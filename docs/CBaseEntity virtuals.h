@@ -88,11 +88,11 @@
 	virtual bool	OnControls( CBaseEntity *pControls ) { return false; }
  89	virtual bool	HasTarget( string_t targetname );
 	virtual	bool	IsPlayer( void ) const { return false; }
-	// virtual bool	IsNetClient( void ) const { return false; } // One of those got removed
-	// virtual bool	IsTemplate( void ) { return false; }
-	// virtual bool	IsBaseObject( void ) const { return false; }	// virtual bool	IsBaseTrain( void ) const { return false; }
-	// virtual bool	IsBaseCombatWeapon( void ) const { return false; }
-	// virtual bool	IsWearable( void ) const { return false; }        
+	virtual bool	IsNetClient( void ) const { return false; } // One of those got removed
+	virtual bool	IsTemplate( void ) { return false; }
+	virtual bool	IsBaseObject( void ) const { return false; }
+	virtual bool	IsBaseTrain( void ) const { return false; }
+	virtual bool	IsBaseCombatWeapon( void ) const { return false; }
 	virtual CBaseCombatWeapon *MyCombatWeaponPointer( void ) { return NULL; }
 	virtual IServerVehicle*			GetServerVehicle() { return NULL; }
 	virtual bool	IsViewable( void );					// is this something that would be looked at (model, sprite, etc.)?

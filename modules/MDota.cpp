@@ -787,8 +787,6 @@ FUNCTION_M(MDota::findUnitsInRadius)
 	PINT(targetUnitTypeFlags);
 	PINT(targetUnitStateFlags);
 
-	printf("Finding units in radius...\n");
-
 	float radiusF = radius;
 	CBaseEntity *pEntity = ent ? ent->ent : NULL;
 

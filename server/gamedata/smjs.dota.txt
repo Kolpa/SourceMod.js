@@ -239,7 +239,7 @@
 			*/
 			"HeroLevelUp"
 			{
-				"windows"	"422"
+				"windows"	"423"
 			}
 			
 			/*
@@ -260,7 +260,7 @@
 			*/
 			"HeroLevelUpAbility"
 			{
-				"windows"	"425"
+				"windows"	"426"
 			}
 			
 			
@@ -271,7 +271,7 @@
 			*/
 			"HeroGiveExperience"
 			{
-				"windows"	"423"
+				"windows"	"424"
 			}
 			
 			
