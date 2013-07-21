@@ -2,18 +2,18 @@
 #include "SMJS_Plugin.h"
 #include "MEntities.h"
 
-SH_DECL_HOOK5(IServerGameClients, ClientConnect, SH_NOATTRIB, 0, bool, int, const char *, const char *, char *, int);
-SH_DECL_HOOK2_void(IServerGameClients, ClientPutInServer, SH_NOATTRIB, 0, int, const char *);
-SH_DECL_HOOK1_void(IServerGameClients, ClientDisconnect, SH_NOATTRIB, 0, int);
-SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, int, const CCommand &);
-SH_DECL_HOOK1_void(IServerGameClients, ClientSettingsChanged, SH_NOATTRIB, 0, int);
+SH_DECL_HOOK5(IServerGameClients, ClientConnect, SH_NOATTRIB, 0, bool, CEntityIndex, const char *, const char *, char *, int);
+SH_DECL_HOOK2_void(IServerGameClients, ClientPutInServer, SH_NOATTRIB, 0, CEntityIndex, const char *);
+SH_DECL_HOOK1_void(IServerGameClients, ClientDisconnect, SH_NOATTRIB, 0, CEntityIndex);
+SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, CEntityIndex, const CCommand &);
+SH_DECL_HOOK1_void(IServerGameClients, ClientSettingsChanged, SH_NOATTRIB, 0, CEntityIndex);
 
-bool OnClientConnect(int client, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
-bool OnClientConnect_Post(int client, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
-void OnClientPutInServer(int client, const char *playername);
-void OnClientDisconnect(int clientIndex);
-void OnClientDisconnect_Post(int clientIndex);
-void OnClientCommand(int client, const CCommand &args);
+bool OnClientConnect(CEntityIndex client, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
+bool OnClientConnect_Post(CEntityIndex client, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
+void OnClientPutInServer(CEntityIndex client, const char *playername);
+void OnClientDisconnect(CEntityIndex clientIndex);
+void OnClientDisconnect_Post(CEntityIndex clientIndex);
+void OnClientCommand(CEntityIndex client, const CCommand &args);
 
 SMJS_Client *clients[MAXCLIENTS];
 
@@ -75,8 +75,8 @@ void MClient::RunAuthChecks(){
 	
 }
 
-bool OnClientConnect(int clientIndex, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen){
-	edict_t *pEntity = gamehelpers->EdictOfIndex(clientIndex);
+bool OnClientConnect(CEntityIndex clientIndex, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen){
+	edict_t *pEntity = gamehelpers->EdictOfIndex(clientIndex.Get());
 	auto client = new SMJS_Client(pEntity);
 	clients[client->entIndex] = client;
 
@@ -96,19 +96,19 @@ bool OnClientConnect(int clientIndex, const char *pszName, const char *pszAddres
 	return true;
 }
 
-bool OnClientConnect_Post(int clientIndex, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen){
-	auto client = clients[clientIndex];
+bool OnClientConnect_Post(CEntityIndex clientIndex, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen){
+	auto client = clients[clientIndex.Get()];
 	client->connected = true;
 	self->CallGlobalFunctionWithWrapped("OnClientConnected", client);
 	return true;
 }
 
-void OnClientPutInServer(int clientIndex, const char *playername){
-	auto client = clients[clientIndex];
+void OnClientPutInServer(CEntityIndex clientIndex, const char *playername){
+	auto client = clients[clientIndex.Get()];
 
 	// If it's a bot
 	if(client == NULL){
-		edict_t *edict = gamehelpers->EdictOfIndex(clientIndex);
+		edict_t *edict = gamehelpers->EdictOfIndex(clientIndex.Get());
 		client = new SMJS_Client(edict);
 		clients[client->entIndex] = client;
 		client->ReattachEntity();
@@ -122,13 +122,13 @@ void OnClientPutInServer(int clientIndex, const char *playername){
 }
 
 int clientIndexThatJustDisconnected;
-void OnClientDisconnect(int clientIndex){
-	auto client = clients[clientIndex];
+void OnClientDisconnect(CEntityIndex clientIndex){
+	auto client = clients[clientIndex.Get()];
 	self->CallGlobalFunctionWithWrapped("OnClientDisconnect", client);
 }
 
-void OnClientDisconnect_Post(int clientIndex){
-	auto client = clients[clientIndex];
+void OnClientDisconnect_Post(CEntityIndex clientIndex){
+	auto client = clients[clientIndex.Get()];
 
 	// It seems OnClientDisconnect_Post is called multiple times, if it's already been called, don't run
 	// this function again
@@ -140,9 +140,9 @@ void OnClientDisconnect_Post(int clientIndex){
 
 	client->entIndex = -1;
 	client->Destroy();
-	clients[clientIndex] = NULL;
+	clients[clientIndex.Get()] = NULL;
 }
 
-void OnClientCommand(int client, const CCommand &args){
+void OnClientCommand(CEntityIndex client, const CCommand &args){
 
 }

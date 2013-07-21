@@ -7,7 +7,7 @@
 WRAPPED_CLS_CPP(MConsole, SMJS_Module)
 
 
-SH_DECL_HOOK2_void(ConCommand, Dispatch, SH_NOATTRIB, false, void *, const CCommand &);
+SH_DECL_HOOK2_void(ConCommand, Dispatch, SH_NOATTRIB, false, const CCommandContext &, const CCommand &);
 
 SH_DECL_HOOK1_void(IServerGameClients, SetCommandClient, SH_NOATTRIB, false, int);
 
@@ -57,7 +57,7 @@ bool safestrcat(char *buffer, size_t maxSize, const char *addition){
    return true;
 }
 
-void MConsole::OnSayCommand_Pre(void *pUnknown, const CCommand &command){
+void MConsole::OnSayCommand_Pre(const CCommandContext &context, const CCommand &command){
 	if(strcmp(command.Arg(0), "say") != 0 && strcmp(command.Arg(0), "say_team")){
 		return;
 	}
@@ -146,7 +146,7 @@ void MConsole::OnSayCommand_Pre(void *pUnknown, const CCommand &command){
 	}
 }
 
-void MConsole::OnSayCommand_Post(void *pUnknown, const CCommand &command){
+void MConsole::OnSayCommand_Post(const CCommandContext &context, const CCommand &command){
 
 }
 
@@ -214,13 +214,13 @@ bool MConsole::InvokePluginsCommand(int client, int argc, const char **argArray,
 	return foundAHook;
 }
 
-void MConsole::CommandCallback(void *pUnknown, const CCommand &command){
+void MConsole::CommandCallback(const CCommandContext &context, const CCommand &command){
 	if(g_MConsole->InvokePluginsCommand(command)){
 		RETURN_META(MRES_SUPERCEDE);
 	}
 }
 
-void MConsole::CommandCallback2(void *pUnknown, const CCommand &command){
+void MConsole::CommandCallback2(const CCommandContext &context, const CCommand &command){
 	g_MConsole->InvokePluginsCommand(command);
 }
 

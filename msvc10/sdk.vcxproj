@@ -479,7 +479,7 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">smjs.ext</TargetName>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">E:\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Fast Compilation|Win32'">Fast Compilation/</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">E:\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">D:\Program Files\Steam\steamapps\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Administrador\Desktop\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\boost_1_53_0\;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\hl2sdk-dota\lib\public\;..\v8\v8\build\Debug\lib;..\lib;..\..\..\hl2sdk-dota\lib\win32\debug\vs2010;$(LibraryPath)</LibraryPath>
