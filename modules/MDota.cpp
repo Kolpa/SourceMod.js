@@ -120,10 +120,17 @@ struct AbilityData {
 	uint32_t	flags;
 };
 
+
+
 static IGameConfig *dotaConf = NULL;
 static void *LoadParticleFile;
 static void *CreateUnit;
+static void *EndCooldown;
+static void *SetRuneType;
+static void *SpawnRune;
+static void *GetCursorTarget;
 
+static void *gamerules;
 static void *GameManager;
 
 static int waitingForPlayersCount = 10;
@@ -139,6 +146,7 @@ static CDetour *heroSpawnDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
+
 static void* (*FindClearSpaceForUnit)(void *unit, Vector vec, int bSomething);
 static CBaseEntity* (*DCreateItem)(const char *item, void *unit, void *unit2);
 static int (__stdcall *DGiveItem)(CBaseEntity *inventory, int a4, int a5, char a6); // eax = 0, ecx = item
@@ -163,6 +171,7 @@ static void PatchWaitForPlayersCount();
 #include "modules/MDota_Detours.h"
 
 MDota::MDota(){
+
 	identifier = "dota";
 
 	printf("Initializing dota.js module...\n");
@@ -182,7 +191,6 @@ MDota::MDota(){
 
 	CDetourManager::Init(g_pSM->GetScriptingEngine(), dotaConf);
 
-
 	parseUnitDetour = DETOUR_CREATE_MEMBER(ParseUnit, "ParseUnit");
 	if(parseUnitDetour) parseUnitDetour->EnableDetour();
 
@@ -201,17 +209,20 @@ MDota::MDota(){
 	heroSpawnDetour = DETOUR_CREATE_MEMBER(HeroSpawn, "HeroSpawn");
 	if(heroSpawnDetour) heroSpawnDetour->EnableDetour();
 
-
 	FIND_DOTA_PTR(GameManager);
 
 	FIND_DOTA_PTR_NEW(UTIL_Remove, "\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74*\x8B\x46\x08\xF6\x80****\x01\x75*\x8B", 28);
 	FIND_DOTA_FUNC(FindUnitsInRadius);
 	FIND_DOTA_FUNC(LoadParticleFile);
+	FIND_DOTA_FUNC(SpawnRune);
 	FIND_DOTA_FUNC(CreateUnit);
+	FIND_DOTA_FUNC(GetCursorTarget);
 	FIND_DOTA_FUNC(FindClearSpaceForUnit);
+	FIND_DOTA_FUNC(SetRuneType);
 	FIND_DOTA_FUNC(DCreateItem);
 	FIND_DOTA_FUNC(DGiveItem);
 	FIND_DOTA_FUNC(DDestroyItem);
+	FIND_DOTA_FUNC(EndCooldown);
 	FIND_DOTA_FUNC(StealAbility);
 	FIND_DOTA_FUNC(DCreateItemDrop);
 	FIND_DOTA_FUNC(DLinkItemDrop);
@@ -249,9 +260,11 @@ void PatchVersionCheck(){
 		ptr[i] = 0x90; // NOP
 	}
 
+	//i dunno it works or something
 	ptr = (uint8_t*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), 
-	"\x8B\x11\x8B\x82\x2A\x2A\x2A\x2A\xFF\xD0\x8B\x2A\x2A\x2A\x2A\x2A\x50\x51\x68\x2A\x2A\x2A\x2A\xFF\x2A\x2A\x2A\x2A\x2A"
-	"\x83\xC4\x0C\x38\x2A\x2A\x2A\x2A\x2A\x74\x50", 40);
+	"\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x01\x8B\x2A\x2A\x2A\x2A\x2A\xFF\xD2\x89\x2A\x2A\x2A\x2A\x2A\x85\xC0\x74\x2A\x85\xF6\x74\x2A\x3B\xC6\x74\x2A\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x01\x8B\x2A\x2A\x2A\x2A\x2A\xFF\xD2\x50\xA1\x2A\x2A\x2A\x2A\x50\x68\x2A\x2A\x2A\x2A\xFF\x2A\x2A\x2A\x2A\x2A\x83\xC4\x0C\x80\x2A\x2A\x2A\x2A\x2A\x2A\x74\x2A\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x11", 
+	84);
+
 
 	if(ptr == NULL){
 		printf("Failed to patch version check!\n");
@@ -259,9 +272,9 @@ void PatchVersionCheck(){
 		return;
 	}
 
-	SourceHook::SetMemAccess(ptr, 40, SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
-
-	ptr[38] = 0xEB; // JZ --> JMP
+	SourceHook::SetMemAccess(ptr, 84, SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
+	
+	ptr[32] = 0xEB; // JZ --> JMP
 }
 
 void PatchWaitForPlayersCount(){
@@ -278,6 +291,8 @@ void PatchWaitForPlayersCount(){
 	*waitingForPlayersCountPtr = waitingForPlayersCount;
 	*((int **)((intptr_t) ptr + 2)) = &waitingForPlayersCount;
 }
+
+
 
 FUNCTION_M(MDota::loadParticleFile)
 	ARG_COUNT(1);
@@ -402,6 +417,49 @@ const char* MDota::HeroIdToClassname(int id) {
 	return NULL;
 }
 
+FUNCTION_M(MDota::getCursorTarget)
+	PENT(ability);
+	CBaseEntity *ent;
+	ent = ability->ent;
+
+	void *target;
+	__asm {
+		mov eax, ent
+		call GetCursorTarget
+		mov target, eax
+	}
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setRuneType)
+	PENT(rune);
+	
+	CBaseEntity *ent;
+	ent = rune->ent;
+
+	__asm {
+		mov eax, ent
+		push 2
+		call SetRuneType
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::spawnRune)
+	CBaseEntity *rune;
+	
+	if (gamerules == NULL){
+		gamerules = sdkTools->GetGameRules();
+	}
+	__asm {
+		push gamerules
+		call SpawnRune
+	}
+	
+	RETURN_UNDEF;
+END
+
 FUNCTION_M(MDota::remove)
 	PENT(ent);
 	if(ent == NULL) THROW("Entity cannot be null");
@@ -430,6 +488,19 @@ FUNCTION_M(MDota::forceWin)
 	auto cmd = icvar->FindCommand("dota_kill_buildings");
 	cmd->RemoveFlags(FCVAR_CHEAT);
 	engine->ServerCommand("dota_kill_buildings\n");
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::endCooldown)
+	PENT(ability);
+	CBaseEntity *ent;
+	ent = ability->ent;
+
+	__asm {
+		push ent
+		call EndCooldown
+	}
 
 	RETURN_UNDEF;
 END

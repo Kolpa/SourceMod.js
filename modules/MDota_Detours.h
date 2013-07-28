@@ -261,7 +261,7 @@ DETOUR_DECL_STATIC4_STDCALL(HeroBuyItem, signed int, CBaseEntity*, unit, char*, 
 		SMJS_Plugin *pl = GetPlugin(i);
 		if(pl == NULL) continue;
 		
-		HandleScope handle_scope(pl->GetIsolate());
+		HandleScope handle_scope(pl->GetIsolate()); 
 		Context::Scope context_scope(pl->GetContext());
 
 		auto hooks = pl->GetHooks("Dota_OnBuyItem");

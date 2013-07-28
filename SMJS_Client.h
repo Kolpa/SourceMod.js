@@ -22,6 +22,7 @@ public:
 
 	FUNCTION_DECL(getName);
 	FUNCTION_DECL(printToChat);
+	FUNCTION_DECL(sendAudio);
 	FUNCTION_DECL(printToConsole);
 	FUNCTION_DECL(isInGame);
 	FUNCTION_DECL(fakeCommand);
@@ -41,6 +42,7 @@ public:
 		temp->SetClassName(v8::String::NewSymbol("Client"));
 		WRAPPED_FUNC(getName);
 		WRAPPED_FUNC(printToChat);
+		WRAPPED_FUNC(sendAudio);
 		WRAPPED_FUNC(printToConsole);
 		WRAPPED_FUNC(isInGame);
 		WRAPPED_FUNC(fakeCommand);

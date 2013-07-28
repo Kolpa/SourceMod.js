@@ -56,6 +56,7 @@ void MGame::OnServerActivate(){
 
 	self->rules.rulesProps.proxy = FindEntityByClassname(-1, "dota_gamerules");
 	self->rules.rulesProps.gamerules = sdkTools->GetGameRules();
+	
 	if(self->rules.rulesProps.gamerules == NULL){
 		printf("Could not find game rules!\n");
 	}

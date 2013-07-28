@@ -132,9 +132,13 @@ public:
 	FUNCTION_DECL(giveItemToHero);
 	FUNCTION_DECL(getTotalExpRequiredForLevel);
 	FUNCTION_DECL(setTotalExpRequiredForLevel);
+	FUNCTION_DECL(spawnRune);
+	FUNCTION_DECL(getCursorTarget);
 	FUNCTION_DECL(sendStatPopup);
+	FUNCTION_DECL(endCooldown);
 	FUNCTION_DECL(setHeroAvailable);
 	FUNCTION_DECL(createItemDrop);
+	FUNCTION_DECL(setRuneType);
 	FUNCTION_DECL(levelUpHero);
 	FUNCTION_DECL(levelUpAbility);
 	FUNCTION_DECL(giveExperienceToHero);
@@ -152,11 +156,15 @@ public:
 		WRAPPED_FUNC(heroIdToClassname);
 		WRAPPED_FUNC(loadParticleFile);
 		WRAPPED_FUNC(forceWin);
+		WRAPPED_FUNC(setRuneType);
 		WRAPPED_FUNC(createUnit);
 		WRAPPED_FUNC(findClearSpaceForUnit);
 		WRAPPED_FUNC(setWaitForPlayersCount);
+		WRAPPED_FUNC(getCursorTarget);
+		WRAPPED_FUNC(endCooldown);
 		WRAPPED_FUNC(giveItemToHero);
 		WRAPPED_FUNC(getTotalExpRequiredForLevel);
+		WRAPPED_FUNC(spawnRune);
 		WRAPPED_FUNC(setTotalExpRequiredForLevel);
 		WRAPPED_FUNC(sendStatPopup);
 		WRAPPED_FUNC(setHeroAvailable);
@@ -834,6 +842,5 @@ public:
 
 		proto->Set("heroes", heroArray);
 	}
-
 	
 };

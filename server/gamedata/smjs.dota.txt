@@ -4,18 +4,44 @@
 	{
 		"Signatures"
 		{
+			"EndCooldown"
+			{
+				"library"	"server"
+				"windows"	"\x55\x8B\xEC\x0F\x57\xC0\x53\x8B**\xF3\x0F\x10*****\x0F\x2E\xC8\x9F\x56\x57\xF6\xC4\x44\x7B*\x8B\xC3\x80***\x74*\x80***\xEB*\x8B**\x85\xF6\x74*\x8D*****\x2B\xC8\x51\xE8\x40\x4B\xD3\xFF"
+				
+			}
+			"IsDeniable"
+			{
+				"library"	"server"
+				"windows"	"\x55\x8B\xEC\x51\x56\x8B\xF0\x8B\x86****\xC1**\x24\x01\x74*\xB0\x01\x5E\x8B\xE5\x5D\xC3"
+			}
+			"GetCursorTarget"
+			{
+				"library"	"server"
+				"windows"	"\x8B*****\x56\x83\xFA\xFF\x0F*****\x8B\xCA\x81\xE1\xFF\xFF\x00\x00\x8B\xC1\xC1\xE0\x04\x8B\xF2\x05****\xC1\xEE\x10\x39**\x75*\x8B\x00\x85\xC0\x74*\x8B\xC1\xC1\xE0\x04\x05****\x39**\x75*\x8B\x00\xEB"
+			}
+			"SetRuneType"
+			{
+				"library"	"server"
+				"windows"	"\x55\x8B\xEC\x53\x56\x57\x8B\xF8\x8B*****\x3B**\x74*\x8B\xC7\x80***\x74*\x80***\xEB*\x8B**\x85\xF6\x74*\x8D*****\x2B\xC8\x51\xE8"
+			}		
+			"SpawnRune"
+			{
+				"library"	"server"
+				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x81\xEC\xAC\x00\x00\x00\x53\x8B**\x56\x57\x6A\x01\x6A\x00\xFF*****\x83\xC4\x08\x89***\x85\xC0\x75*\x8B*****\x83\xF9\xFF\x74*\x8B*\x25\xFF\xFF\x00\x00\xC1\xE0\x04"
+			}
 			"GameManager"
 			{
 				"library"	"server"
 				"windows"	"****\x8B\xF0\xE8****\x0F\xB7\xC0\xB9\xFF\xFF\x00\x00\x66\x3B\xC1\x75*\x33\xC0\xEB"
 			}
-			
+
 			"LobbyObject"
 			{
 				"library"	"server"
 				"windows"	"****\x85\xC0\x74\x0F\x80\x78\x68\x00\x74\x09\x83\x78\x64\x01\x75\x03\xB0\x01\xC3"
 			}
-			
+
 			/*
 				void UTIL_Remove(IServerNetworkable *oldObj);
 			*/
@@ -24,42 +50,42 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74*\x8B\x46\x08\xF6\x80****\x01\x75*\x8B"
 			}
-			
+
 			/*
 				int __usercall FindUnitsInRadius<eax>(CUtlVector *vecOut<eax>, int team, Vector *position, void *ent, float radius, char targetTeamFlags, int targetUnitTypeFlags, int targetUnitStateFlags, int a9, char bSomething)
-				
+
 				This is one of the most complicated functions to call. I'll explain it slowly.
-				
+
 				vecOut is where the results are put
 				team is the team where this search is coming from (usually ent), this is for the targetTeamFlags
 				ent may be null, it's usually the entity that's doing the search
 				radius is the radius, duh
-				
+
 				a9 and bSomething are usually 0, I don't know what they mean
 			*/
-			
+
 			"FindUnitsInRadius"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF0\x81\xEC\x74\x01\x00\x00\x53\x56\x8B\x75\x0C\x57\x8B\xF8\xA1"
 			}
-			
+
 			"LoadParticleFile"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x14\x8B*****\x53\x56\x57\x33\xDB\x53\x8B\xF0\x8B\x01\x8B\x50\x20\x6A\xFF\x56\x6A\x01\xFF\xD2"
 			}
-			
+
 			"ParseUnit"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x0C\x53\x56\x57\x8B\xF9\x83\xBF\x08\x02\x00\x00\x00\x89\x7C\x24\x14\x74*\x8B\xB7\x08\x02\x00\x00"
 			}
-			
-			
+
+
 			/*
 				CBaseEntity* __usercall CreateUnit<eax>(const char *clsname<eax>, int player, signed int team, char bNoMouse, signed int alwaysZero)
-				
+
 				Function called inside the "dota_create_neutral_hero" concmd dispatch
 			*/
 			"CreateUnit"
@@ -67,7 +93,7 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x1C\x53\x56\x57\x8B\xF8\x33\xC0\x38*****\xC6\x45\xFF\x00\x0F\x95\xC0\x8B"
 			}
-			
+
 			/*
 				const char **__userpurge GetAbilityValue<eax>(int a1<eax>, const char *a2)
 				GetAbilityValue(v11, "movement_speed_reduction");
@@ -78,10 +104,11 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x51\x53\x56\x8B\xF0\x83\xBE\x08\x04\x00\x00\x00"
 			}
-			
+			//55 8B EC 83 E4 F8 51 53 56 8B F0 83 BE 08 04 00 00 00
+			//GetLevelSpecialValueFor
 			/*
 				void __userpurge ClientPickHero(void *client<esi>, CCommand *a2)
-				
+
 				Called in the main dispatch function for client commands, in the "dota_select_hero" section
 			*/
 			"ClientPickHero"
@@ -89,16 +116,16 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x08\x53\x56\x8B\xF0\x8B\x06\x8B\x90\xC8\x05\x00\x00\x57\x8B\xCE\xFF\xD2\x83"
 			}
-			
+
 			"FindClearSpaceForUnit"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xC0\x81\xEC\xF4\x02\x00\x00\x80******\x53\x56\x57\x75\x2A\x8B\x45\x18\xF3\x0F\x7E\x45\x0C"
 			}
-			
+
 			/*
 				signed int __stdcall HeroBuyItem(void *hero, char *item, int playerID, signed int a4)
-				
+
 				Search for the string: "NPC is not near a shop that sells '%s'\n"
 			*/
 			"HeroBuyItem"
@@ -106,10 +133,10 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x24\x8B\x45\x10\x53\x56\x57\x50\xE8****\x89\x44\x24\x0C\x85\xC0\x0F"
 			}
-			
+
 			/*
 				int __cdecl DCreateItem(char *item, void *unit, void *unit)
-				
+
 				Called by dota_create_item
 			*/
 			"DCreateItem"
@@ -117,11 +144,11 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x8B\x55\x10\x81\xEC\xA4\x00\x00\x00\x53\x56\x57\x85\xD2\x74\x12\x80\xBA\x1C\x01\x00\x00\x00\x74\x09\xF6\x82\x5C\x09\x00\x00\x01\x75\x52\x8B\x8A\xC4\x01\x00\x00\x83\xF9"
 			}
-			
+
 			/*
 				signed int __userpurge DGiveItem<eax>(int a1<eax>, void *item<ecx>, void *inventory, int a4, int a5, char a6);
 				GiveItem(0, item, hero + 10240, 3, -1, 0)
-				
+
 				Called by dota_create_item
 			*/
 			"DGiveItem"
@@ -129,23 +156,23 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x2C\x53\x8B\x5D\x08\x56\x57\x8B\xF1\x8B\xF8\x8B\x86\x54\x01\x00\x00"
 			}
-			
+
 			/*
 				void __cdecl DDestroyItem(void *item)
-				
+
 				Called by dota_create_item
 			*/
-			
+
 			"DDestroyItem"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74\x74\x8B\x46\x08\xF6\x80\x20\x01\x00\x00\x01"
 			}
-			
-			
+
+
 			/*
 				CBaseEntity* __cdecl CreateItemDrop(Vector location);
-				
+
 				"item_halloween_candy_corn"
 			*/
 			"DCreateItemDrop"
@@ -153,7 +180,7 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x81\xEC\x9C\x00\x00\x00\x53\x56\x33\xF6\x57\x8D\x44\x24\x10\x89\x74\x24\x18\xE8"
 			}
-			
+
 			/*
 				int __userpurge LinkItemDrop<eax>(CBaseEntity *item<eax>, CBaseEntity *drop);
 			*/
@@ -162,7 +189,7 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x0C\x53\x56\x8B\x75\x08\x57\x8B\xF8\x85\xFF\x74"
 			}
-			
+
 			/*
 				Found in HasModifier, or any function that calls FindFactory
 			*/
@@ -171,32 +198,32 @@
 				"library"	"server"
 				"windows"	"****\xE8****\x8B\xC8\x89\x4D\x08\x85\xC9\x75\x18\x56\x68"
 			}
-			
+
 			/*
 				void* __userpurge HasModifier<eax>(char *modifier<eax>, void *m_ModifierManager, void *unknown)
-				
+
 				"No factory for %s!\n"
 			*/
-			
+
 			"HasModifier"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\xF6\x05****\x01\x53\x8B\x5D\x08\x56\x57\x8B\xF0\x75\x19\x83\x0D****\x01\xE8"
 			}
-			
+
 			/*
 				void* __stdcall CModifierFactoryDictionary::FindFactory(CModifierFactoryDictionary *this, char *modifier)
 			*/
-			
+
 			"FindFactory"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x0C\xA1****\x53\x66\x0F\x57\xC0\x56\x66\x0F\x13\x44\x24\x0C\x83\x78\x0C\x00\x57\x74\x3C************************************************************\x8B\x70\x0C\x8B\x4D\x08"
 			}
-			
+
 			/*
 				void* __thiscall CreateModifier(CModifierFactoryDictionary *this, char *modifier)
-				
+
 				"Attempted to create unknown modifier type %s!\n"
 			*/
 			"CreateModifier"
@@ -204,33 +231,33 @@
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x56\x51\xE8****\x85\xC0\x75*\x56\x68****\xFF\x15****\x83\xC4\x08\x33\xC0"
 			}
-			
+
 			"StealAbility"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x08\x56\x8B\x75\x08\x8B\x86\xC4\x01\x00\x00\x57\x83\xF8\xFF\x74\x1D\x8B\xC8\x81\xE1\xFF\xFF\x00\x00"
 			}
-			
+
 			/*
 				CDOTA_BaseNPC::GatherStates
-				
+
 				int __usercall GatherStates<eax>(void *this<eax>);
-				
+
 			*/
-			
+
 			"UnitThink"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x3C***********************************************************************************************************************************************************\xA1****\x89\x44\x24\x14\x85\xC0\x75*\x0F\x57\xC0\xEB*\x80\x78\x39\x00\x75*\x80\x78\x38\x00\x75*"
 			}
-			
+
 			"HeroSpawn"
 			{
 				"library"	"server"
 				"windows"	"\x55\x8B\xEC\x83\xE4\xF8\x51\x53\x56\x57\x8B\xF9\x80\xBF****\x00\x8D\xB7****\x74*\x8B\x86"
 			}
 		}
-		
+
 		"Offsets"
 		{
 			/*
@@ -241,9 +268,9 @@
 			{
 				"windows"	"423"
 			}
-			
+
 			/*
-				
+
 				int __thiscall UnitInvade(void *this, char a2);
 				55 8B EC 53 56 57 8B F9 8A 4D 08 38 8F ? ? ? ? 74 ? 8B C7 80 78 ? 00 74 ? 80 48 ? 01
 				"modifier_roquelaire"
@@ -252,30 +279,29 @@
 			{
 				"windows"	"371"
 			}
-			
+
 			/*
 				void* __thiscall HeroLevelUpAbility(void *this, void *ability)
-				
+
 				55 8B EC 83 E4 F8 83 EC 0C 53 56 57 8B 7D 08 8B F1 8B 8F ? ? ? ? 89 74 24 10 83 F9 FF 74
 			*/
 			"HeroLevelUpAbility"
 			{
 				"windows"	"426"
 			}
-			
-			
+
+
 			/*
 				bool __thiscall HeroGiveExperience(void *this, float amount);
-				
+
 				55 8B EC 83 EC 08 57 8B F9 80 BF ? ? ? ? 01 75 ? 32 C0 5F 8B E5 5D C2 04 00 8B 8F ? ? ? ? 56 83 F9 FF
 			*/
 			"HeroGiveExperience"
 			{
 				"windows"	"424"
 			}
-			
-			
+
+
 		}
 	}
 }
-
