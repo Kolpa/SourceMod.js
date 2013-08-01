@@ -126,7 +126,7 @@ dota.UNIT_TARGET_STATE_FLAG_ETHEREAL =                  1 << 14;
 dota.UNIT_TARGET_STATE_FLAG_HAS_MANA =                  1 << 15;
 //dota.UNIT_TARGET_STATE_FLAG_ =                        1 << 16;
 dota.UNIT_TARGET_STATE_FLAG_NOT_CREEP_HERO =            1 << 17;
-//dota.UNIT_TARGET_STATE_FLAG_ =                        1 << 18; // filters only passes if: (has this flag || does not have unit flag 31)
+dota.UNIT_TARGET_STATE_FLAG_BANISHED =                  1 << 18; // filters also matches banished units
 //dota.UNIT_TARGET_STATE_FLAG_ =                        1 << 19; // has unit state 12
 
 /////////////// Unit type flags ///////////////
