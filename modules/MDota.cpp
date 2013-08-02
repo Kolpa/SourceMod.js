@@ -121,6 +121,40 @@ struct AbilityData {
 };
 
 
+class CRecipientFilter : public IRecipientFilter
+{
+private:
+        bool                            m_bReliable;
+        bool                            m_bInitMessage;
+        CUtlVector< int >               m_Recipients;
+       
+        // If using prediction rules, the filter itself suppresses local player
+        bool                            m_bUsingPredictionRules;
+        // If ignoring prediction cull, then external systems can determine
+        //  whether this is a special case where culling should not occur
+        bool                            m_bIgnorePredictionCull;
+
+public:
+						CRecipientFilter() { m_Recipients.SetSize(2048); m_bReliable = true; m_bInitMessage = true; m_bUsingPredictionRules = false; m_bIgnorePredictionCull = false; }
+        virtual         ~CRecipientFilter() {}
+ 
+        virtual bool    IsReliable( void ) const { return m_bReliable; }
+		virtual bool    IsInitMessage( void ) const { return m_bInitMessage; }
+ 
+        virtual int             GetRecipientCount( void ) const { return m_Recipients.Count(); }
+        virtual CEntityIndex             GetRecipientIndex( int slot ) const
+        {
+                if (slot < 0 || slot >= m_Recipients.Count())
+                        return -1;
+               
+                return m_Recipients[slot];
+        }
+
+		void AddIndex( CEntityIndex index )
+		{
+			m_Recipients.AddToTail(index.Get());
+		}
+};
 
 static IGameConfig *dotaConf = NULL;
 static void *LoadParticleFile;
@@ -129,9 +163,19 @@ static void *EndCooldown;
 static void *SetRuneType;
 static void *SpawnRune;
 static void *GetCursorTarget;
+static void *ParticleManagerFunc;
+static void *CreateParticleEffect;
+static void *SetParticleControlEnt;
+static void *SetParticleControl;
+static void *ApplyDamage;
+static void *UpdateDamageQueue;
+
+static uint8_t gpm[4];
 
 static void *gamerules;
 static void *GameManager;
+
+static int particleIndex = 100000; //i don't know how to properly hook into the particle index system yet so i'll just do this bullshit
 
 static int waitingForPlayersCount = 10;
 static int* waitingForPlayersCountPtr = NULL;
@@ -143,6 +187,7 @@ static CDetour *clientPickHeroDetour;
 static CDetour *heroBuyItemDetour;
 static CDetour *unitThinkDetour;
 static CDetour *heroSpawnDetour;
+static CDetour *createParticleDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
@@ -191,6 +236,8 @@ MDota::MDota(){
 
 	CDetourManager::Init(g_pSM->GetScriptingEngine(), dotaConf);
 
+	
+
 	parseUnitDetour = DETOUR_CREATE_MEMBER(ParseUnit, "ParseUnit");
 	if(parseUnitDetour) parseUnitDetour->EnableDetour();
 
@@ -219,7 +266,13 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(GetCursorTarget);
 	FIND_DOTA_FUNC(FindClearSpaceForUnit);
 	FIND_DOTA_FUNC(SetRuneType);
+	FIND_DOTA_FUNC(ApplyDamage);
+	FIND_DOTA_FUNC(UpdateDamageQueue);
+	FIND_DOTA_FUNC(CreateParticleEffect);
+	FIND_DOTA_FUNC(SetParticleControlEnt);
+	FIND_DOTA_FUNC(SetParticleControl);
 	FIND_DOTA_FUNC(DCreateItem);
+	FIND_DOTA_FUNC(ParticleManagerFunc);
 	FIND_DOTA_FUNC(DGiveItem);
 	FIND_DOTA_FUNC(DDestroyItem);
 	FIND_DOTA_FUNC(EndCooldown);
@@ -227,10 +280,19 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(DCreateItemDrop);
 	FIND_DOTA_FUNC(DLinkItemDrop);
 	
-
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
 		smutils->LogError(myself, "Couldn't find expRequiredForLevel\n");
+	}
+	
+	//\x56\x57\x8B\xF9\xBE\x64\x0B\x00\x00\x8D\xA4\x24\x00\x00\x00\x00\x8B\xC7\xE8\x2A\x2A\x2A\x2A\x8B\x0C\x30\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xEB
+
+	uint8_t *ptr = (uint8_t*)ParticleManagerFunc; //GetParticleManager is inlined in windows, this is a function that happens to contain the inlined dword. The rest is history
+	SourceHook::SetMemAccess(ptr, 60, SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
+
+	for(int i = 45; i < 49; i++){
+		gpm[i-45] = ptr[i];
+		printf("%d \n", gpm[i-45]);
 	}
 
 	printf("Done!\n");
@@ -238,10 +300,11 @@ MDota::MDota(){
 
 void MDota::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){
 	auto obj = wrapper->ToObject();
-	
 }
 
+
 void PatchVersionCheck(){
+
 	uint8_t *ptr = (uint8_t*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), 
 	"\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x11\x8B\x82\x2A\x2A\x2A\x2A\xFF\xD0\x8B\x0D\x2A\x2A\x2A\x2A\x50\x51\x68\x2A\x2A\x2A\x2A"
 	"\xFF\x2A\x2A\x2A\x2A\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x11\x8B\x82\x2A\x2A\x2A\x2A\x83\xC4\x0C\x68\x2A\x2A\x2A\x2A\xFF"
@@ -294,6 +357,40 @@ void PatchWaitForPlayersCount(){
 
 
 
+FUNCTION_M(MDota::applyDamage)
+	PENT(attacker);
+	PENT(attacked);
+	PENT(ability);
+	PNUM(damage);
+	PINT(damageType);
+	PINT(unknown);
+
+	//I don't know I have tried every arg in every slot
+	//please make it work
+
+	CBaseEntity *attackerEnt;
+	attackerEnt = attacker->ent;
+	CBaseEntity *attackedEnt;
+	attackedEnt = attacked->ent;
+	CBaseEntity *abilityEnt;
+	abilityEnt = ability->ent;
+
+	if(attackerEnt == NULL || attackedEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
+
+	__asm {
+		mov edi, attackedEnt 
+		push unknown
+		push damageType
+		push damage
+		push abilityEnt
+		push attackerEnt
+		call ApplyDamage
+		add esp, 14h
+	}
+	
+	RETURN_UNDEF;
+END
+
 FUNCTION_M(MDota::loadParticleFile)
 	ARG_COUNT(1);
 	PSTR(file);
@@ -305,117 +402,6 @@ FUNCTION_M(MDota::loadParticleFile)
 
 	RETURN_UNDEF;
 END
-
-const char* MDota::HeroIdToClassname(int id) {
-	switch(id){
-		case Hero_Base: return "npc_dota_hero_base";
-		case Hero_AntiMage: return "npc_dota_hero_antimage";
-		case Hero_Axe: return "npc_dota_hero_axe";
-		case Hero_Bane: return "npc_dota_hero_bane";
-		case Hero_Bloodseeker: return "npc_dota_hero_bloodseeker";
-		case Hero_CrystalMaiden: return "npc_dota_hero_crystal_maiden";
-		case Hero_DrowRanger: return "npc_dota_hero_drow_ranger";
-		case Hero_EarthShaker: return "npc_dota_hero_earthshaker";
-		case Hero_Juggernaut: return "npc_dota_hero_juggernaut";
-		case Hero_Mirana: return "npc_dota_hero_mirana";
-		case Hero_Morphling: return "npc_dota_hero_morphling";
-		case Hero_ShadowFiend: return "npc_dota_hero_nevermore";
-		case Hero_PhantomLancer: return "npc_dota_hero_phantom_lancer";
-		case Hero_Puck: return "npc_dota_hero_puck";
-		case Hero_Pudge: return "npc_dota_hero_pudge";
-		case Hero_Razor: return "npc_dota_hero_razor";
-		case Hero_SandKing: return "npc_dota_hero_sand_king";
-		case Hero_StormSpirit: return "npc_dota_hero_storm_spirit";
-		case Hero_Sven: return "npc_dota_hero_sven";
-		case Hero_Tiny: return "npc_dota_hero_tiny";
-		case Hero_VengefulSpirit: return "npc_dota_hero_vengefulspirit";
-		case Hero_Windrunner: return "npc_dota_hero_windrunner";
-		case Hero_Zeus: return "npc_dota_hero_zuus";
-		case Hero_Kunkka: return "npc_dota_hero_kunkka";
-		case Hero_Lina: return "npc_dota_hero_lina";
-		case Hero_Lion: return "npc_dota_hero_lion";
-		case Hero_ShadowShaman: return "npc_dota_hero_shadow_shaman";
-		case Hero_Slardar: return "npc_dota_hero_slardar";
-		case Hero_Tidehunter: return "npc_dota_hero_tidehunter";
-		case Hero_WitchDoctor: return "npc_dota_hero_witch_doctor";
-		case Hero_Lich: return "npc_dota_hero_lich";
-		case Hero_Riki: return "npc_dota_hero_riki";
-		case Hero_Enigma: return "npc_dota_hero_enigma";
-		case Hero_Tinker: return "npc_dota_hero_tinker";
-		case Hero_Sniper: return "npc_dota_hero_sniper";
-		case Hero_Necrolyte: return "npc_dota_hero_necrolyte";
-		case Hero_Warlock: return "npc_dota_hero_warlock";
-		case Hero_BeastMaster: return "npc_dota_hero_beastmaster";
-		case Hero_QueenOfPain: return "npc_dota_hero_queenofpain";
-		case Hero_Venomancer: return "npc_dota_hero_venomancer";
-		case Hero_FacelessVoid: return "npc_dota_hero_faceless_void";
-		case Hero_SkeletonKing: return "npc_dota_hero_skeleton_king";
-		case Hero_DeathProphet: return "npc_dota_hero_death_prophet";
-		case Hero_PhantomAssassin: return "npc_dota_hero_phantom_assassin";
-		case Hero_Pugna: return "npc_dota_hero_pugna";
-		case Hero_TemplarAssassin: return "npc_dota_hero_templar_assassin";
-		case Hero_Viper: return "npc_dota_hero_viper";
-		case Hero_Luna: return "npc_dota_hero_luna";
-		case Hero_DragonKnight: return "npc_dota_hero_dragon_knight";
-		case Hero_Dazzle: return "npc_dota_hero_dazzle";
-		case Hero_Clockwerk: return "npc_dota_hero_rattletrap";
-		case Hero_Leshrac: return "npc_dota_hero_leshrac";
-		case Hero_Furion: return "npc_dota_hero_furion";
-		case Hero_Lifestealer: return "npc_dota_hero_life_stealer";
-		case Hero_DarkSeer: return "npc_dota_hero_dark_seer";
-		case Hero_Clinkz: return "npc_dota_hero_clinkz";
-		case Hero_Omniknight: return "npc_dota_hero_omniknight";
-		case Hero_Enchantress: return "npc_dota_hero_enchantress";
-		case Hero_Huskar: return "npc_dota_hero_huskar";
-		case Hero_NightStalker: return "npc_dota_hero_night_stalker";
-		case Hero_Broodmother: return "npc_dota_hero_broodmother";
-		case Hero_BountyHunter: return "npc_dota_hero_bounty_hunter";
-		case Hero_Weaver: return "npc_dota_hero_weaver";
-		case Hero_Jakiro: return "npc_dota_hero_jakiro";
-		case Hero_Batrider: return "npc_dota_hero_batrider";
-		case Hero_Chen: return "npc_dota_hero_chen";
-		case Hero_Spectre: return "npc_dota_hero_spectre";
-		case Hero_AncientApparition: return "npc_dota_hero_ancient_apparition";
-		case Hero_Doom: return "npc_dota_hero_doom_bringer";
-		case Hero_Ursa: return "npc_dota_hero_ursa";
-		case Hero_SpiritBreaker: return "npc_dota_hero_spirit_breaker";
-		case Hero_Gyrocopter: return "npc_dota_hero_gyrocopter";
-		case Hero_Alchemist: return "npc_dota_hero_alchemist";
-		case Hero_Invoker: return "npc_dota_hero_invoker";
-		case Hero_Silencer: return "npc_dota_hero_silencer";
-		case Hero_ObsidianDestroyer: return "npc_dota_hero_obsidian_destroyer";
-		case Hero_Lycan: return "npc_dota_hero_lycan";
-		case Hero_Brewmaster: return "npc_dota_hero_brewmaster";
-		case Hero_ShadowDemon: return "npc_dota_hero_shadow_demon";
-		case Hero_LoneDruid: return "npc_dota_hero_lone_druid";
-		case Hero_ChaosKnight: return "npc_dota_hero_chaos_knight";
-		case Hero_Meepo: return "npc_dota_hero_meepo";
-		case Hero_TreantProtector: return "npc_dota_hero_treant";
-		case Hero_OgreMagi: return "npc_dota_hero_ogre_magi";
-		case Hero_Undying: return "npc_dota_hero_undying";
-		case Hero_Rubick: return "npc_dota_hero_rubick";
-		case Hero_Disruptor: return "npc_dota_hero_disruptor";
-		case Hero_NyxAssassin: return "npc_dota_hero_nyx_assassin";
-		case Hero_NagaSiren: return "npc_dota_hero_naga_siren";
-		case Hero_KeeperOfTheLight: return "npc_dota_hero_keeper_of_the_light";
-		case Hero_Wisp: return "npc_dota_hero_wisp";
-		case Hero_Visage: return "npc_dota_hero_visage";
-		case Hero_Slark: return "npc_dota_hero_slark";
-		case Hero_Medusa: return "npc_dota_hero_medusa";
-		case Hero_TrollWarlord: return "npc_dota_hero_troll_warlord";
-		case Hero_CentaurWarchief: return "npc_dota_hero_centaur";
-		case Hero_Magnus: return "npc_dota_hero_magnataur";
-		case Hero_Timbersaw: return "npc_dota_hero_shredder";
-		case Hero_Bristleback: return "npc_dota_hero_bristleback";
-		case Hero_Tusk: return "npc_dota_hero_tusk";
-		case Hero_SkywrathMage: return "npc_dota_hero_skywrath_mage";
-		case Hero_Abaddon: return "npc_dota_hero_abaddon";
-		case Hero_ElderTitan: return "npc_dota_hero_elder_titan";
-		case Hero_LegionCommander: return "npc_dota_hero_legion_commander";
-	}
-
-	return NULL;
-}
 
 FUNCTION_M(MDota::getCursorTarget)
 	PENT(ability);
@@ -444,6 +430,79 @@ FUNCTION_M(MDota::setRuneType)
 	}
 
 	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setParticleControlEnt)
+	PENT(ent);
+	PINT(index);
+	PSTR(attach);
+	PVEC(x, y, z);
+
+	CBaseEntity *control;
+	control = ent->ent;
+	if(control == NULL) THROW("Entity cannot be null");
+
+	Vector vec(x,y,z);
+
+	auto str = *attach;
+	__asm {
+		mov eax, control //msvc STRONK
+		push vec
+		push 0
+		push 2
+		push str
+		push 5
+		push 0
+		push index //last
+		call SetParticleControlEnt
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setParticleControl)
+	PINT(index);
+	PINT(unknown);
+	PVEC(x,y,z);
+
+	Vector vec(x,y,z);
+
+	__asm {
+		push vec
+		push 2
+		push 2
+		push 2
+		push index
+		call SetParticleControl
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::createParticleEffect)
+	PENT(unit);
+	PSTR(name);
+
+	CBaseEntity *ent;
+	ent = unit->ent;
+
+	if(ent == NULL) THROW("Entity cannot be null");
+
+	const char *string = *name;
+
+	__asm {
+		mov eax, dword ptr gpm //particlemanager objectptr
+		push 0 // idk object handle type or something 
+		push 0 
+		push 2 //attach_type
+	    push particleIndex //index
+		mov ecx, string //particlesystem name
+		call CreateParticleEffect
+	}
+
+	particleIndex++;
+
+	RETURN_SCOPED(v8::Int32::New(particleIndex - 1));
 END
 
 FUNCTION_M(MDota::spawnRune)
@@ -540,7 +599,6 @@ FUNCTION_M(MDota::createUnit)
 	}
 	
 	if(ent == NULL) return v8::Null();
-
 	RETURN_SCOPED(GetEntityWrapper(ent)->GetWrapper(GetPluginRunning()));
 END
 
@@ -948,4 +1006,116 @@ FUNCTION_M(MDota::_unitInvade)
 
 	RETURN_UNDEF;
 END
+
+	const char* MDota::HeroIdToClassname(int id) {
+	switch(id){
+		case Hero_Base: return "npc_dota_hero_base";
+		case Hero_AntiMage: return "npc_dota_hero_antimage";
+		case Hero_Axe: return "npc_dota_hero_axe";
+		case Hero_Bane: return "npc_dota_hero_bane";
+		case Hero_Bloodseeker: return "npc_dota_hero_bloodseeker";
+		case Hero_CrystalMaiden: return "npc_dota_hero_crystal_maiden";
+		case Hero_DrowRanger: return "npc_dota_hero_drow_ranger";
+		case Hero_EarthShaker: return "npc_dota_hero_earthshaker";
+		case Hero_Juggernaut: return "npc_dota_hero_juggernaut";
+		case Hero_Mirana: return "npc_dota_hero_mirana";
+		case Hero_Morphling: return "npc_dota_hero_morphling";
+		case Hero_ShadowFiend: return "npc_dota_hero_nevermore";
+		case Hero_PhantomLancer: return "npc_dota_hero_phantom_lancer";
+		case Hero_Puck: return "npc_dota_hero_puck";
+		case Hero_Pudge: return "npc_dota_hero_pudge";
+		case Hero_Razor: return "npc_dota_hero_razor";
+		case Hero_SandKing: return "npc_dota_hero_sand_king";
+		case Hero_StormSpirit: return "npc_dota_hero_storm_spirit";
+		case Hero_Sven: return "npc_dota_hero_sven";
+		case Hero_Tiny: return "npc_dota_hero_tiny";
+		case Hero_VengefulSpirit: return "npc_dota_hero_vengefulspirit";
+		case Hero_Windrunner: return "npc_dota_hero_windrunner";
+		case Hero_Zeus: return "npc_dota_hero_zuus";
+		case Hero_Kunkka: return "npc_dota_hero_kunkka";
+		case Hero_Lina: return "npc_dota_hero_lina";
+		case Hero_Lion: return "npc_dota_hero_lion";
+		case Hero_ShadowShaman: return "npc_dota_hero_shadow_shaman";
+		case Hero_Slardar: return "npc_dota_hero_slardar";
+		case Hero_Tidehunter: return "npc_dota_hero_tidehunter";
+		case Hero_WitchDoctor: return "npc_dota_hero_witch_doctor";
+		case Hero_Lich: return "npc_dota_hero_lich";
+		case Hero_Riki: return "npc_dota_hero_riki";
+		case Hero_Enigma: return "npc_dota_hero_enigma";
+		case Hero_Tinker: return "npc_dota_hero_tinker";
+		case Hero_Sniper: return "npc_dota_hero_sniper";
+		case Hero_Necrolyte: return "npc_dota_hero_necrolyte";
+		case Hero_Warlock: return "npc_dota_hero_warlock";
+		case Hero_BeastMaster: return "npc_dota_hero_beastmaster";
+		case Hero_QueenOfPain: return "npc_dota_hero_queenofpain";
+		case Hero_Venomancer: return "npc_dota_hero_venomancer";
+		case Hero_FacelessVoid: return "npc_dota_hero_faceless_void";
+		case Hero_SkeletonKing: return "npc_dota_hero_skeleton_king";
+		case Hero_DeathProphet: return "npc_dota_hero_death_prophet";
+		case Hero_PhantomAssassin: return "npc_dota_hero_phantom_assassin";
+		case Hero_Pugna: return "npc_dota_hero_pugna";
+		case Hero_TemplarAssassin: return "npc_dota_hero_templar_assassin";
+		case Hero_Viper: return "npc_dota_hero_viper";
+		case Hero_Luna: return "npc_dota_hero_luna";
+		case Hero_DragonKnight: return "npc_dota_hero_dragon_knight";
+		case Hero_Dazzle: return "npc_dota_hero_dazzle";
+		case Hero_Clockwerk: return "npc_dota_hero_rattletrap";
+		case Hero_Leshrac: return "npc_dota_hero_leshrac";
+		case Hero_Furion: return "npc_dota_hero_furion";
+		case Hero_Lifestealer: return "npc_dota_hero_life_stealer";
+		case Hero_DarkSeer: return "npc_dota_hero_dark_seer";
+		case Hero_Clinkz: return "npc_dota_hero_clinkz";
+		case Hero_Omniknight: return "npc_dota_hero_omniknight";
+		case Hero_Enchantress: return "npc_dota_hero_enchantress";
+		case Hero_Huskar: return "npc_dota_hero_huskar";
+		case Hero_NightStalker: return "npc_dota_hero_night_stalker";
+		case Hero_Broodmother: return "npc_dota_hero_broodmother";
+		case Hero_BountyHunter: return "npc_dota_hero_bounty_hunter";
+		case Hero_Weaver: return "npc_dota_hero_weaver";
+		case Hero_Jakiro: return "npc_dota_hero_jakiro";
+		case Hero_Batrider: return "npc_dota_hero_batrider";
+		case Hero_Chen: return "npc_dota_hero_chen";
+		case Hero_Spectre: return "npc_dota_hero_spectre";
+		case Hero_AncientApparition: return "npc_dota_hero_ancient_apparition";
+		case Hero_Doom: return "npc_dota_hero_doom_bringer";
+		case Hero_Ursa: return "npc_dota_hero_ursa";
+		case Hero_SpiritBreaker: return "npc_dota_hero_spirit_breaker";
+		case Hero_Gyrocopter: return "npc_dota_hero_gyrocopter";
+		case Hero_Alchemist: return "npc_dota_hero_alchemist";
+		case Hero_Invoker: return "npc_dota_hero_invoker";
+		case Hero_Silencer: return "npc_dota_hero_silencer";
+		case Hero_ObsidianDestroyer: return "npc_dota_hero_obsidian_destroyer";
+		case Hero_Lycan: return "npc_dota_hero_lycan";
+		case Hero_Brewmaster: return "npc_dota_hero_brewmaster";
+		case Hero_ShadowDemon: return "npc_dota_hero_shadow_demon";
+		case Hero_LoneDruid: return "npc_dota_hero_lone_druid";
+		case Hero_ChaosKnight: return "npc_dota_hero_chaos_knight";
+		case Hero_Meepo: return "npc_dota_hero_meepo";
+		case Hero_TreantProtector: return "npc_dota_hero_treant";
+		case Hero_OgreMagi: return "npc_dota_hero_ogre_magi";
+		case Hero_Undying: return "npc_dota_hero_undying";
+		case Hero_Rubick: return "npc_dota_hero_rubick";
+		case Hero_Disruptor: return "npc_dota_hero_disruptor";
+		case Hero_NyxAssassin: return "npc_dota_hero_nyx_assassin";
+		case Hero_NagaSiren: return "npc_dota_hero_naga_siren";
+		case Hero_KeeperOfTheLight: return "npc_dota_hero_keeper_of_the_light";
+		case Hero_Wisp: return "npc_dota_hero_wisp";
+		case Hero_Visage: return "npc_dota_hero_visage";
+		case Hero_Slark: return "npc_dota_hero_slark";
+		case Hero_Medusa: return "npc_dota_hero_medusa";
+		case Hero_TrollWarlord: return "npc_dota_hero_troll_warlord";
+		case Hero_CentaurWarchief: return "npc_dota_hero_centaur";
+		case Hero_Magnus: return "npc_dota_hero_magnataur";
+		case Hero_Timbersaw: return "npc_dota_hero_shredder";
+		case Hero_Bristleback: return "npc_dota_hero_bristleback";
+		case Hero_Tusk: return "npc_dota_hero_tusk";
+		case Hero_SkywrathMage: return "npc_dota_hero_skywrath_mage";
+		case Hero_Abaddon: return "npc_dota_hero_abaddon";
+		case Hero_ElderTitan: return "npc_dota_hero_elder_titan";
+		case Hero_LegionCommander: return "npc_dota_hero_legion_commander";
+	}
+
+	return NULL;
+}
+
 	

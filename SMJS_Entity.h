@@ -36,6 +36,8 @@ public:
 	FUNCTION_DECL(getData);
 	FUNCTION_DECL(setDataEnt);
 	FUNCTION_DECL(teleport);
+	FUNCTION_DECL(setRotation);
+	FUNCTION_DECL(setVelocity);
 	FUNCTION_DECL(changeTeam);
 
 	WRAPPED_CLS(SMJS_Entity, SMJS_BaseWrapped) {
@@ -54,6 +56,8 @@ public:
 		WRAPPED_FUNC(getData);
 		WRAPPED_FUNC(setDataEnt);
 		WRAPPED_FUNC(teleport);
+		WRAPPED_FUNC(setRotation);
+		WRAPPED_FUNC(setVelocity);
 		WRAPPED_FUNC(changeTeam);
 
 	}

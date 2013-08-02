@@ -200,6 +200,7 @@ const char* CallClientPickHero(CBaseEntity *client, CCommand *cmd, bool* block){
 	return NULL;
 }
 
+
 DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
 	CBaseEntity *client;
 	const char *newHero;
@@ -336,6 +337,8 @@ DETOUR_DECL_MEMBER0(UnitThink, void){
 	}
 	canSetState = false;
 }
+
+
 
 DETOUR_DECL_MEMBER1(HeroSpawn, void, int, something){
 	CBaseEntity *ent = (CBaseEntity*) this;

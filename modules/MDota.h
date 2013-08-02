@@ -132,7 +132,11 @@ public:
 	FUNCTION_DECL(giveItemToHero);
 	FUNCTION_DECL(getTotalExpRequiredForLevel);
 	FUNCTION_DECL(setTotalExpRequiredForLevel);
+	FUNCTION_DECL(createParticleEffect);
+	FUNCTION_DECL(setParticleControlEnt);
+	FUNCTION_DECL(setParticleControl);
 	FUNCTION_DECL(spawnRune);
+	FUNCTION_DECL(applyDamage);
 	FUNCTION_DECL(getCursorTarget);
 	FUNCTION_DECL(sendStatPopup);
 	FUNCTION_DECL(endCooldown);
@@ -161,8 +165,12 @@ public:
 		WRAPPED_FUNC(findClearSpaceForUnit);
 		WRAPPED_FUNC(setWaitForPlayersCount);
 		WRAPPED_FUNC(getCursorTarget);
+		WRAPPED_FUNC(applyDamage);
 		WRAPPED_FUNC(endCooldown);
 		WRAPPED_FUNC(giveItemToHero);
+		WRAPPED_FUNC(createParticleEffect);
+		WRAPPED_FUNC(setParticleControlEnt);
+		WRAPPED_FUNC(setParticleControl);
 		WRAPPED_FUNC(getTotalExpRequiredForLevel);
 		WRAPPED_FUNC(spawnRune);
 		WRAPPED_FUNC(setTotalExpRequiredForLevel);

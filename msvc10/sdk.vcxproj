@@ -479,7 +479,7 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">smjs.ext</TargetName>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">E:\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Fast Compilation|Win32'">Fast Compilation/</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">D:\Program Files\Steam\steamapps\common\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">C:\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Administrador\Desktop\dota 2 beta\dota\addons\sourcemod\extensions\</OutDir>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\boost_1_53_0\;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\hl2sdk-dota\lib\public\;..\v8\v8\build\Debug\lib;..\lib;..\..\..\hl2sdk-dota\lib\win32\debug\vs2010;$(LibraryPath)</LibraryPath>
@@ -587,7 +587,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release with Symbols|Win32'">
     <ClCompile>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..\sdk;..\;..\..\..\sourcemod-central;..\..\..\sourcemod-central\public;..\..\..\sourcemod-central\public\sourcepawn;..\..\..\mmsource-1.9\core;..\..\..\mmsource-1.9\core\sourcehook;..\..\..\mmsource-1.9\public;..\..\..\hl2sdk-dota\;..\..\..\hl2sdk-dota\public;..\..\..\hl2sdk-dota\public\tier0;..\..\..\hl2sdk-dota\public\tier1;..\..\..\hl2sdk-dota\public\engine;..\..\..\hl2sdk-dota\public\vstdlib;..\..\..\hl2sdk-dota\public\game\server;..\v8\v8\include;..\..\..\sourcemod-central\public\extensions;..\clsocket;..\..\..\hl2sdk-dota\common\protobuf-2.4.1\src;..\..\..\hl2sdk-dota\public\engine\protobuf;..\..\..\hl2sdk-dota\public\game\shared\protobuf;..\libuv\include;..\sourcemod;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\sdk;..\;..\..\..\sourcemod-central;..\..\..\sourcemod-central\public;..\..\..\sourcemod-central\public\sourcepawn;..\..\..\mmsource-1.9\core;..\..\..\mmsource-1.9\core\sourcehook;..\..\..\mmsource-1.9\public;..\..\..\hl2sdk-dota\;..\..\..\hl2sdk-dota\public;..\..\..\hl2sdk-dota\public\tier0;..\..\..\hl2sdk-dota\public\tier1;..\..\..\hl2sdk-dota\public\engine;..\..\..\hl2sdk-dota\public\vstdlib;..\..\..\hl2sdk-dota\public\game\server;..\v8\v8\include;..\..\..\sourcemod-central\public\extensions;..\clsocket;..\..\..\hl2sdk-dota\common\protobuf-2.4.1\src;..\..\..\hl2sdk-dota\public\engine\protobuf;..\..\..\hl2sdk-dota\public\game\shared\protobuf;..\libuv\include;..\sourcemod;..\..\..\hl2sdk-dota\game;..\..\..\hl2sdk-dota\game\server;..\..\..\hl2sdk-dota\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;PLATFORM_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;SOURCEMOD_BUILD;COMPILER_MSVC;COMPILER_MSVC32;SOURCE_ENGINE=14;USING_V8_SHARED;V8_USE_UNSAFE_HANDLES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -616,7 +616,7 @@
       <AdditionalDependencies>Ws2_32.lib;WINMM.LIB;interfaces.lib;tier0.lib;tier1.lib;vstdlib.lib;v8.lib;v8_base.ia32.lib;v8_snapshot.lib;clsocket.lib;libprotobuf.lib;libuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/Profile %(AdditionalOptions)</AdditionalOptions>
       <LinkStatus>false</LinkStatus>
-      <ProgramDatabaseFile>D:\Program Files\Steam\steamapps\common\dota 2 beta\dota\addons\sourcemod\</ProgramDatabaseFile>
+      <ProgramDatabaseFile>C:\Users\Administrador\Desktop\dota 2 beta\dota\addons\sourcemod\extensions\</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug - Old Metamod|Win32'">
@@ -1309,6 +1309,7 @@
     <ClCompile Include="..\SMJS_SimpleWrapped.cpp" />
     <ClCompile Include="..\SMJS_VKeyValues.cpp" />
     <ClCompile Include="..\sourcemod\MemoryUtils.cpp" />
+    <ClCompile Include="CRecipientFilter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\hl2sdk-dota\public\engine\protobuf\netmessages.pb.h" />

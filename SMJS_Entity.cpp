@@ -379,6 +379,120 @@ FUNCTION_M(SMJS_Entity::teleport)
 	RETURN_UNDEF;
 END
 
+FUNCTION_M(SMJS_Entity::setRotation)
+		GET_INTERNAL(SMJS_Entity*, self);
+	if(!self->valid) THROW("Invalid entity");
+
+	static ICallWrapper *g_pTeleport = NULL;
+	if (!g_pTeleport){
+		int offset;
+		if (!sdkToolsConf->GetOffset("Teleport", &offset)){
+			THROW("\"Teleport\" not supported by this mod");
+		}
+
+		// Temporary fix until the sourcemod offset is updated
+		offset = 116;
+	
+		PassInfo pass[3];
+		pass[0].type = PassType_Basic;
+		pass[0].flags = PASSFLAG_BYVAL;
+		pass[0].size = sizeof(void *);
+		
+		pass[1].type = PassType_Basic;
+		pass[1].flags = PASSFLAG_BYVAL;
+		pass[1].size = sizeof(void *);
+		
+		pass[2].type = PassType_Basic;
+		pass[2].flags = PASSFLAG_BYVAL;
+		pass[2].size = sizeof(void *);
+		
+		if (!(g_pTeleport = binTools->CreateVCall(offset, 0, 0, NULL, pass, 3))){
+			THROW("\"Teleport\" wrapper failed to initialized");
+		}
+	}
+	
+	PVEC(x, y, z);
+
+	unsigned char vstk[sizeof(void *) * 4];
+	unsigned char *vptr = vstk;
+
+	Vector vec(x, y, z);
+	
+	*(void **)vptr = self->ent;
+	vptr += sizeof(void *);
+
+	*(void **)vptr = NULL;
+	vptr += sizeof(void *);
+
+	*(void **)vptr = &vec;
+	vptr += sizeof(void *);
+
+	*(void **)vptr = NULL;
+	vptr += sizeof(void *);
+
+	void *ret;
+	g_pTeleport->Execute(vstk, &ret);
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(SMJS_Entity::setVelocity)
+	GET_INTERNAL(SMJS_Entity*, self);
+	if(!self->valid) THROW("Invalid entity");
+
+	static ICallWrapper *g_pTeleport = NULL;
+	if (!g_pTeleport){
+		int offset;
+		if (!sdkToolsConf->GetOffset("Teleport", &offset)){
+			THROW("\"Teleport\" not supported by this mod");
+		}
+
+		// Temporary fix until the sourcemod offset is updated
+		offset = 116;
+	
+		PassInfo pass[3];
+		pass[0].type = PassType_Basic;
+		pass[0].flags = PASSFLAG_BYVAL;
+		pass[0].size = sizeof(void *);
+		
+		pass[1].type = PassType_Basic;
+		pass[1].flags = PASSFLAG_BYVAL;
+		pass[1].size = sizeof(void *);
+		
+		pass[2].type = PassType_Basic;
+		pass[2].flags = PASSFLAG_BYVAL;
+		pass[2].size = sizeof(void *);
+		
+		if (!(g_pTeleport = binTools->CreateVCall(offset, 0, 0, NULL, pass, 3))){
+			THROW("\"Teleport\" wrapper failed to initialized");
+		}
+	}
+	
+	PVEC(x, y, z);
+
+	unsigned char vstk[sizeof(void *) * 4];
+	unsigned char *vptr = vstk;
+
+	Vector vec(x, y, z);
+	
+	*(void **)vptr = self->ent;
+	vptr += sizeof(void *);
+
+	*(void **)vptr = NULL;
+	vptr += sizeof(void *);
+
+	*(void **)vptr = NULL;
+	vptr += sizeof(void *);
+
+	*(void **)vptr = &vec;
+	vptr += sizeof(void *);
+
+	void *ret;
+	g_pTeleport->Execute(vstk, &ret);
+
+	RETURN_UNDEF;
+END
+
 FUNCTION_M(SMJS_Entity::changeTeam)
 	GET_INTERNAL(SMJS_Entity*, self);
 	if(!self->valid) THROW("Invalid entity");

@@ -64,8 +64,9 @@ private:
 
 class SingleRecipientFilter : public IRecipientFilter {
 public:
-	SingleRecipientFilter(int idx){
-		index = idx;
+	SingleRecipientFilter(int idx)
+		:index(index._index = idx)
+	{
 	}
 
 	virtual bool IsReliable( void ) const __override{
@@ -80,13 +81,13 @@ public:
 		return 1;
 	}
 
-	virtual const int* GetRecipientIndex(char *unknown, int slot) const __override{
+	virtual CEntityIndex GetRecipientIndex( int slot ) const __override{
 		//*client = gamehelpers->EdictOfIndex(index);
-		return &index;
+		return index;
 	}
 
 private:
-	int index;
+	CEntityIndex index;
 };
 
 #endif

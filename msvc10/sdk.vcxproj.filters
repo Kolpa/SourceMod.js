@@ -152,6 +152,9 @@
     <ClCompile Include="..\sourcemod\MemoryUtils.cpp">
       <Filter>SourceMod</Filter>
     </ClCompile>
+    <ClCompile Include="CRecipientFilter.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extension.h">
