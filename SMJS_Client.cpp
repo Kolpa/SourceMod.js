@@ -49,22 +49,6 @@ void SendMessage(int clientIndex, int dest, const char *str){
 	engine->SendUserMessage(filter, UM_TextMsg, textmsg);
 }
 
-FUNCTION_M(SMJS_Client::sendAudio)
-	GET_INTERNAL(SMJS_Client*, self)
-	if(!self->valid) THROW("Invalid entity");
-	
-	PBOL(stop);
-	PSTR(name);
-
-	SingleRecipientFilter filter(self->entIndex);
-	CUserMsg_SendAudio audiomsg;
-	audiomsg.set_stop(stop);
-	audiomsg.set_name(*name);
-	
-	engine->SendUserMessage(filter, UM_SendAudio, audiomsg);
-	RETURN_UNDEF;
-END
-
 FUNCTION_M(SMJS_Client::printToChat)
 	GET_INTERNAL(SMJS_Client*, self);
 	if(!self->valid) THROW("Invalid entity");

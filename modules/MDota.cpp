@@ -168,9 +168,10 @@ static void *CreateParticleEffect;
 static void *SetParticleControlEnt;
 static void *SetParticleControl;
 static void *ApplyDamage;
-static void *UpdateDamageQueue;
+static void *AddNewModifier;
+static void *CreateAbility;
 
-static uint8_t gpm[4];
+static uint8_t GetParticleManager[4];
 
 static void *gamerules;
 static void *GameManager;
@@ -267,10 +268,11 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(FindClearSpaceForUnit);
 	FIND_DOTA_FUNC(SetRuneType);
 	FIND_DOTA_FUNC(ApplyDamage);
-	FIND_DOTA_FUNC(UpdateDamageQueue);
 	FIND_DOTA_FUNC(CreateParticleEffect);
 	FIND_DOTA_FUNC(SetParticleControlEnt);
 	FIND_DOTA_FUNC(SetParticleControl);
+	FIND_DOTA_FUNC(AddNewModifier);
+	FIND_DOTA_FUNC(CreateAbility);
 	FIND_DOTA_FUNC(DCreateItem);
 	FIND_DOTA_FUNC(ParticleManagerFunc);
 	FIND_DOTA_FUNC(DGiveItem);
@@ -291,8 +293,8 @@ MDota::MDota(){
 	SourceHook::SetMemAccess(ptr, 60, SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
 
 	for(int i = 45; i < 49; i++){
-		gpm[i-45] = ptr[i];
-		printf("%d \n", gpm[i-45]);
+		GetParticleManager[i-45] = ptr[i];
+		printf("%d \n", GetParticleManager[i-45]);
 	}
 
 	printf("Done!\n");
@@ -377,11 +379,13 @@ FUNCTION_M(MDota::applyDamage)
 
 	if(attackerEnt == NULL || attackedEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
 
+	auto pDamage = (float)damage;
+
 	__asm {
 		mov edi, attackedEnt 
 		push unknown
 		push damageType
-		push damage
+		push pDamage
 		push abilityEnt
 		push attackerEnt
 		call ApplyDamage
@@ -432,6 +436,44 @@ FUNCTION_M(MDota::setRuneType)
 	RETURN_UNDEF;
 END
 
+FUNCTION_M(MDota::createAbility)
+	PENT(hero);
+	PSTR(clsname);
+	
+	CBaseEntity *heroEnt;
+	heroEnt = hero->ent;
+
+	CBaseEntity *ability;
+
+	__asm {
+		push heroEnt
+		push clsname
+		call CreateAbility
+		mov ability, eax
+		add esp, 8	
+	}
+
+	RETURN_SCOPED(GetEntityWrapper(ability)->GetWrapper(GetPluginRunning()));
+END
+
+FUNCTION_M(MDota::sendAudio)
+	POBJ(client);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+	
+	PBOL(stop);
+	PSTR(name);
+
+	SingleRecipientFilter filter(target->entIndex);
+	CUserMsg_SendAudio audiomsg;
+	audiomsg.set_stop(stop);
+	audiomsg.set_name(*name);
+	
+	engine->SendUserMessage(filter, UM_SendAudio, audiomsg);
+	RETURN_UNDEF;
+END
+
 FUNCTION_M(MDota::setParticleControlEnt)
 	PENT(ent);
 	PINT(index);
@@ -460,21 +502,68 @@ FUNCTION_M(MDota::setParticleControlEnt)
 	RETURN_UNDEF;
 END
 
-FUNCTION_M(MDota::setParticleControl)
+FUNCTION_M(MDota::setParticleOrient)
+	POBJ(client);
 	PINT(index);
-	PINT(unknown);
+	PINT(control_point);
+	PVEC(xfwd, yfwd, zfwd);
+	PVEC(xright, yright, zright);
+	PVEC(xup, yup, zup);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+
+	SingleRecipientFilter filter(target->entIndex);
+	CDOTAUserMsg_ParticleManager particlemsg;
+	particlemsg.set_index(index);
+	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ORIENTATION);
+	auto orientmsg = particlemsg.mutable_update_particle_orient();
+
+	auto fwdvec = orientmsg->mutable_forward();
+	auto rightvec = orientmsg->mutable_right();
+	auto upvec = orientmsg->mutable_up();
+
+	fwdvec->set_x(xfwd);
+	fwdvec->set_y(yfwd);
+	fwdvec->set_z(zfwd);
+
+	rightvec->set_x(xright);
+	rightvec->set_y(yright);
+	rightvec->set_z(zright);
+
+	upvec->set_x(xup);
+	upvec->set_y(yup);
+	upvec->set_z(zup);
+
+	engine->SendUserMessage(filter, DOTA_UM_ParticleManager, particlemsg);
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setParticleControl)
+	//the lesser particlemanager functions just wrap the usermessages so i will call them manually, gives us more control over who sees what etc
+
+	POBJ(client);
+	PINT(index);
+	PINT(control_point);
 	PVEC(x,y,z);
 
-	Vector vec(x,y,z);
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
 
-	__asm {
-		push vec
-		push 2
-		push 2
-		push 2
-		push index
-		call SetParticleControl
-	}
+	SingleRecipientFilter filter(target->entIndex);
+	CDOTAUserMsg_ParticleManager particlemsg;
+	particlemsg.set_index(index);
+	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_UPDATE);
+
+	auto updatemsg = particlemsg.mutable_update_particle();
+	auto vector = updatemsg->mutable_position();
+	updatemsg->set_control_point(control_point);
+	vector->set_x(x);
+	vector->set_y(y);
+	vector->set_z(z);
+	
+	engine->SendUserMessage(filter, DOTA_UM_ParticleManager, particlemsg);
 
 	RETURN_UNDEF;
 END
@@ -482,19 +571,21 @@ END
 FUNCTION_M(MDota::createParticleEffect)
 	PENT(unit);
 	PSTR(name);
+	PINT(attach);
 
 	CBaseEntity *ent;
 	ent = unit->ent;
 
 	if(ent == NULL) THROW("Entity cannot be null");
+	if(attach == 2) ent = 0;
 
 	const char *string = *name;
 
 	__asm {
-		mov eax, dword ptr gpm //particlemanager objectptr
+		mov eax, dword ptr GetParticleManager //particlemanager objectptr
 		push 0 // idk object handle type or something 
-		push 0 
-		push 2 //attach_type
+		push ent
+		push attach //attach_type
 	    push particleIndex //index
 		mov ecx, string //particlesystem name
 		call CreateParticleEffect
@@ -503,6 +594,58 @@ FUNCTION_M(MDota::createParticleEffect)
 	particleIndex++;
 
 	RETURN_SCOPED(v8::Int32::New(particleIndex - 1));
+END
+
+KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *setName){
+
+	KeyValues *kv = new KeyValues(setName);
+
+	auto properties = options->GetOwnPropertyNames();
+
+	v8::String::Utf8Value str(properties->Get(0));
+
+	for(int i = 0; i < properties->Length(); i++){
+		v8::String::Utf8Value prop(properties->Get(i));
+		kv->SetFloat(*prop, options->Get(String::New(*prop))->Int32Value());	
+	}
+	return kv;
+}
+
+FUNCTION_M(MDota::addNewModifier) 
+	PENT(target);
+	PENT(ability);
+	PSTR(modifierName);
+	PSTR(setName);
+	POBJ(options);
+
+	CBaseEntity *targetEnt;
+	targetEnt = target->ent;
+
+	CBaseEntity *abilityEnt;
+	abilityEnt = ability->ent;
+
+	if(targetEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
+
+	auto modifierManager = (void*)((uintptr_t)targetEnt + 3004);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+
+	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
+
+	if(kv == NULL) THROW("options object misconfigured");
+
+	auto modifier = *modifierName;
+
+	__asm {
+		mov ecx, modifierManager
+		push 0
+		push 4294967295
+		push kv
+		push modifier
+		push abilityEnt
+		push targetEnt
+		call AddNewModifier
+	}
+
+	RETURN_UNDEF;
 END
 
 FUNCTION_M(MDota::spawnRune)
@@ -740,9 +883,12 @@ FUNCTION_M(MDota::setHeroAvailable)
 	
 	PINT(hero);
 	PBOL(available);
+
+	if (hero > 128) THROW("Hero index too large!");
+
 	*(bool*)((intptr_t) GameManager + stableOffset + hero) = available;
 	*(bool*)((intptr_t) GameManager + currentOffset + hero) = available;
-	*(bool*)((intptr_t) GameManager + culledOffset + hero) = available;
+	*(bool*)((intptr_t) GameManager + culledOffset + hero) = !available;
 	RETURN_UNDEF;
 END
 
