@@ -163,6 +163,24 @@ dota.UNIT_TARGET_TYPE_SIEGES =     1 << 3;
 dota.UNIT_TARGET_TYPE_COURIERS =   1 << 4;
 dota.UNIT_TARGET_TYPE_WARDS =      1 << 5;
 
+/////////////// executeOrders order type /////////////
+dota.ORDER_TYPE_MOVE_TO_LOCATION = 1;
+dota.ORDER_TYPE_MOVE_TO_UNIT = 2;
+dota.ORDER_TYPE_ATTACK_MOVE = 3;
+dota.ORDER_TYPE_ATTACK = 4;
+dota.ORDER_TYPE_CAST_ABILITY_ON_LOCATION = 5;
+dota.ORDER_TYPE_CAST_ABILITY_ON_UNIT = 6;
+dota.ORDER_TYPE_CAST_ABILITY_ON_TREE = 7;
+dota.ORDER_TYPE_CAST_ABILITY_NO_TARGET = 8;
+dota.ORDER_TYPE_AUTO_CAST_ABILITY = 9;
+dota.ORDER_TYPE_HOLD = 10;
+dota.ORDER_TYPE_DROP_ITEM = 12;
+dota.ORDER_TYPE_GIVE_ITEM = 13;
+dota.ORDER_TYPE_PICK_UP_ITEM = 14;
+dota.ORDER_TYPE_PICK_UP_RUNE = 15;
+dota.ORDER_TYPE_BUY_ITEM = 16;
+dota.ORDER_TYPE_AUTO_CAST_TOGGLE = 20;
+dota.ORDER_TYPE_STOP = 21;
 
 // The actual offset is around 0x2770, but it may change, so we store it as a relative
 // offset from the closest prop we know

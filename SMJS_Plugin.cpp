@@ -2,9 +2,12 @@
 #include "SMJS_Plugin.h"
 #include "modules/MPlugin.h"
 
+
 std::vector<SMJS_Module*> modules;
 std::vector<SMJS_Plugin*> plugins;
 PLUGIN_ID numPlugins = 0;
+
+
 
 inline const char* ToCString(const String::Utf8Value& value) {
   return *value ? *value : "NULL";
@@ -61,7 +64,7 @@ SMJS_Plugin::SMJS_Plugin(bool isSandboxed){
 void SMJS_Plugin::LoadModules(){
 	HandleScope handle_scope(isolate);
 	Context::Scope context_scope(context);
-
+	
 	for(auto it = modules.begin(); it != modules.end(); ++it) {
 		SMJS_Module *module = (*it);
 		if(!module->sandboxed && isSandboxed) continue;

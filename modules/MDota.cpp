@@ -49,6 +49,8 @@
 
 WRAPPED_CLS_CPP(MDota, SMJS_Module);
 
+
+
 enum LobbyType {
 	LT_INVALID = -1,
 	LT_PUBLIC_MM = 0,
@@ -59,6 +61,20 @@ enum LobbyType {
 	LT_TEAM_MM,
 	LT_SOLO_QUEUE
 };
+
+struct CUnitOrders
+{
+	int		m_iPlayerID;
+	int		m_iUnknown;
+	CUtlVector<int>	m_SelectedUnitEntIndexes;
+	int		m_iOrderType;
+	int		m_iTargetEntIndex;
+	int		m_iAbilityEntIndex;
+	Vector	m_TargetPos;
+	bool	m_bQueueOrder;
+};
+
+
 
 struct LobbyData {
 	void **vtable;
@@ -170,6 +186,15 @@ static void *SetParticleControl;
 static void *ApplyDamage;
 static void *AddNewModifier;
 static void *CreateAbility;
+static void *SetAbilityByIndex;
+static void *MakeTeamLose;
+static void *RemoveModifierByName;
+static void *LookupAttachment;
+static void *SetHealth;
+static void *Heal;
+static void *FindModifierByName;
+static void *ExecuteOrders;
+static void *GetCursorLocation;
 
 static uint8_t GetParticleManager[4];
 
@@ -188,7 +213,7 @@ static CDetour *clientPickHeroDetour;
 static CDetour *heroBuyItemDetour;
 static CDetour *unitThinkDetour;
 static CDetour *heroSpawnDetour;
-static CDetour *createParticleDetour;
+static CDetour *isDeniableDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
@@ -215,6 +240,8 @@ static void PatchVersionCheck();
 static void PatchWaitForPlayersCount();
 
 #include "modules/MDota_Detours.h"
+
+
 
 MDota::MDota(){
 
@@ -257,6 +284,9 @@ MDota::MDota(){
 	heroSpawnDetour = DETOUR_CREATE_MEMBER(HeroSpawn, "HeroSpawn");
 	if(heroSpawnDetour) heroSpawnDetour->EnableDetour();
 
+	isDeniableDetour = DETOUR_CREATE_STATIC(IsDeniable, "IsDeniable");
+	if(isDeniableDetour) isDeniableDetour->EnableDetour();
+
 	FIND_DOTA_PTR(GameManager);
 
 	FIND_DOTA_PTR_NEW(UTIL_Remove, "\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74*\x8B\x46\x08\xF6\x80****\x01\x75*\x8B", 28);
@@ -268,15 +298,24 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(FindClearSpaceForUnit);
 	FIND_DOTA_FUNC(SetRuneType);
 	FIND_DOTA_FUNC(ApplyDamage);
+	FIND_DOTA_FUNC(ExecuteOrders);
+	FIND_DOTA_FUNC(SetAbilityByIndex);
+	FIND_DOTA_FUNC(RemoveModifierByName);
+	FIND_DOTA_FUNC(GetCursorLocation);
 	FIND_DOTA_FUNC(CreateParticleEffect);
 	FIND_DOTA_FUNC(SetParticleControlEnt);
 	FIND_DOTA_FUNC(SetParticleControl);
 	FIND_DOTA_FUNC(AddNewModifier);
+	FIND_DOTA_FUNC(SetHealth);
+	FIND_DOTA_FUNC(Heal);
 	FIND_DOTA_FUNC(CreateAbility);
 	FIND_DOTA_FUNC(DCreateItem);
 	FIND_DOTA_FUNC(ParticleManagerFunc);
+	FIND_DOTA_FUNC(FindModifierByName);
 	FIND_DOTA_FUNC(DGiveItem);
 	FIND_DOTA_FUNC(DDestroyItem);
+	FIND_DOTA_FUNC(MakeTeamLose);
+	FIND_DOTA_FUNC(LookupAttachment);
 	FIND_DOTA_FUNC(EndCooldown);
 	FIND_DOTA_FUNC(StealAbility);
 	FIND_DOTA_FUNC(DCreateItemDrop);
@@ -357,7 +396,85 @@ void PatchWaitForPlayersCount(){
 	*((int **)((intptr_t) ptr + 2)) = &waitingForPlayersCount;
 }
 
+FUNCTION_M(MDota::cursorLocation)
+	PENT(unit);
 
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+	if(unitEnt == NULL) THROW("Invalid entity");
+
+	Vector vec;
+	void *tru;
+	float thing = 0.0;
+	__asm{
+		mov edx, unitEnt
+		mov edi, thing
+		call GetCursorLocation
+		mov tru, eax
+	}
+	printf("%d dd", tru);
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::executeOrders)
+	PINT(playerId);
+	PINT(type);
+	POBJ(units);
+	PENT(target);
+	PENT(ability);
+	PBOL(queue);
+	PVEC(x,y,z);
+
+	CUnitOrders orders;
+	Vector vec(x,y,z);
+
+	CUtlVector<int> vector;
+
+	if(!units->IsArray()) THROW("Argument 3 must be an array of entities");
+
+	auto arr = v8::Handle<v8::Array>::Cast(units);
+
+	for(int i = 0; i < arr->Length(); i++){
+		auto element = arr->Get(i)->ToObject();
+		auto target = dynamic_cast<SMJS_Entity*>((SMJS_Base*) v8::Handle<v8::External>::Cast(element->GetInternalField(0))->Value());
+		if(target == NULL) THROW("Invalid entity in array");
+	
+		vector.AddToTail(target->entIndex);
+	}
+
+	if(ability == NULL){
+		orders.m_iAbilityEntIndex = -1;
+	}else{
+		orders.m_iAbilityEntIndex = ability->entIndex;
+	}
+	if(target == NULL){
+		orders.m_iTargetEntIndex = -1;
+	}else{
+		orders.m_iTargetEntIndex = target->entIndex;
+	}
+
+	orders.m_bQueueOrder = queue;
+	orders.m_TargetPos = vec;
+	orders.m_SelectedUnitEntIndexes = vector;
+	orders.m_iPlayerID = playerId;
+	orders.m_iOrderType = type;
+	orders.m_iUnknown = 0;
+
+	auto tmp = &orders;
+
+	__asm {
+		push 1;
+		push 1;
+		push 1;
+		push tmp
+		mov edi, 0
+		call ExecuteOrders
+		add esp, 10h
+	}
+
+	RETURN_UNDEF;
+END
 
 FUNCTION_M(MDota::applyDamage)
 	PENT(attacker);
@@ -366,9 +483,6 @@ FUNCTION_M(MDota::applyDamage)
 	PNUM(damage);
 	PINT(damageType);
 	PINT(unknown);
-
-	//I don't know I have tried every arg in every slot
-	//please make it work
 
 	CBaseEntity *attackerEnt;
 	attackerEnt = attacker->ent;
@@ -412,12 +526,35 @@ FUNCTION_M(MDota::getCursorTarget)
 	CBaseEntity *ent;
 	ent = ability->ent;
 
-	void *target;
+	CBaseEntity *target;
 	__asm {
 		mov eax, ent
 		call GetCursorTarget
 		mov target, eax
 	}
+
+	RETURN_SCOPED(GetEntityWrapper(target)->GetWrapper(GetPluginRunning()));
+END
+
+FUNCTION_M(MDota::setAbilityByIndex)
+	PENT(unit);
+	PENT(ability);
+	PINT(index);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+	CBaseEntity *abilityEnt;
+	abilityEnt = ability->ent;
+	
+	if(unitEnt == NULL || abilityEnt == NULL) THROW("Invalid entity");
+
+	__asm {
+		push index
+		push abilityEnt
+		mov eax, unitEnt
+		call SetAbilityByIndex
+	}
+
 	RETURN_UNDEF;
 END
 
@@ -474,28 +611,65 @@ FUNCTION_M(MDota::sendAudio)
 	RETURN_UNDEF;
 END
 
-FUNCTION_M(MDota::setParticleControlEnt)
-	PENT(ent);
+FUNCTION_M(MDota::releaseParticle)
+	POBJ(client);
 	PINT(index);
-	PSTR(attach);
-	PVEC(x, y, z);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+
+	SingleRecipientFilter filter(target->entIndex);
+	CDOTAUserMsg_ParticleManager particlemsg;
+	particlemsg.set_index(index);
+	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_RELEASE);
+
+	engine->SendUserMessage(filter, DOTA_UM_ParticleManager, particlemsg);
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::destroyParticle)
+	POBJ(client);
+	PINT(index);
+	PBOL(destroyImmediately);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+
+	SingleRecipientFilter filter(target->entIndex);
+	CDOTAUserMsg_ParticleManager particlemsg;
+	particlemsg.set_index(index);
+	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_DESTROY);
+	particlemsg.mutable_destroy_particle()->set_destroy_immediately(destroyImmediately);
+
+	engine->SendUserMessage(filter, DOTA_UM_ParticleManager, particlemsg);
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setParticleControlEnt)
+	PENT(unit);
+	PINT(controlPoint);
+	PINT(unknown);
+	PSTR(attachPoint);
+	PINT(attachType);
+	PINT(index);
 
 	CBaseEntity *control;
-	control = ent->ent;
+	control = unit->ent;
 	if(control == NULL) THROW("Entity cannot be null");
 
-	Vector vec(x,y,z);
+	void *entOffset = (void*)((uintptr_t)control + 656); 
+	char *str = *attachPoint;
 
-	auto str = *attach;
 	__asm {
-		mov eax, control //msvc STRONK
-		push vec
-		push 0
-		push 2
+		push entOffset
+		push control
+		push unknown //idk
 		push str
-		push 5
-		push 0
-		push index //last
+		push attachType //attach_type
+		push controlPoint //control_point
+		push index
+		mov eax, control
 		call SetParticleControlEnt
 	}
 
@@ -505,7 +679,7 @@ END
 FUNCTION_M(MDota::setParticleOrient)
 	POBJ(client);
 	PINT(index);
-	PINT(control_point);
+	PINT(controlPoint);
 	PVEC(xfwd, yfwd, zfwd);
 	PVEC(xright, yright, zright);
 	PVEC(xup, yup, zup);
@@ -541,11 +715,9 @@ FUNCTION_M(MDota::setParticleOrient)
 END
 
 FUNCTION_M(MDota::setParticleControl)
-	//the lesser particlemanager functions just wrap the usermessages so i will call them manually, gives us more control over who sees what etc
-
 	POBJ(client);
 	PINT(index);
-	PINT(control_point);
+	PINT(controlPoint);
 	PVEC(x,y,z);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
@@ -558,7 +730,7 @@ FUNCTION_M(MDota::setParticleControl)
 
 	auto updatemsg = particlemsg.mutable_update_particle();
 	auto vector = updatemsg->mutable_position();
-	updatemsg->set_control_point(control_point);
+	updatemsg->set_control_point(controlPoint);
 	vector->set_x(x);
 	vector->set_y(y);
 	vector->set_z(z);
@@ -611,6 +783,109 @@ KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *set
 	return kv;
 }
 
+FUNCTION_M(MDota::mapLine)
+	POBJ(receiving);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(receiving->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+
+	PINT(playerId);
+	PBOL(initial);
+	PVEC(x,y,z);
+
+	CDOTAUserMsg_MapLine mapmsg;
+	mapmsg.set_player_id(playerId);
+
+	mapmsg.mutable_mapline()->set_x(x);
+	mapmsg.mutable_mapline()->set_y(y);
+	mapmsg.mutable_mapline()->set_initial(initial);
+
+	SingleRecipientFilter filter(target->entIndex);
+	engine->SendUserMessage(filter, DOTA_UM_MapLine, mapmsg);
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::pingLocation)
+	POBJ(receiving);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(receiving->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+
+	PINT(playerId);
+	PINT(pingTarget);
+	PBOL(directPing);
+	PINT(type);
+	PVEC(x,y,z);
+
+	CDOTAUserMsg_LocationPing pingmsg;
+	pingmsg.set_player_id(playerId);
+
+	pingmsg.mutable_location_ping()->set_x(x);
+	pingmsg.mutable_location_ping()->set_y(y);
+	pingmsg.mutable_location_ping()->set_target(pingTarget);
+	pingmsg.mutable_location_ping()->set_type(type);
+	pingmsg.mutable_location_ping()->set_direct_ping(directPing);
+
+	SingleRecipientFilter filter(target->entIndex);
+	engine->SendUserMessage(filter, DOTA_UM_LocationPing, pingmsg);
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::worldLine)
+	POBJ(receiving);
+
+	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(receiving->GetInternalField(0))->Value());
+	if(target == NULL) THROW("Invalid target");
+
+	PINT(playerId);
+	PBOL(end);
+	PBOL(initial);
+	PVEC(x,y,z);
+
+	SingleRecipientFilter filter(target->entIndex);
+
+	CDOTAUserMsg_WorldLine linemsg;
+	linemsg.set_player_id(playerId);
+	
+	auto internalmsg = linemsg.mutable_worldline();
+
+	internalmsg->set_x(x);
+	internalmsg->set_y(y);
+	internalmsg->set_z(z);
+	
+	
+		internalmsg->set_end(end);
+	
+		internalmsg->set_initial(initial);
+	
+
+	engine->SendUserMessage(filter, DOTA_UM_WorldLine, linemsg);
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::removeModifier)
+	 PENT(unit);
+	 PSTR(modifier);
+
+	 CBaseEntity *unitEnt;
+	 unitEnt = unit->ent;
+
+	 if(unitEnt == NULL) THROW("Invalid entity");
+
+	 char *pModifier = *modifier;
+	 void *modifierManager = (void*)((uintptr_t)unitEnt + 3004);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+
+	 __asm {
+		 push pModifier
+		 push modifierManager
+		 call RemoveModifierByName
+	 }
+	
+	RETURN_UNDEF;
+END
+
 FUNCTION_M(MDota::addNewModifier) 
 	PENT(target);
 	PENT(ability);
@@ -626,13 +901,13 @@ FUNCTION_M(MDota::addNewModifier)
 
 	if(targetEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
 
-	auto modifierManager = (void*)((uintptr_t)targetEnt + 3004);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+	void *modifierManager = (void*)((uintptr_t)targetEnt + 3004);  //I think this might crash on non-npc ents, so.. trees and misc. shit
 
 	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
 
 	if(kv == NULL) THROW("options object misconfigured");
 
-	auto modifier = *modifierName;
+	char *modifier = *modifierName;
 
 	__asm {
 		mov ecx, modifierManager
@@ -686,10 +961,15 @@ FUNCTION_M(MDota::forceWin)
 	PINT(team);
 	if(team != 2 && team != 3) THROW_VERB("Invalid team %d", team);
 	
-	//FIXME
-	auto cmd = icvar->FindCommand("dota_kill_buildings");
-	cmd->RemoveFlags(FCVAR_CHEAT);
-	engine->ServerCommand("dota_kill_buildings\n");
+	if (gamerules == NULL){
+		gamerules = sdkTools->GetGameRules();
+	}
+
+	__asm {
+		mov eax, gamerules
+		push team
+		call MakeTeamLose
+	}
 
 	RETURN_UNDEF;
 END
@@ -845,6 +1125,8 @@ FUNCTION_M(MDota::setTotalExpRequiredForLevel)
 
 	RETURN_UNDEF;
 END
+
+
 
 FUNCTION_M(MDota::sendStatPopup)
 	USE_NETPROP_OFFSET(offset, CDOTAPlayer, m_iPlayerID);
@@ -1004,6 +1286,73 @@ FUNCTION_M(MDota::levelUpAbility)
 
 	RETURN_UNDEF;
 END
+
+FUNCTION_M(MDota::hasModifier)
+	PENT(unit);
+	PSTR(modifier);
+	PINT(unknown);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+
+	if(unitEnt == NULL) THROW("Invalid entity");
+
+	void *modifierManager = (void*)((uintptr_t)unitEnt + 3004);
+	char *str = *modifier;
+
+	void *buff;
+
+	__asm {
+		mov eax, str
+		push 0 
+		push modifierManager
+		call FindModifierByName
+		mov buff, eax
+	}
+
+	bool exists = false;
+	if (buff != NULL) exists = true;
+
+	RETURN_SCOPED(v8::Boolean::New(exists));
+END
+
+FUNCTION_M(MDota::heal)
+	PENT(unit);
+	PENT(ability);
+	PINT(amount);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+	CBaseEntity *abilityEnt;
+	abilityEnt = ability->ent;
+
+	if(unitEnt == NULL || abilityEnt == NULL) THROW("Invalid entity");
+
+	__asm {
+		mov eax, amount
+		mov ecx, unitEnt
+		push abilityEnt
+		call Heal
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setHealth)
+	PENT(unit);
+	PINT(amount);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+
+	__asm {
+		mov ecx, unitEnt
+		push amount
+		call SetHealth
+	}
+
+	RETURN_UNDEF;
+}
 
 FUNCTION_M(MDota::giveExperienceToHero)
 	PENT(unit);

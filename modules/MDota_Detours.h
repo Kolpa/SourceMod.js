@@ -108,6 +108,8 @@ void CallGetAbilityValueHook(CBaseEntity *ability, AbilityData *data){
 	}
 }
 
+
+
 DETOUR_DECL_STATIC1_STDCALL_NAKED(GetAbilityValue, uint8_t *, char*, a2){
 	void *ability;
 	AbilityData *data;
@@ -254,6 +256,7 @@ DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
 	}
 }
 
+
 DETOUR_DECL_STATIC4_STDCALL(HeroBuyItem, signed int, CBaseEntity*, unit, char*, item, int, playerID, signed int, a4){
 	auto unitWrapper = GetEntityWrapper(unit);
 
@@ -285,6 +288,78 @@ DETOUR_DECL_STATIC4_STDCALL(HeroBuyItem, signed int, CBaseEntity*, unit, char*, 
 	}
 
 	return DETOUR_STATIC_CALL(HeroBuyItem)(unit, item, playerID, a4);
+}
+
+int CallIsDeniableHook(CBaseEntity *unit){
+	SMJS_Entity *entityWrapper;
+	entityWrapper = GetEntityWrapper(unit);
+	printf("got wrapper");
+	
+	int len = GetNumPlugins();
+	for(int i = 0; i < len; ++i){
+		SMJS_Plugin *pl = GetPlugin(i);
+		if(pl == NULL) continue;
+		
+		HandleScope handle_scope(pl->GetIsolate()); 
+		Context::Scope context_scope(pl->GetContext());
+
+		auto *hooks = pl->GetHooks("Dota_OnDeniableCheck");
+
+		if(hooks->size() == 0) continue;
+
+		v8::Handle<v8::Value> args[1];
+		args[0] = entityWrapper->GetWrapper(pl);
+
+		for(auto it = hooks->begin(); it != hooks->end(); ++it){
+			auto func = *it;
+			auto res = func->Call(pl->GetContext()->Global(), 1, args);
+			if(!res.IsEmpty() && !res->IsUndefined()){
+				if(res->IsFalse()){
+					printf("returned false");
+					return 0;
+				}
+				if(res->IsTrue()){
+					printf("returned true");
+					return 1;
+				}
+			}
+		}
+	}
+	return 2;
+}
+
+DETOUR_DECL_NAKED(IsDeniable, bool){
+	CBaseEntity *unit;
+
+	__asm {
+		push	ebp
+		mov		ebp, esp
+		sub		esp, 64
+
+		mov		unit, eax
+	}
+
+	__asm pushad
+	__asm pushfd
+
+	int8 ret;
+	ret = false;
+	ret = CallIsDeniableHook(unit);
+	if(ret == 2){
+		__asm {
+			mov eax, unit
+			call IsDeniable_Actual
+			mov ret, al
+		}
+	}
+	__asm{
+		popfd
+		popad
+		mov al, ret
+		leave
+		retn
+	}
+
 }
 
 DETOUR_DECL_MEMBER0(UnitThink, void){

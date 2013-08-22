@@ -69,6 +69,8 @@ void CmdReloadPlugin(const CCommandContext &context, const CCommand &command);
 
 void RegCommand(const char *cmdName, void(*func)(const CCommandContext &context, const CCommand&));
 
+
+
 ConCommand jsCmd("js", CmdJS, "SourceMod.js");
 
 std::vector<std::string> trustedPlugins;

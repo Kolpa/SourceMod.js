@@ -15,6 +15,7 @@ SH_DECL_HOOK1_void(IServerGameDLL, Think, SH_NOATTRIB, 0, bool);
 SH_DECL_HOOK2(IGameEventManager2, FireEvent, SH_NOATTRIB, 0, bool, IGameEvent *, bool);
 
 
+
 WRAPPED_CLS_CPP(MGame, SMJS_Module)
 
 struct TeamInfo {
@@ -31,6 +32,7 @@ MGame::MGame(){
 
 	SH_ADD_HOOK(IServerGameDLL, ServerActivate, gamedll, SH_MEMBER(this, &MGame::OnPreServerActivate), false);
 	SH_ADD_HOOK(IServerGameDLL, ServerActivate, gamedll, SH_MEMBER(this, &MGame::OnServerActivate), true);
+
 	SH_ADD_HOOK(IServerGameDLL, Think, gamedll, SH_MEMBER(this, &MGame::OnThink), true);
 
 	SH_ADD_HOOK(IServerGameDLL, LevelShutdown, gamedll, SH_STATIC(MGame::LevelShutdown), false);

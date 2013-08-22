@@ -140,15 +140,27 @@ public:
 	FUNCTION_DECL(addNewModifier);
 	FUNCTION_DECL(spawnRune);
 	FUNCTION_DECL(applyDamage);
+	FUNCTION_DECL(removeModifier);
 	FUNCTION_DECL(getCursorTarget);
 	FUNCTION_DECL(sendStatPopup);
 	FUNCTION_DECL(endCooldown);
 	FUNCTION_DECL(createAbility);
 	FUNCTION_DECL(setHeroAvailable);
+	FUNCTION_DECL(heal);
+	FUNCTION_DECL(destroyParticle);
+	FUNCTION_DECL(releaseParticle);
+	FUNCTION_DECL(executeOrders);
+	FUNCTION_DECL(cursorLocation);
+	FUNCTION_DECL(hasModifier);
+	FUNCTION_DECL(worldLine);
+	FUNCTION_DECL(mapLine);
+	FUNCTION_DECL(pingLocation)
+	FUNCTION_DECL(setAbilityByIndex);
 	FUNCTION_DECL(createItemDrop);
 	FUNCTION_DECL(setRuneType);
 	FUNCTION_DECL(levelUpHero);
 	FUNCTION_DECL(levelUpAbility);
+	FUNCTION_DECL(setHealth);
 	FUNCTION_DECL(giveExperienceToHero);
 	FUNCTION_DECL(unitHasState);
 	FUNCTION_DECL(findUnitsInRadius);
@@ -166,7 +178,14 @@ public:
 		WRAPPED_FUNC(forceWin);
 		WRAPPED_FUNC(createAbility);
 		WRAPPED_FUNC(setRuneType);
+		WRAPPED_FUNC(mapLine);
+		WRAPPED_FUNC(setAbilityByIndex);
 		WRAPPED_FUNC(createUnit);
+		WRAPPED_FUNC(pingLocation);
+		WRAPPED_FUNC(removeModifier);
+		WRAPPED_FUNC(worldLine);
+		WRAPPED_FUNC(executeOrders);
+		WRAPPED_FUNC(cursorLocation);
 		WRAPPED_FUNC(findClearSpaceForUnit);
 		WRAPPED_FUNC(setWaitForPlayersCount);
 		WRAPPED_FUNC(getCursorTarget);
@@ -180,6 +199,11 @@ public:
 		WRAPPED_FUNC(setParticleOrient);
 		WRAPPED_FUNC(addNewModifier);
 		WRAPPED_FUNC(getTotalExpRequiredForLevel);
+		WRAPPED_FUNC(setHealth);
+		WRAPPED_FUNC(heal);
+		WRAPPED_FUNC(hasModifier);
+		WRAPPED_FUNC(destroyParticle);
+		WRAPPED_FUNC(releaseParticle);
 		WRAPPED_FUNC(spawnRune);
 		WRAPPED_FUNC(setTotalExpRequiredForLevel);
 		WRAPPED_FUNC(sendStatPopup);
@@ -860,3 +884,6 @@ public:
 	}
 	
 };
+
+
+

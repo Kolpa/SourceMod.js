@@ -3,6 +3,7 @@
 #include "SMJS.h"
 #include "SMJS_Module.h"
 #include "SMJS_Entity.h"
+#include "ISDKHooks.h"
 #include <vector>
 #include <map>
 
@@ -26,3 +27,5 @@ public:
 
 	
 };
+
+

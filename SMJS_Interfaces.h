@@ -8,6 +8,7 @@
 #include <filesystem.h>
 #include <IEngineSound.h>
 #include "toolframework/itoolentity.h"
+#include "public\extensions\ISDKHooks.h"
 #include "ISDKTools.h"
 #include "IBinTools.h"
 #include <IGameConfigs.h>
@@ -32,6 +33,7 @@ extern IEngineSound *enginesound;
 // extern IServerPluginHelpers *serverpluginhelpers;
 extern IServerPluginCallbacks *vsp_interface;
 extern IServerTools *serverTools;
+extern ISDKHooks *sdkHooks;
 extern ISDKTools *sdkTools;
 extern IBinTools *binTools;
 extern IGameConfig *sdkToolsConf;

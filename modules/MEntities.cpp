@@ -6,6 +6,7 @@ WRAPPED_CLS_CPP(MEntities, SMJS_Module);
 
 
 std::unordered_map<cell_t, SMJS_Entity*> refs;
+
 SMJS_Entity* GetEntityWrapper(int32_t ref){
 	if(ref == -1) return NULL;
 

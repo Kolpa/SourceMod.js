@@ -13,6 +13,7 @@ class SMJS_Module;
 
 extern std::vector<SMJS_Module*> SMJS_Modules;
 
+
 class SMJS_Module : public SMJS_BaseWrapped {
 public:
 	std::string identifier;
