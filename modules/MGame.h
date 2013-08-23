@@ -88,7 +88,7 @@ public:
 	{
 		EntHookType_OnSpellStart,
 		EntHookType_OnSpellStartPost,
-
+		EntHookType_GetManaCost,
 		EntHookType_MAX
 	};
 
@@ -120,6 +120,7 @@ public:
 public:
 	void Hook_OnSpellStart();
 	void Hook_OnSpellStartPost();
+	int Hook_GetManaCost(int level);
 
 private:
 	void SetupEntHooks();

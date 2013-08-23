@@ -510,7 +510,7 @@ END
 
 /*
  * To add new HookTypes, do the following for each:
- * - Add to HookType enum in MHooks.h, once each for pre and post if applicable.
+ * - Add to HookType enum in MGame.h, once each for pre and post if applicable.
  * - Add same hook type values to dota.js or whichever js file has them.
  * - Add the hook DECL once below this comment.
  * - Add one line to the g_HookTypes definition below.
@@ -524,6 +524,7 @@ END
 
 
 SH_DECL_MANUALHOOK0_void(OnSpellStart, 0, 0, 0);
+SH_DECL_MANUALHOOK1(GetManaCost, 0, 0, 0, int, int);
 
 #define SET_PRE_true(gamedataname) g_EntHookTypes[EntHookType_##gamedataname].supported = true;
 #define SET_PRE_false(gamedataname)
@@ -552,6 +553,8 @@ static EntHookTypeData g_EntHookTypes[MGame::EntHookType_MAX] =
 {
 	//   Hook name                DT required ("" for no req)  Supported (always false til later)
 	{ "OnSpellStart", "DT_DOTABaseAbility", false },
+	{ "OnSpellStartPost", "DT_DOTA_BaseAbility", false},
+	{ "GetManaCost", "DT_DOTABaseAbility", false  },
 };
 
 
@@ -563,6 +566,7 @@ void MGame::SetupEntHooks()
 	// (pre is not necessarily a prehook, just named without "Post" appeneded)
 
 	CHECKOFFSET(OnSpellStart, true, true);
+	CHECKOFFSET(GetManaCost, true, false);
 }
 
 void MGame::OnPluginDestroyed(SMJS_Plugin *plugin)
@@ -653,7 +657,8 @@ static bool UTIL_ContainsDataTable(SendTable *pTable, const char *name)
 	SendProp *prop;
 	SendTable *table;
 
-	if (strcmp(name, pTable->GetName()) == 0)
+	pname = pTable->GetName(); 
+	if (pname && strcmp(name, pname) == 0)
 		return true;
 
 	for (int i = 0; i < props; i++)
@@ -692,8 +697,8 @@ MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plug
 	if (!!strcmp(g_EntHookTypes[type].dtReq, ""))
 	{
 		IServerUnknown *pUnk = (IServerUnknown *) pEntity;
-
 		IServerNetworkable *pNet = pUnk->GetNetworkable();
+
 		if (pNet && !UTIL_ContainsDataTable(pNet->GetServerClass()->m_pTable, g_EntHookTypes[type].dtReq))
 			return HookRet_BadEntForHookType;
 	}
@@ -711,14 +716,20 @@ MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plug
 
 	if (!bHooked)
 	{
+		
 		switch (type)
 		{
 		case EntHookType_OnSpellStart:
+
 			SH_ADD_MANUALHOOK(OnSpellStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnSpellStart), false);
 			break;
 		case EntHookType_OnSpellStartPost:
+
 			SH_ADD_MANUALHOOK(OnSpellStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnSpellStartPost), true);
 			break;
+		case EntHookType_GetManaCost:
+
+			SH_ADD_MANUALHOOK(GetManaCost, pEntity, SH_MEMBER(self, &MGame::Hook_GetManaCost), false);
 		}
 	}
 
@@ -760,6 +771,8 @@ void MGame::Unhook(int entIndex, EntHookType type)
 		case EntHookType_OnSpellStartPost:
 			SH_REMOVE_MANUALHOOK(OnSpellStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnSpellStartPost), true);
 			break;
+		case EntHookType_GetManaCost:
+			SH_REMOVE_MANUALHOOK(GetManaCost, pEntity, SH_MEMBER(self, &MGame::Hook_GetManaCost), false);
 		}
 	}
 }
@@ -767,12 +780,18 @@ void MGame::Unhook(int entIndex, EntHookType type)
 void MGame::Hook_OnSpellStart()
 {
 	CBaseEntity *pAbility = META_IFACEPTR(CBaseEntity);
+	int entity = gamehelpers->EntityToBCompatRef(pAbility);
+
+		
 
 	bool handled = false;
 
 	for (auto iter = m_EntHooks[EntHookType_OnSpellStart].begin(); iter != m_EntHooks[EntHookType_OnSpellStart].end(); ++iter)
 	{
 		EntHookInfo *pHook = *iter;
+		if (pHook->entity != entity)
+			continue;
+
 		SMJS_Plugin *pPlugin = pHook->plugin;
 
 		HandleScope handle_scope(pPlugin->GetIsolate());
@@ -802,10 +821,13 @@ void MGame::Hook_OnSpellStart()
 void MGame::Hook_OnSpellStartPost()
 {
 	CBaseEntity *pAbility = META_IFACEPTR(CBaseEntity);
+	int entity = gamehelpers->EntityToBCompatRef(pAbility);
 
 	for (auto iter = m_EntHooks[EntHookType_OnSpellStart].begin(); iter != m_EntHooks[EntHookType_OnSpellStart].end(); ++iter)
 	{
 		EntHookInfo *pHook = *iter;
+		if (pHook->entity != entity)
+			continue;
 		SMJS_Plugin *pPlugin = pHook->plugin;
 
 		HandleScope handle_scope(pPlugin->GetIsolate());
@@ -818,4 +840,51 @@ void MGame::Hook_OnSpellStartPost()
 	}
 
 	RETURN_META(MRES_IGNORED);
+}
+
+int MGame::Hook_GetManaCost(int level)
+{
+	CBaseEntity *pAbility = META_IFACEPTR(CBaseEntity);
+	int entity = gamehelpers->EntityToBCompatRef(pAbility);
+
+	bool handled = false;
+
+	for (auto iter = m_EntHooks[EntHookType_GetManaCost].begin(); iter != m_EntHooks[EntHookType_GetManaCost].end(); ++iter)
+	{
+		EntHookInfo *pHook = *iter;
+		if (pHook->entity != entity)
+			continue;
+		SMJS_Plugin *pPlugin = pHook->plugin;
+
+		HandleScope handle_scope(pPlugin->GetIsolate());
+		Context::Scope context_scope(pPlugin->GetContext());
+
+		SMJS_Entity *entityWrapper = GetEntityWrapper(pAbility);
+		v8::Handle<v8::Value> args[2];
+		args[0] = entityWrapper->GetWrapper(pPlugin);
+		args[1] = v8::Int32::New(level);
+		auto res = pHook->callback->Call(pPlugin->GetContext()->Global(), 2, args);
+		int value = 0;
+		int retCode = 0;
+
+		if(!res->IsArray()){
+			continue;
+		}else{
+			auto arr = v8::Handle<v8::Array>::Cast(res);
+			value = arr->Get(0)->Int32Value();
+			retCode = arr->Get(1)->Int32Value();
+		}
+
+		if (retCode >= Pl_Stop)
+			RETURN_META_VALUE(MRES_SUPERCEDE, value);
+
+		if (retCode >= Pl_Handled)
+			handled = true;
+	}
+
+	if (handled)
+		RETURN_META_VALUE(MRES_SUPERCEDE, 0);
+
+	RETURN_META_VALUE(MRES_IGNORED, 0);
+
 }

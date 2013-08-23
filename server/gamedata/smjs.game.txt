@@ -10,6 +10,12 @@
 				"linux"		"240"
 				"mac"		"240"
 			}
+			"GetManaCost"
+			{
+				"windows"	"246"
+				"linux"		"247"
+				"mac"		"247"
+			}
 		}
 	}
 }

@@ -182,6 +182,15 @@ dota.ORDER_TYPE_BUY_ITEM = 16;
 dota.ORDER_TYPE_AUTO_CAST_TOGGLE = 20;
 dota.ORDER_TYPE_STOP = 21;
 
+dota.PL_CONTINUE = 0;
+dota.PL_CHANGED = 1;
+dota.PL_HANDLED = 3;
+dota.PL_STOP = 4;
+
+dota.ENT_HOOK_ON_SPELL_START = 0;
+dota.ENT_HOOK_ON_SPELL_START_POST = 1;
+dota.ENT_HOOK_GET_MANA_COST = 2;
+
 // The actual offset is around 0x2770, but it may change, so we store it as a relative
 // offset from the closest prop we know
 // This is found in the dota scripted spawner functions
@@ -296,13 +305,6 @@ dota.clearMap = function(){
 	dota.removeAll("npc_dota_roshan*");
 }
 
-Pl_Continue = 0;
-Pl_Changed = 1;
-Pl_Handled = 3;
-Pl_Stop = 4;
 
-var entHookTypes = {};
-entHookTypes.OnSpellStart = 0;
-entHookTypes.OnSpellStartPost = 1;
 
 })();
