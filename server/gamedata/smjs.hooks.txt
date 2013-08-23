@@ -1,0 +1,15 @@
+"Games"
+{
+	"dota"
+	{
+		"Offsets"
+		{
+			"OnSpellStart"
+			{
+				"windows"	"239"
+				"linux"		"240"
+				"mac"		"240"
+			}
+		}
+	}
+}
