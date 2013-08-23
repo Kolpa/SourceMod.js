@@ -2,18 +2,23 @@
 #include "SMJS_Module.h"
 #include "SMJS_GameRules.h"
 #include "filesystem.h"
+#include <vector>
 
 class MGame :
 	public SMJS_Module,
-	public IGameEventListener2
+	public IGameEventListener2,
+	public ISMEntityListener
 {
 public:
 	SMJS_GameRules rules;
 
 	MGame();
+	virtual ~MGame();
 
 	void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper);
 	void Init();
+
+	virtual void OnPluginDestroyed(SMJS_Plugin *plugin);
 
 	static CBaseEntity* FindEntityByClassname(int startIndex, char *searchname);
 	static CBaseEntity* NativeFindEntityByClassname(int startIndex, char *searchname);
@@ -25,6 +30,7 @@ public:
 	}
 
 	FUNCTION_DECL(hook);
+	FUNCTION_DECL(hookEnt);
 	FUNCTION_DECL(getTeamClientCount);
 	FUNCTION_DECL(precacheModel);
 	FUNCTION_DECL(findEntityByClassname);
@@ -45,6 +51,7 @@ public:
 		proto->Set("rules", v8::Null());
 
 		WRAPPED_FUNC(hook);
+		WRAPPED_FUNC(hookEnt);
 		WRAPPED_FUNC(getTeamClientCount);
 		WRAPPED_FUNC(precacheModel);
 		WRAPPED_FUNC(findEntityByClassname);
@@ -74,6 +81,54 @@ private:
 	static int FSReadFileEx(const char *pFileName, const char *pPath, void **ppBuf, bool bNullTerminate = false, bool bOptimalAlloc = false, int nMaxBytes = 0, int nStartingByte = 0, FSAllocFunc_t pfnAlloc = NULL);
 	static FileHandle_t FSOpenEx(const char *pFileName, const char *pOptions, unsigned flags = 0, const char *pathID = 0, char **ppszResolvedFilename = NULL);
 
-
 	static void OnGameFrame(bool simulating);
+
+public:
+	enum EntHookType
+	{
+		EntHookType_OnSpellStart,
+		EntHookType_OnSpellStartPost,
+
+		EntHookType_MAX
+	};
+
+	enum EntHookReturn
+	{
+		HookRet_Successful,
+		HookRet_InvalidEntity,
+		HookRet_InvalidHookType,
+		HookRet_NotSupported,
+		HookRet_BadEntForHookType,
+	};
+
+private:
+	class EntHookInfo
+	{
+	public:
+		int entity;
+		SMJS_Plugin *plugin;
+		v8::Persistent<v8::Function> callback;
+	};
+
+	typedef std::vector<EntHookInfo *> EntHookList;
+
+	// ISMEntityListener
+public:
+	virtual void OnEntityDestroyed(CBaseEntity *pEntity);
+
+	// Hook callbacks
+public:
+	void Hook_OnSpellStart();
+	void Hook_OnSpellStartPost();
+
+private:
+	void SetupEntHooks();
+	EntHookReturn HookInternal(int entity, EntHookType type, SMJS_Plugin *pPlugin, v8::Persistent<v8::Function> callback);
+	void Unhook(int entIndex, EntHookType type);	
+
+private:
+	IGameConfig *m_pGameConf;
+	ISDKHooks *m_pSDKHooks;
+
+	EntHookList m_EntHooks[EntHookType_MAX];
 };
