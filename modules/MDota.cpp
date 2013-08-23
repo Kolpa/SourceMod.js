@@ -333,7 +333,6 @@ MDota::MDota(){
 
 	for(int i = 45; i < 49; i++){
 		GetParticleManager[i-45] = ptr[i];
-		printf("%d \n", GetParticleManager[i-45]);
 	}
 
 	printf("Done!\n");

@@ -293,8 +293,7 @@ DETOUR_DECL_STATIC4_STDCALL(HeroBuyItem, signed int, CBaseEntity*, unit, char*, 
 int CallIsDeniableHook(CBaseEntity *unit){
 	SMJS_Entity *entityWrapper;
 	entityWrapper = GetEntityWrapper(unit);
-	printf("got wrapper");
-	
+
 	int len = GetNumPlugins();
 	for(int i = 0; i < len; ++i){
 		SMJS_Plugin *pl = GetPlugin(i);
@@ -315,11 +314,9 @@ int CallIsDeniableHook(CBaseEntity *unit){
 			auto res = func->Call(pl->GetContext()->Global(), 1, args);
 			if(!res.IsEmpty() && !res->IsUndefined()){
 				if(res->IsFalse()){
-					printf("returned false");
 					return 0;
 				}
 				if(res->IsTrue()){
-					printf("returned true");
 					return 1;
 				}
 			}
