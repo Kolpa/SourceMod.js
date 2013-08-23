@@ -182,6 +182,13 @@ dota.ORDER_TYPE_BUY_ITEM = 16;
 dota.ORDER_TYPE_AUTO_CAST_TOGGLE = 20;
 dota.ORDER_TYPE_STOP = 21;
 
+/////////////// rune types /////////////////////////
+dota.RUNE_TYPE_DOUBLE_DAMAGE = 0;
+dota.RUNE_TYPE_HASTE = 1;
+dota.RUNE_TYPE_ILLUSION = 2;
+dota.RUNE_TYPE_INVIS = 3;
+dota.RUNE_TYPE_REGENERATION = 4;
+
 dota.PL_CONTINUE = 0;
 dota.PL_CHANGED = 1;
 dota.PL_HANDLED = 3;

@@ -482,7 +482,6 @@ FUNCTION_M(MDota::applyDamage)
 	PENT(ability);
 	PNUM(damage);
 	PINT(damageType);
-	PINT(unknown);
 
 	CBaseEntity *attackerEnt;
 	attackerEnt = attacker->ent;
@@ -497,7 +496,7 @@ FUNCTION_M(MDota::applyDamage)
 
 	__asm {
 		mov edi, attackedEnt 
-		push unknown
+		push 0
 		push damageType
 		push pDamage
 		push abilityEnt
@@ -560,13 +559,14 @@ END
 
 FUNCTION_M(MDota::setRuneType)
 	PENT(rune);
+	PINT(runeType);
 	
 	CBaseEntity *ent;
 	ent = rune->ent;
 
 	__asm {
 		mov eax, ent
-		push 2
+		push runeType
 		call SetRuneType
 	}
 
