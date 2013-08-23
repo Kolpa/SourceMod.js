@@ -301,8 +301,8 @@ Pl_Changed = 1;
 Pl_Handled = 3;
 Pl_Stop = 4;
 
-var hooks = {};
-hooks.Hook_OnSpellStart = 0;
-hooks.Hook_OnSpellStartPost = 1;
+var entHookTypes = {};
+entHookTypes.OnSpellStart = 0;
+entHookTypes.OnSpellStartPost = 1;
 
 })();

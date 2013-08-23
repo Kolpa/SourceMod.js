@@ -1287,7 +1287,6 @@
     <ClCompile Include="..\modules\MEntities.cpp" />
     <ClCompile Include="..\modules\MFileSystem.cpp" />
     <ClCompile Include="..\modules\MGame.cpp" />
-    <ClCompile Include="..\modules\MHooks.cpp" />
     <ClCompile Include="..\modules\MKeyValue.cpp" />
     <ClCompile Include="..\modules\MPlugin.cpp" />
     <ClCompile Include="..\modules\MServer.cpp" />
@@ -1336,7 +1335,6 @@
     <ClInclude Include="..\modules\MEntities.h" />
     <ClInclude Include="..\modules\MFileSystem.h" />
     <ClInclude Include="..\modules\MGame.h" />
-    <ClInclude Include="..\modules\MHooks.h" />
     <ClInclude Include="..\modules\MKeyValue.h" />
     <ClInclude Include="..\modules\MPlugin.h" />
     <ClInclude Include="..\modules\MSocket.h" />
