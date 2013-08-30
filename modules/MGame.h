@@ -89,6 +89,21 @@ public:
 		EntHookType_OnSpellStart,
 		EntHookType_OnSpellStartPost,
 		EntHookType_GetManaCost,
+		EntHookType_IsStealable,
+		EntHookType_GetChannelTime,
+		EntHookType_GetCastRange,
+		EntHookType_GetCastPoint,
+		EntHookType_GetCooldown,
+		EntHookType_GetAbilityDamage,
+		EntHookType_OnAbilityPhaseStart,
+		EntHookType_OnAbilityPhaseInterrupted,
+		EntHookType_OnChannelFinish,
+		EntHookType_OnToggle,
+		EntHookType_OnProjectileHit,
+		EntHookType_OnProjectileThinkWithVector,
+		EntHookType_OnProjectileThinkWithInt,
+		EntHookType_OnStolen,
+
 		EntHookType_MAX
 	};
 
@@ -121,6 +136,20 @@ public:
 	void Hook_OnSpellStart();
 	void Hook_OnSpellStartPost();
 	int Hook_GetManaCost(int level);
+	bool Hook_IsStealable();
+	float Hook_GetChannelTime();
+	int Hook_GetCastRange();
+	float Hook_GetCastPoint();
+	float Hook_GetCooldown(int level);
+	int Hook_GetAbilityDamage();
+	void Hook_OnAbilityPhaseStart();
+	void Hook_OnAbilityPhaseInterrupted();
+	void Hook_OnChannelFinish();
+	void Hook_OnToggle();
+	void Hook_OnProjectileHit(CBaseHandle handle, const Vector &);
+	void Hook_OnProjectileThinkWithVector(const Vector &think);
+	void Hook_OnProjectileThinkWithInt(int think);
+	void Hook_OnStolen();
 
 private:
 	void SetupEntHooks();

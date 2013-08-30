@@ -74,8 +74,6 @@ struct CUnitOrders
 	bool	m_bQueueOrder;
 };
 
-
-
 struct LobbyData {
 	void **vtable;
 	uint8_t padding01[80];
@@ -306,7 +304,6 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(SetParticleControlEnt);
 	FIND_DOTA_FUNC(SetParticleControl);
 	FIND_DOTA_FUNC(AddNewModifier);
-	FIND_DOTA_FUNC(SetHealth);
 	FIND_DOTA_FUNC(Heal);
 	FIND_DOTA_FUNC(CreateAbility);
 	FIND_DOTA_FUNC(DCreateItem);
@@ -315,7 +312,6 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(DGiveItem);
 	FIND_DOTA_FUNC(DDestroyItem);
 	FIND_DOTA_FUNC(MakeTeamLose);
-	FIND_DOTA_FUNC(LookupAttachment);
 	FIND_DOTA_FUNC(EndCooldown);
 	FIND_DOTA_FUNC(StealAbility);
 	FIND_DOTA_FUNC(DCreateItemDrop);
@@ -394,27 +390,6 @@ void PatchWaitForPlayersCount(){
 	*waitingForPlayersCountPtr = waitingForPlayersCount;
 	*((int **)((intptr_t) ptr + 2)) = &waitingForPlayersCount;
 }
-
-FUNCTION_M(MDota::cursorLocation)
-	PENT(unit);
-
-	CBaseEntity *unitEnt;
-	unitEnt = unit->ent;
-	if(unitEnt == NULL) THROW("Invalid entity");
-
-	Vector vec;
-	void *tru;
-	float thing = 0.0;
-	__asm{
-		mov edx, unitEnt
-		mov edi, thing
-		call GetCursorLocation
-		mov tru, eax
-	}
-	printf("%d dd", tru);
-
-	RETURN_UNDEF;
-END
 
 FUNCTION_M(MDota::executeOrders)
 	PINT(playerId);
@@ -525,13 +500,42 @@ FUNCTION_M(MDota::getCursorTarget)
 	ent = ability->ent;
 
 	CBaseEntity *target;
+
 	__asm {
 		mov eax, ent
 		call GetCursorTarget
 		mov target, eax
 	}
 
-	RETURN_SCOPED(GetEntityWrapper(target)->GetWrapper(GetPluginRunning()));
+	auto wrapped = GetEntityWrapper(target);
+	auto retne = wrapped->GetWrapper(GetPluginRunning());
+
+	RETURN_SCOPED(retne);
+END
+
+FUNCTION_M(MDota::getCursorLocation)
+	PENT(ability);
+
+	CBaseEntity *abilityEnt;
+	abilityEnt = ability->ent;
+	if(abilityEnt == NULL) THROW("Invalid entity");
+
+	Vector vec;
+	Vector *vecptr = &vec;
+
+	Vector *ret;
+	__asm{
+		mov eax, abilityEnt
+		mov ecx, vecptr
+		call GetCursorLocation
+		mov ret, eax
+	}
+
+	auto jsvec = v8::Object::New();
+	jsvec->Set(v8::String::New("x"), v8::Number::New(vecptr->x));
+	jsvec->Set(v8::String::New("y"), v8::Number::New(vecptr->y));
+	jsvec->Set(v8::String::New("z"), v8::Number::New(vecptr->z));
+	RETURN_SCOPED(jsvec);
 END
 
 FUNCTION_M(MDota::setAbilityByIndex)
@@ -874,7 +878,7 @@ FUNCTION_M(MDota::removeModifier)
 	 if(unitEnt == NULL) THROW("Invalid entity");
 
 	 char *pModifier = *modifier;
-	 void *modifierManager = (void*)((uintptr_t)unitEnt + 3004);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+	 void *modifierManager = (void*)((uintptr_t)unitEnt + 3008);  //I think this might crash on non-npc ents, so.. trees and misc. shit
 
 	 __asm {
 		 push pModifier
@@ -900,7 +904,7 @@ FUNCTION_M(MDota::addNewModifier)
 
 	if(targetEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
 
-	void *modifierManager = (void*)((uintptr_t)targetEnt + 3004);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+	void *modifierManager = (void*)((uintptr_t)targetEnt + 3008);  //I think this might crash on non-npc ents, so.. trees and misc. shit
 
 	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
 
@@ -911,7 +915,7 @@ FUNCTION_M(MDota::addNewModifier)
 	__asm {
 		mov ecx, modifierManager
 		push 0
-		push 4294967295
+		push -1
 		push kv
 		push modifier
 		push abilityEnt
@@ -1289,21 +1293,20 @@ END
 FUNCTION_M(MDota::hasModifier)
 	PENT(unit);
 	PSTR(modifier);
-	PINT(unknown);
 
 	CBaseEntity *unitEnt;
 	unitEnt = unit->ent;
 
 	if(unitEnt == NULL) THROW("Invalid entity");
 
-	void *modifierManager = (void*)((uintptr_t)unitEnt + 3004);
+	void *modifierManager = (void*)((uintptr_t)unitEnt + 3008);
 	char *str = *modifier;
 
 	void *buff;
 
 	__asm {
-		mov eax, str
-		push 0 
+		push 0
+		push str 
 		push modifierManager
 		call FindModifierByName
 		mov buff, eax

@@ -150,7 +150,7 @@ public:
 	FUNCTION_DECL(destroyParticle);
 	FUNCTION_DECL(releaseParticle);
 	FUNCTION_DECL(executeOrders);
-	FUNCTION_DECL(cursorLocation);
+	FUNCTION_DECL(getCursorLocation);
 	FUNCTION_DECL(hasModifier);
 	FUNCTION_DECL(worldLine);
 	FUNCTION_DECL(mapLine);
@@ -185,7 +185,7 @@ public:
 		WRAPPED_FUNC(removeModifier);
 		WRAPPED_FUNC(worldLine);
 		WRAPPED_FUNC(executeOrders);
-		WRAPPED_FUNC(cursorLocation);
+		WRAPPED_FUNC(getCursorLocation);
 		WRAPPED_FUNC(findClearSpaceForUnit);
 		WRAPPED_FUNC(setWaitForPlayersCount);
 		WRAPPED_FUNC(getCursorTarget);
