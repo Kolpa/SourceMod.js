@@ -339,20 +339,20 @@ DETOUR_DECL_NAKED(IsDeniable, bool){
 	__asm pushad
 	__asm pushfd
 
-	int8 ret;
-	ret = false;
-	ret = CallIsDeniableHook(unit);
-	if(ret == 2){
+	int8 res;
+	res = false;
+	res = CallIsDeniableHook(unit);
+	if(res == 2){
 		__asm {
 			mov eax, unit
 			call IsDeniable_Actual
-			mov ret, al
+			mov res, al
 		}
 	}
 	__asm{
 		popfd
 		popad
-		mov al, ret
+		mov al, res
 		leave
 		retn
 	}

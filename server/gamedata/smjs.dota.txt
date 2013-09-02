@@ -364,7 +364,7 @@
 			*/
 			"HeroLevelUp"
 			{
-				"windows"	"423"
+				"windows"	"426"
 			}
 
 			/*
@@ -385,7 +385,7 @@
 			*/
 			"HeroLevelUpAbility"
 			{
-				"windows"	"426"
+				"windows"	"429"
 			}
 
 
@@ -396,7 +396,7 @@
 			*/
 			"HeroGiveExperience"
 			{
-				"windows"	"424"
+				"windows"	"427"
 			}
 			"GetRefEHandle"
 			{

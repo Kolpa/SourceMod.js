@@ -523,12 +523,12 @@ FUNCTION_M(MDota::getCursorLocation)
 	Vector vec;
 	Vector *vecptr = &vec;
 
-	Vector *ret;
+	Vector *res;
 	__asm{
 		mov eax, abilityEnt
 		mov ecx, vecptr
 		call GetCursorLocation
-		mov ret, eax
+		mov res, eax
 	}
 
 	auto jsvec = v8::Object::New();
