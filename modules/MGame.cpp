@@ -532,7 +532,7 @@ SH_DECL_MANUALHOOK0(IsStealable, 0, 0, 0, bool);
 SH_DECL_MANUALHOOK0(GetAbilityDamage, 0, 0, 0, int);
 SH_DECL_MANUALHOOK0_void(OnAbilityPhaseStart, 0, 0, 0);
 SH_DECL_MANUALHOOK0_void(OnAbilityPhaseInterrupted, 0, 0, 0);
-SH_DECL_MANUALHOOK0_void(OnChannelFinish, 0, 0, 0);
+SH_DECL_MANUALHOOK1_void(OnChannelFinish, 0, 0, 0, bool);
 SH_DECL_MANUALHOOK0_void(OnToggle, 0, 0, 0);
 SH_DECL_MANUALHOOK2_void(OnProjectileHit, 0, 0, 0, CBaseHandle, const Vector &);
 SH_DECL_MANUALHOOK1_void(OnProjectileThinkWithVector, 0, 0, 0, const Vector &);
@@ -611,6 +611,7 @@ void MGame::SetupEntHooks()
 	CHECKOFFSET(OnProjectileThinkWithVector, true, false);
 	CHECKOFFSET(OnProjectileThinkWithInt, true, false);
 	CHECKOFFSET(OnStolen, true, false);
+
 }
 
 void MGame::OnPluginDestroyed(SMJS_Plugin *plugin)
@@ -880,7 +881,7 @@ void MGame::Hook_OnSpellStart()
 	int entity = gamehelpers->EntityToBCompatRef(pAbility);
 
 	bool handled = false;
-
+	
 	for (auto iter = m_EntHooks[EntHookType_OnSpellStart].begin(); iter != m_EntHooks[EntHookType_OnSpellStart].end(); ++iter)
 	{
 		EntHookInfo *pHook = *iter;
@@ -1112,7 +1113,6 @@ float MGame::Hook_GetCastPoint(){
 
 		if (res->IsNumber() && !handled){
 			returnValue = (float)res->NumberValue();
-			printf("%f return\n", returnValue);
 			handled = true;
 		}
 	}
@@ -1268,7 +1268,7 @@ void MGame::Hook_OnAbilityPhaseInterrupted(){
 	RETURN_META(MRES_IGNORED);
 }
 
-void MGame::Hook_OnChannelFinish(){
+void MGame::Hook_OnChannelFinish(bool pBool){
 	CBaseEntity *pAbility = META_IFACEPTR(CBaseEntity);
 	int entity = gamehelpers->EntityToBCompatRef(pAbility);
 
@@ -1474,6 +1474,46 @@ void MGame::Hook_OnStolen(){
 	RETURN_META(MRES_IGNORED);
 }
 
+/*int MGame::Hook_UpgradeAbility(CBaseEntity *pAbility){
+	CBaseEntity *pEntity = META_IFACEPTR(CBaseEntity);
+	int entity = gamehelpers->EntityToBCompatRef(pEntity);
+
+	bool handled = false;
+	int returnValue = 0;
+
+	for (auto iter = m_EntHooks[EntHookType_UpgradeAbility].begin(); iter != m_EntHooks[EntHookType_UpgradeAbility].end(); ++iter){
+		EntHookInfo *pHook = *iter;
+		if (pHook->entity != entity)
+			continue;
+		SMJS_Plugin *pPlugin = pHook->plugin;
+
+		HandleScope handle_scope(pPlugin->GetIsolate());
+		Context::Scope context_scope(pPlugin->GetContext());
+
+		SMJS_Entity *entityWrapper = GetEntityWrapper(pEntity);
+		SMJS_Entity *abilityWrapper = GetEntityWrapper(pAbility);
+		v8::Handle<v8::Value> args[2];
+		args[0] = entityWrapper->GetWrapper(pPlugin);
+		args[1] = abilityWrapper->GetWrapper(pPlugin);
+
+		auto res = pHook->callback->Call(pPlugin->GetContext()->Global(), 2, args);
+		if (res.IsEmpty() || res->IsUndefined())
+			continue;
+
+		if (res->IsBoolean() && !handled){
+			if(res->IsFalse()){
+				RETURN_META_VALUE(MRES_SUPERCEDE, 0);
+			}
+		}
+	}
+
+	if(handled){
+		RETURN_META_VALUE(MRES_SUPERCEDE, returnValue);
+	}
+
+	RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+*/
 
 
 

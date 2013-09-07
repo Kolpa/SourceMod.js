@@ -17,7 +17,6 @@ IEngineSound *enginesound;
 // IServerPluginHelpers *serverpluginhelpers;
 IServerPluginCallbacks *vsp_interface;
 IServerTools *serverTools;
-SourceMod::ISDKHooks *sdkHooks;
 SourceMod::ISDKTools *sdkTools;
 SourceMod::IBinTools *binTools;
 IGameConfig *sdkToolsConf = NULL;
@@ -61,7 +60,6 @@ bool SMJS_LoadConfs(char *error, size_t maxlength, bool late){
 }
 
 void SMJS_InitLateInterfaces(){
-	SM_GET_LATE_IFACE(SDKHOOKS, sdkHooks);
 	SM_GET_LATE_IFACE(SDKTOOLS, sdkTools);
 	SM_GET_LATE_IFACE(BINTOOLS, binTools);
 }

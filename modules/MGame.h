@@ -144,7 +144,7 @@ public:
 	int Hook_GetAbilityDamage();
 	void Hook_OnAbilityPhaseStart();
 	void Hook_OnAbilityPhaseInterrupted();
-	void Hook_OnChannelFinish();
+	void Hook_OnChannelFinish(bool pBool);
 	void Hook_OnToggle();
 	void Hook_OnProjectileHit(CBaseHandle handle, const Vector &);
 	void Hook_OnProjectileThinkWithVector(const Vector &think);

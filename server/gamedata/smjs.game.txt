@@ -4,6 +4,66 @@
 	{
 		"Offsets"
 		{
+			"UpgradeAbility"
+			{
+				"windows"	"429"
+			}
+			"IsStealable"
+			{
+				"windows"	"264"
+			}
+			"GetAbilityType"
+			{
+				"windows"	"209"
+			}
+			"GetChannelTime"
+			{
+				"windows"	"212"
+			}
+			"GetCastRange"
+			{
+				"windows"	"213"
+			}
+			"GetCastPoint"
+			{
+				"windows"	"215"
+			}
+			"GetCooldown"
+			{
+				"windows"	"223"
+			}
+			"OnAbilityPhaseStart"
+			{
+				"windows"	"237"
+			}
+			"OnAbilityPhaseInterrupted"
+			{
+				"windows"	"238"
+			}
+			"OnChannelFinish"
+			{
+				"windows"	"240"
+			}
+			"OnToggle"
+			{
+				"windows"	"243"
+			}
+			"OnProjectileHit"
+			{
+				"windows"	"251"
+			}
+			"OnProjectileThinkWithVector"
+			{
+				"windows"	"254"
+			}
+			"OnProjectileThinkWithInt"
+			{
+				"windows"	"253"
+			}
+			"OnStolen"
+			{
+				"windows"	"266"
+			}
 			"OnSpellStart"
 			{
 				"windows"	"239"
@@ -15,6 +75,12 @@
 				"windows"	"246"
 				"linux"		"247"
 				"mac"		"247"
+			}
+			"GetAbilityDamage"
+			{
+				"windows"	"226"
+				"linux"		"227"
+				"mac"		"227"
 			}
 		}
 	}

@@ -140,12 +140,14 @@ public:
 	FUNCTION_DECL(addNewModifier);
 	FUNCTION_DECL(spawnRune);
 	FUNCTION_DECL(applyDamage);
+	FUNCTION_DECL(removeAbilityFromIndex);
 	FUNCTION_DECL(removeModifier);
 	FUNCTION_DECL(getCursorTarget);
 	FUNCTION_DECL(sendStatPopup);
 	FUNCTION_DECL(endCooldown);
 	FUNCTION_DECL(createAbility);
 	FUNCTION_DECL(setHeroAvailable);
+	FUNCTION_DECL(swapAbilities);
 	FUNCTION_DECL(heal);
 	FUNCTION_DECL(destroyParticle);
 	FUNCTION_DECL(releaseParticle);
@@ -186,6 +188,8 @@ public:
 		WRAPPED_FUNC(worldLine);
 		WRAPPED_FUNC(executeOrders);
 		WRAPPED_FUNC(getCursorLocation);
+		WRAPPED_FUNC(swapAbilities);
+		WRAPPED_FUNC(removeAbilityFromIndex);
 		WRAPPED_FUNC(findClearSpaceForUnit);
 		WRAPPED_FUNC(setWaitForPlayersCount);
 		WRAPPED_FUNC(getCursorTarget);

@@ -188,15 +188,26 @@ dota.RUNE_TYPE_HASTE = 1;
 dota.RUNE_TYPE_ILLUSION = 2;
 dota.RUNE_TYPE_INVIS = 3;
 dota.RUNE_TYPE_REGENERATION = 4;
-
-dota.PL_CONTINUE = 0;
-dota.PL_CHANGED = 1;
-dota.PL_HANDLED = 3;
-dota.PL_STOP = 4;
-
+			
 dota.ENT_HOOK_ON_SPELL_START = 0;
 dota.ENT_HOOK_ON_SPELL_START_POST = 1;
 dota.ENT_HOOK_GET_MANA_COST = 2;
+dota.ENT_HOOK_IS_STEALABLE = 3;
+dota.ENT_HOOK_GET_CHANNEL_TIME = 4;
+dota.ENT_HOOK_GET_CAST_RANGE = 5;
+dota.ENT_HOOK_GET_CAST_POINT = 6;
+dota.ENT_HOOK_GET_COOLDOWN = 7;
+dota.ENT_HOOK_GET_ABILITY_DAMAGE = 8;
+dota.ENT_HOOK_ON_ABILITY_PHASE_START = 9;
+dota.ENT_HOOK_ON_ABILITY_PHASE_INTERRUPTED = 10;
+dota.ENT_HOOK_ON_CHANNEL_FINISH = 11;
+dota.ENT_HOOK_ON_TOGGLE = 12;
+dota.ENT_HOOK_ON_STOLEN = 16;
+
+//dota.ENT_HOOK_ON_PROJECTILE_THINK_WITH_VECTOR = 14;
+//dota.ENT_HOOK_ON_PROJECTILE_THINK_WITH_INT = 15;
+
+
 
 // The actual offset is around 0x2770, but it may change, so we store it as a relative
 // offset from the closest prop we know

@@ -193,6 +193,8 @@ static void *Heal;
 static void *FindModifierByName;
 static void *ExecuteOrders;
 static void *GetCursorLocation;
+static void *SwapAbilities;
+static void *RemoveAbilityFromIndex;
 
 static uint8_t GetParticleManager[4];
 
@@ -296,11 +298,13 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(FindClearSpaceForUnit);
 	FIND_DOTA_FUNC(SetRuneType);
 	FIND_DOTA_FUNC(ApplyDamage);
+	FIND_DOTA_FUNC(RemoveAbilityFromIndex);
 	FIND_DOTA_FUNC(ExecuteOrders);
 	FIND_DOTA_FUNC(SetAbilityByIndex);
 	FIND_DOTA_FUNC(RemoveModifierByName);
 	FIND_DOTA_FUNC(GetCursorLocation);
 	FIND_DOTA_FUNC(CreateParticleEffect);
+	FIND_DOTA_FUNC(SwapAbilities);
 	FIND_DOTA_FUNC(SetParticleControlEnt);
 	FIND_DOTA_FUNC(SetParticleControl);
 	FIND_DOTA_FUNC(AddNewModifier);
@@ -536,6 +540,46 @@ FUNCTION_M(MDota::getCursorLocation)
 	jsvec->Set(v8::String::New("y"), v8::Number::New(vecptr->y));
 	jsvec->Set(v8::String::New("z"), v8::Number::New(vecptr->z));
 	RETURN_SCOPED(jsvec);
+END
+
+FUNCTION_M(MDota::removeAbilityFromIndex)
+	PENT(unit);
+	PINT(index);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+	if(unitEnt == NULL) THROW("Invalid entity");
+
+	__asm{
+		mov eax, unitEnt
+		push index
+		call RemoveAbilityFromIndex
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::swapAbilities)
+	PENT(unit);
+	PSTR(inCls);
+	PSTR(outCls);
+	PBOL(firstVisible);
+	PBOL(secondVisible);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+	if(unitEnt == NULL) THROW("Invalid entity");
+
+	__asm{
+		push secondVisible
+		push firstVisible
+		push inCls
+		push outCls
+		push unitEnt
+		call SwapAbilities
+	}
+
+	RETURN_UNDEF;
 END
 
 FUNCTION_M(MDota::setAbilityByIndex)
