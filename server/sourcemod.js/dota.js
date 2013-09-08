@@ -323,6 +323,13 @@ dota.clearMap = function(){
 	dota.removeAll("npc_dota_roshan*");
 }
 
-
+dota.setUnitControllableByPlayer = function(ent, playerId, value){
+	if(value){
+		ent.netprops.m_iIsControllableByPlayer |= 1 << playerId;
+	}else{
+		ent.netprops.m_iIsControllableByPlayer &= ~playerId;
+	}
+	
+}
 
 })();
