@@ -59,11 +59,17 @@ FUNCTION_M(MKeyValue::parse)
 	RETURN_SCOPED(ParseKeyValue(*str));
 END
 
+
+#define KV_ERROR(x, ...) snprintf(tmpBuffer, sizeof(tmpBuffer), x, ##__VA_ARGS__); \
+				v8::ThrowException(v8::String::New(tmpBuffer)); \
+				return v8::Handle<v8::Value>()
+
 v8::Handle<v8::Value> ParseKeyValue(const char *str){
 	int len = strlen(str);
 	int line = 1;
 	int i = 0;
 	int depth = 0;
+	char tmpBuffer[512];
 	
 	enum TreeType {
 		Object,
@@ -103,7 +109,8 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 			}
 
 			if(i + 1 == len){
-				THROW_VERB("Unterminated comment at the end of the document, started at line %d", startLine);
+				KV_ERROR("Unterminated comment at the end of the document, started at line %d", startLine);
+				
 			}
 			i += 1;
 
@@ -115,7 +122,7 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 			}
 
 			if(i == len || chr == '\n' || chr == '\r'){
-				THROW_VERB("Unterminated string at line %d", line);
+				KV_ERROR("Unterminated string at line %d", line);
 			}
 
 			auto resultString = v8::String::New(&str[startIndex + 1], i - startIndex - 1);
@@ -148,7 +155,7 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 
 			if(treeType[depth] == Object){
 				if(keys[depth].IsEmpty()){
-					THROW_VERB("A number can't be the key of a value at line %d (offset %d)", line, i);
+					KV_ERROR("A number can't be the key of a value at line %d (offset %d)", line, i);
 				}else{
 					v8::Handle<v8::Object>::Cast(tree[depth])->Set(keys[depth], number);
 					keys[depth].Clear();
@@ -162,7 +169,7 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 		}else if(chr == '{'){
 			if(treeType[depth] == Object){
 				if(keys[depth].IsEmpty()){
-					THROW_VERB("A block needs a key at line %d (offset %d)", line, i);
+					KV_ERROR("A block needs a key at line %d (offset %d)", line, i);
 				}
 			}
 
@@ -175,11 +182,11 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 			keys[depth].Clear();
 		}else if(chr == '}'){
 			if(depth == 0){
-				THROW_VERB( "Mismatching bracket at line %d", line);
+				KV_ERROR( "Mismatching bracket at line %d", line);
 			}
 
 			if(treeType[depth] != Object){
-				THROW_VERB("Mismatching brackets at line %d", line);
+				KV_ERROR("Mismatching brackets at line %d", line);
 			}
 
 			auto v = tree[depth];
@@ -201,7 +208,7 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 		}else if(chr == '['){
 			if(treeType[depth] == Object){
 				if(keys[depth].IsEmpty()){
-					THROW_VERB("An array needs a key at line %d (offset %d)", line, i);
+					KV_ERROR("An array needs a key at line %d (offset %d)", line, i);
 				}
 			}
 
@@ -214,11 +221,11 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 			keys[depth].Clear();
 		}else if(chr == ']'){
 			if(depth == 0){
-				THROW_VERB( "Mismatching bracket at line %d", line);
+				KV_ERROR( "Mismatching bracket at line %d", line);
 			}
 
 			if(treeType[depth] != Array){
-				THROW_VERB("Mismatching brackets at line %d", line);
+				KV_ERROR("Mismatching brackets at line %d", line);
 			}
 
 			auto v = tree[depth];
@@ -246,12 +253,12 @@ v8::Handle<v8::Value> ParseKeyValue(const char *str){
 			}
 			--i;
 		}else{
-			THROW_VERB("Unexpected character \"%c\" at line %d (offset %d)", chr, line, i);
+			KV_ERROR("Unexpected character \"%c\" at line %d (offset %d)", chr, line, i);
 		}
 	}
 
 	if(depth != 0){
-		THROW_VERB("Missing brackets");
+		KV_ERROR("Missing brackets");
 	}
 
 	return tree[0];

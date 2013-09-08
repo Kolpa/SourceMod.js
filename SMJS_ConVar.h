@@ -50,8 +50,8 @@ public:
 		
 	}
 
-	static Handle<Value> GetFlags(Local<String> prop, const AccessorInfo& info);
-	static void SetFlags(Local<String> prop, Local<Value> value, const AccessorInfo& info);
+	static void GetFlags(Local<String> property, const PropertyCallbackInfo<Value>& args);
+	static void SetFlags(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void>& args);
 };
 
 #endif

@@ -53,11 +53,11 @@ public:
 protected:
 	v8::Persistent<v8::Value> GenerateThenFindCachedValue(PLUGIN_ID plId, std::string key, void *ent, edict_t *edict, SendProp *p, size_t offset);
 
-	static v8::Handle<v8::Value> SGetNetProp(v8::Local<v8::String> prop, const v8::AccessorInfo &info);
-	static v8::Handle<v8::Value> SSetNetProp(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+	static void SGetNetProp(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& args);
+	static void SSetNetProp(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args);
 
 	static v8::Handle<v8::Value> SGetNetProp(void *ent, edict_t *edict, SendProp *p, size_t offset, bool *isCacheable = NULL, const char *name = NULL);
-	static v8::Handle<v8::Value> SSetNetProp(void *ent, edict_t *edict, SendProp *p, size_t offset, v8::Local<v8::Value> value, boost::function<v8::Persistent<v8::Value> ()> getCache, const char *name = NULL);
+	static void SSetNetProp(void *ent, edict_t *edict, SendProp *p, size_t offset, v8::Local<v8::Value> value, boost::function<v8::Persistent<v8::Value> ()> getCache, const char *name = NULL);
 	
 	friend SMJS_NPValueCacher;
 	friend SMJS_DataTable;
@@ -72,8 +72,8 @@ private:
 	size_t offset;
 	std::map<uint32_t, v8::Persistent<v8::Value>> cachedValues;
 
-	static v8::Handle<v8::Value> DTGetter(uint32_t index, const AccessorInfo& info);
-	static v8::Handle<v8::Value> DTSetter(uint32_t index, Local<Value> value, const AccessorInfo& info);
+	static void DTGetter(uint32_t index, const PropertyCallbackInfo<Value>& args);
+	static void DTSetter(uint32_t index, Local<Value> value, const PropertyCallbackInfo<Value>& args);
 
 	SMJS_DataTable() : SMJS_SimpleWrapped(NULL) {};
 

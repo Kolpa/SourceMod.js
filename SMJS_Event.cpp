@@ -107,15 +107,16 @@ FUNCTION_M(SMJS_Event::block)
 	self->blocked = true;
 	RETURN_UNDEF;
 END
-Handle<Value> SMJS_Event::GetBroadcast(Local<String> prop, const AccessorInfo& info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+
+void SMJS_Event::GetBroadcast(Local<String> property, const PropertyCallbackInfo<Value>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_Event *self = dynamic_cast<SMJS_Event*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
-	return v8::Boolean::New(self->broadcast);
+	RETURN_BOOL(self->broadcast);
 }
 
-void SMJS_Event::SetBroadcast(Local<String> prop, Local<Value> value, const AccessorInfo& info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+void SMJS_Event::SetBroadcast(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_Event *self = dynamic_cast<SMJS_Event*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
 	self->broadcast = value->BooleanValue();

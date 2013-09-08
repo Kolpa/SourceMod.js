@@ -342,7 +342,7 @@ void SMJS_Plugin::CheckApi(){
 	if(apiVersion == 0) apiVersion = SMJS_API_VERSION;
 }
 
-Handle<Value> JSN_Print(const Arguments& args) {
+void JSN_Print(const FunctionCallbackInfo<Value>& args){
 	HandleScope handle_scope(args.GetIsolate());
 
 	bool first = true;
@@ -358,7 +358,7 @@ Handle<Value> JSN_Print(const Arguments& args) {
 	}
 	printf("\n");
 	fflush(stdout);
-	return Undefined();
+	RETURN_UNDEF;
 }
 
 FUNCTION(JSN_Require)

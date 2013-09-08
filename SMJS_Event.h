@@ -68,8 +68,8 @@ public:
 
 private:
 	SMJS_Event();
-	static Handle<Value> GetBroadcast(Local<String> prop, const AccessorInfo& info);
-	static void SetBroadcast(Local<String> prop, Local<Value> value, const AccessorInfo& info);
+	static void GetBroadcast(Local<String> property, const PropertyCallbackInfo<Value>& args);
+	static void SetBroadcast(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void>& args);
 };
 
 #endif

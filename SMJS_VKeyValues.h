@@ -49,8 +49,8 @@ public:
 
 	void Restore();
 
-	static v8::Handle<v8::Value> GetKeyValue(v8::Local<v8::String> prop, const v8::AccessorInfo &info);
-	static v8::Handle<v8::Value> SetKeyValue(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+	static void GetKeyValue(Local<String> property, const PropertyCallbackInfo<Value>& args);
+	static void SetKeyValue(Local<String> property, Local<Value> value, const PropertyCallbackInfo<Value>& args);
 
 	WRAPPED_CLS(SMJS_VKeyValues, SMJS_BaseWrapped) {
 		temp->SetClassName(v8::String::NewSymbol("VKeyValues"));

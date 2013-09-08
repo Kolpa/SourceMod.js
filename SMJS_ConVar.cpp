@@ -9,15 +9,15 @@ FUNCTION_M(SMJS_ConVar::getName)
 	RETURN_SCOPED(v8::String::New(self->cv->GetName()));
 END
 
-Handle<Value> SMJS_ConVar::GetFlags(Local<String> prop, const AccessorInfo& info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+void SMJS_ConVar::GetFlags(Local<String> property, const PropertyCallbackInfo<Value>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_ConVar *self = dynamic_cast<SMJS_ConVar*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
-	return v8::Int32::New(self->cv->GetFlags());
+	RETURN_INT(self->cv->GetFlags());
 }
 
-void SMJS_ConVar::SetFlags(Local<String> prop, Local<Value> value, const AccessorInfo& info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+void SMJS_ConVar::SetFlags(Local<String> property, Local<Value> value, const PropertyCallbackInfo<void>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_ConVar *self = dynamic_cast<SMJS_ConVar*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
 	auto newFlags = (int) value->NumberValue();

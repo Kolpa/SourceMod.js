@@ -18,7 +18,8 @@ public:
 
 	void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper);
 
-	static v8::Handle<v8::Value> SetKeyValue(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+
+	static void SetKeyValue(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args);
 
 	WRAPPED_CLS(SMJS_EntKeyValues, SMJS_BaseWrapped) {
 		temp->SetClassName(v8::String::NewSymbol("EntityKeyValues"));

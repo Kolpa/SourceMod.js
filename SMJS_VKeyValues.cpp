@@ -29,22 +29,22 @@ void SMJS_VKeyValues::Restore(){
 	}
 }
 
-v8::Handle<v8::Value> SMJS_VKeyValues::GetKeyValue(v8::Local<v8::String> prop, const v8::AccessorInfo &info){
-	SMJS_VKeyValues *self = dynamic_cast<SMJS_VKeyValues*>((SMJS_BaseWrapped*)Handle<External>::Cast(info.This()->GetInternalField(0))->Value());
+ void SMJS_VKeyValues::GetKeyValue(Local<String> prop, const PropertyCallbackInfo<Value>& args){
+	SMJS_VKeyValues *self = dynamic_cast<SMJS_VKeyValues*>((SMJS_BaseWrapped*)Handle<External>::Cast(args.This()->GetInternalField(0))->Value());
 	if(self->kv == NULL) THROW("Invalid keyvalue object");
 
 	v8::String::Utf8Value str(prop);
 	switch(self->kv->GetDataType(*str)){
-		case KeyValues::TYPE_NONE: return v8::Undefined();
-		case KeyValues::TYPE_STRING: return v8::String::New(self->kv->GetString(*str));
-		case KeyValues::TYPE_INT: return v8::Int32::New(self->kv->GetInt(*str));
-		case KeyValues::TYPE_FLOAT: return v8::Number::New(self->kv->GetFloat(*str));
+		case KeyValues::TYPE_NONE: RETURN_UNDEF;
+		case KeyValues::TYPE_STRING: RETURN_STRING(self->kv->GetString(*str));
+		case KeyValues::TYPE_INT: RETURN_INT(self->kv->GetInt(*str));
+		case KeyValues::TYPE_FLOAT: RETURN_NUMBER(self->kv->GetFloat(*str));
 		default: THROW_VERB("Unknown data type %d", self->kv->GetDataType(*str));
 	}
 }
 
-v8::Handle<v8::Value> SMJS_VKeyValues::SetKeyValue(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info){
-	SMJS_VKeyValues *self = dynamic_cast<SMJS_VKeyValues*>((SMJS_BaseWrapped*)Handle<External>::Cast(info.This()->GetInternalField(0))->Value());
+void SMJS_VKeyValues::SetKeyValue(Local<String> prop, Local<Value> value, const PropertyCallbackInfo<Value>& args){
+	SMJS_VKeyValues *self = dynamic_cast<SMJS_VKeyValues*>((SMJS_BaseWrapped*)Handle<External>::Cast(args.This()->GetInternalField(0))->Value());
 	if(self->kv == NULL) THROW("Invalid keyvalue object");
 	
 	v8::String::Utf8Value str(prop);
@@ -105,5 +105,5 @@ v8::Handle<v8::Value> SMJS_VKeyValues::SetKeyValue(v8::Local<v8::String> prop, v
 		default: THROW_VERB("Unknown data type %d", self->kv->GetDataType(*str));
 	}
 
-	return value;
+	RETURN(value);
 }

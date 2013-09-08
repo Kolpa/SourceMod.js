@@ -22,8 +22,8 @@ void SMJS_EntKeyValues::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8
 
 }
 
-v8::Handle<v8::Value> SMJS_EntKeyValues::SetKeyValue(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+void SMJS_EntKeyValues::SetKeyValue(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_EntKeyValues *self = dynamic_cast<SMJS_EntKeyValues*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
 	v8::String::AsciiValue propStr(prop);
@@ -31,10 +31,10 @@ v8::Handle<v8::Value> SMJS_EntKeyValues::SetKeyValue(v8::Local<v8::String> prop,
 	if(value->IsString()){
 		v8::String::AsciiValue valueStr(value->ToString());
 		serverTools->SetKeyValue(self->entWrapper->ent, *propStr, *valueStr);
-		return value;
+		RETURN(value);
 	}else if(value->IsNumber()){
 		serverTools->SetKeyValue(self->entWrapper->ent, *propStr, (float) value->NumberValue());
-		return value;
+		RETURN(value);
 	}
 
 	THROW("Entity KeyValues can only be strings or floats, for other types, vector for example, use: \"0.0 0.0 0.0\"");

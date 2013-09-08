@@ -15,8 +15,8 @@ typedef SMJS_Module* (*SMJS_ModuleCreator)();
 
 void SMJS_AddModule(SMJS_Module *module);
 
-v8::Handle<v8::Value> JSN_Print(const v8::Arguments& args);
-v8::Handle<v8::Value> JSN_Require(const v8::Arguments& args);
+void JSN_Print(const FunctionCallbackInfo<Value>& args);
+void JSN_Require(const FunctionCallbackInfo<Value>& args);
 
 class SMJS_Plugin;
 typedef void(*DestroyCallback)(SMJS_Plugin*);

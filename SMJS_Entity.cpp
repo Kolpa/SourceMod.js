@@ -64,11 +64,11 @@ void SMJS_Entity::SetEntity(CBaseEntity *ent){
 	this->valid = true;
 }
 
-Handle<Value> GetEntityIndex(Local<String> prop, const AccessorInfo& info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); \
+void GetEntityIndex(Local<String> property, const PropertyCallbackInfo<Value>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0);
 	SMJS_Entity* self = dynamic_cast<SMJS_Entity*>((SMJS_Base*)Handle<External>::Cast(_intfld)->Value());
 
-	return v8::Int32::New(self->entIndex);
+	RETURN_INT(self->entIndex);
 }
 
 void SMJS_Entity::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){

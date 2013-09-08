@@ -346,9 +346,7 @@ FUNCTION_M(MGame::findEntityByClassname)
 
 	CBaseEntity *ent = FindEntityByClassname(startIndex, *searchname);
 
-	if(ent == NULL){
-		return v8::Null();
-	}
+	if(ent == NULL) RETURN_NULL;
 
 	RETURN_SCOPED(GetEntityWrapper(ent)->GetWrapper(GetPluginRunning()));
 END
@@ -400,7 +398,7 @@ END
 
 FUNCTION_M(MGame::findEntityByTargetname)
 	CBaseEntity *pEntity = (CBaseEntity *)serverTools->FirstEntity();;
-	if (!pEntity) return v8::Null();
+	if (!pEntity) RETURN_NULL;
 
 	PSTR(searchname);
 
@@ -425,7 +423,7 @@ FUNCTION_M(MGame::findEntityByTargetname)
 		pEntity = (CBaseEntity *)serverTools->NextEntity(pEntity);
 	}
 
-	return v8::Null();
+	RETURN_NULL;
 END
 
 FUNCTION_M(MGame::getTime)
@@ -444,7 +442,7 @@ FUNCTION_M(MGame::hookEvent)
 	
 	if (!gameevents->FindListener(self, *name)){
 		if (!gameevents->AddListener(self, *name, true)){
-			RETURN_SCOPED(v8::Boolean::New(false));
+			RETURN_BOOL(false);
 		}
 	}
 
@@ -455,7 +453,7 @@ FUNCTION_M(MGame::hookEvent)
 		plugin->GetEventHooks(*name)->push_back(v8::Persistent<v8::Function>::New(callback));
 	}
 
-	RETURN_SCOPED(v8::Boolean::New(true));
+	RETURN_BOOL(true);
 END
 
 FUNCTION_M(MGame::createEntity)

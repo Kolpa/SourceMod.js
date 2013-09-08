@@ -4,8 +4,8 @@
 
 WRAPPED_CLS_CPP(SMJS_DataMaps, SMJS_BaseWrapped);
 
-v8::Handle<v8::Value> SMJS_DataMaps::SGetDataMap(v8::Local<v8::String> prop, const v8::AccessorInfo &info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+void SMJS_DataMaps::SGetDataMap(v8::Local<v8::String> prop, const v8::PropertyCallbackInfo<v8::Value>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_DataMaps *self = dynamic_cast<SMJS_DataMaps*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
 	auto ent = self->entWrapper->ent;
@@ -16,27 +16,27 @@ v8::Handle<v8::Value> SMJS_DataMaps::SGetDataMap(v8::Local<v8::String> prop, con
 	v8::String::AsciiValue str(prop);
 
 	typedescription_t *desc = gamehelpers->FindInDataMap(datamap, *str);
-	if(desc == NULL) return v8::Undefined();
+	if(desc == NULL) RETURN_UNDEFINED;
 
 	
 
 	switch(desc->fieldType){
-		case FIELD_INTEGER: return v8::Int32::New(*(int32_t *)((intptr_t)ent + desc->fieldOffset));
-		case FIELD_FLOAT:  return v8::Number::New(*(float *)((intptr_t)ent + desc->fieldOffset));
+		case FIELD_INTEGER: RETURN_INT(*(int32_t *)((intptr_t)ent + desc->fieldOffset));
+		case FIELD_FLOAT:   RETURN_NUMBER(*(float *)((intptr_t)ent + desc->fieldOffset));
 
 		case FIELD_STRING:
 		case FIELD_MODELNAME:
 		case FIELD_SOUNDNAME: {
 				string_t idx = *(string_t *)((intptr_t)ent + desc->fieldOffset);
-				return v8::String::New((idx == NULL_STRING) ? "" : STRING(idx));
+				RETURN_STRING((idx == NULL_STRING) ? "" : STRING(idx));
 		} break;
 
 		default: THROW("Unsupported datamap type");
 	}
 }
 
-v8::Handle<v8::Value> SMJS_DataMaps::SSetDataMap(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info){
-	Local<Value> _intfld = info.This()->GetInternalField(0); 
+void SMJS_DataMaps::SSetDataMap(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args){
+	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_DataMaps *self = dynamic_cast<SMJS_DataMaps*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 
 	auto ent = self->entWrapper->ent;
@@ -47,7 +47,7 @@ v8::Handle<v8::Value> SMJS_DataMaps::SSetDataMap(v8::Local<v8::String> prop, v8:
 	v8::String::AsciiValue str(prop);
 
 	typedescription_t *desc = gamehelpers->FindInDataMap(datamap, *str);
-	if(desc == NULL) return v8::Undefined();
+	if(desc == NULL) RETURN_UNDEFINED;
 
 	
 
@@ -68,5 +68,5 @@ v8::Handle<v8::Value> SMJS_DataMaps::SSetDataMap(v8::Local<v8::String> prop, v8:
 		default: THROW("Unsupported datamap type");
 	}
 
-	return value;
+	RETURN(value);
 }

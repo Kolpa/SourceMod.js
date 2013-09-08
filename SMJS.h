@@ -13,9 +13,13 @@ __pragma(warning(disable:4005) )
 #define HAVE_STDINT_H
 #include "platform.h"
 #define V8STDINT_H_
+
+#include "v8config.h"
 #include "v8.h"
 #include "k7v8macros.h"
 #include "uv.h"
+
+#include <string>
 
 __pragma(warning(default:4005) )
 

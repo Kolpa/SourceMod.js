@@ -21,8 +21,8 @@ public:
 		temp->InstanceTemplate()->SetNamedPropertyHandler(SGetDataMap, SSetDataMap);
 	}
 
-	static v8::Handle<v8::Value> SGetDataMap(v8::Local<v8::String> prop, const v8::AccessorInfo &info);
-	static v8::Handle<v8::Value> SSetDataMap(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+	static void SGetDataMap(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& args);
+	static void SSetDataMap(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args);
 };
 
 #endif

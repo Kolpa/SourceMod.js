@@ -413,7 +413,7 @@ FUNCTION_M(MDota::executeOrders)
 
 	auto arr = v8::Handle<v8::Array>::Cast(units);
 
-	for(int i = 0; i < arr->Length(); i++){
+	for(size_t i = 0; i < arr->Length(); i++){
 		auto element = arr->Get(i)->ToObject();
 		auto target = dynamic_cast<SMJS_Entity*>((SMJS_Base*) v8::Handle<v8::External>::Cast(element->GetInternalField(0))->Value());
 		if(target == NULL) THROW("Invalid entity in array");
@@ -566,16 +566,20 @@ FUNCTION_M(MDota::swapAbilities)
 	PBOL(firstVisible);
 	PBOL(secondVisible);
 
+	const char *strInCls = *inCls;
+	const char *strOutCls = *outCls;
+
+
 	CBaseEntity *unitEnt;
 	unitEnt = unit->ent;
 	if(unitEnt == NULL) THROW("Invalid entity");
 
 	__asm{
-		push secondVisible
-		push firstVisible
-		push inCls
-		push outCls
-		push unitEnt
+		push dword ptr secondVisible
+		push dword ptr firstVisible
+		push strInCls
+		push strOutCls
+		push dword ptr unitEnt
 		call SwapAbilities
 	}
 
@@ -623,15 +627,18 @@ END
 FUNCTION_M(MDota::createAbility)
 	PENT(hero);
 	PSTR(clsname);
+
+	const char *clsnameStr = *clsname;
 	
 	CBaseEntity *heroEnt;
 	heroEnt = hero->ent;
 
 	CBaseEntity *ability;
 
+
 	__asm {
 		push heroEnt
-		push clsname
+		push clsnameStr
 		call CreateAbility
 		mov ability, eax
 		add esp, 8	
@@ -706,13 +713,13 @@ FUNCTION_M(MDota::setParticleControlEnt)
 	if(control == NULL) THROW("Entity cannot be null");
 
 	void *entOffset = (void*)((uintptr_t)control + 656); 
-	char *str = *attachPoint;
+	char *attachPointStr = *attachPoint;
 
 	__asm {
 		push entOffset
 		push control
 		push unknown //idk
-		push str
+		push attachPointStr
 		push attachType //attach_type
 		push controlPoint //control_point
 		push index
@@ -823,9 +830,9 @@ KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *set
 
 	v8::String::Utf8Value str(properties->Get(0));
 
-	for(int i = 0; i < properties->Length(); i++){
+	for(size_t i = 0; i < properties->Length(); i++){
 		v8::String::Utf8Value prop(properties->Get(i));
-		kv->SetFloat(*prop, options->Get(String::New(*prop))->Int32Value());	
+		kv->SetFloat(*prop, options->Get(properties->Get(i))->Int32Value());	
 	}
 	return kv;
 }
@@ -913,6 +920,7 @@ FUNCTION_M(MDota::worldLine)
 END
 
 FUNCTION_M(MDota::removeModifier)
+	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
 	 PENT(unit);
 	 PSTR(modifier);
 
@@ -922,7 +930,7 @@ FUNCTION_M(MDota::removeModifier)
 	 if(unitEnt == NULL) THROW("Invalid entity");
 
 	 char *pModifier = *modifier;
-	 void *modifierManager = (void*)((uintptr_t)unitEnt + 3008);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+	 void *modifierManager = (void*)((uintptr_t)unitEnt + offset);
 
 	 __asm {
 		 push pModifier
@@ -934,6 +942,8 @@ FUNCTION_M(MDota::removeModifier)
 END
 
 FUNCTION_M(MDota::addNewModifier) 
+	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
+
 	PENT(target);
 	PENT(ability);
 	PSTR(modifierName);
@@ -948,7 +958,7 @@ FUNCTION_M(MDota::addNewModifier)
 
 	if(targetEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
 
-	void *modifierManager = (void*)((uintptr_t)targetEnt + 3008);  //I think this might crash on non-npc ents, so.. trees and misc. shit
+	void *modifierManager = (void*)((uintptr_t)targetEnt + offset);
 
 	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
 
@@ -971,8 +981,6 @@ FUNCTION_M(MDota::addNewModifier)
 END
 
 FUNCTION_M(MDota::spawnRune)
-	CBaseEntity *rune;
-	
 	if (gamerules == NULL){
 		gamerules = sdkTools->GetGameRules();
 	}
@@ -1000,7 +1008,7 @@ END
 FUNCTION_M(MDota::heroIdToClassname)
 	PINT(id);
 	auto ret = HeroIdToClassname(id);
-	if(ret == NULL) return v8::Null();
+	if(ret == NULL) RETURN_NULL;
 	RETURN_SCOPED(v8::String::New(ret));
 END
 
@@ -1068,7 +1076,7 @@ FUNCTION_M(MDota::createUnit)
 		add		esp, 10h
 	}
 	
-	if(ent == NULL) return v8::Null();
+	if(ent == NULL) RETURN_NULL;
 	RETURN_SCOPED(GetEntityWrapper(ent)->GetWrapper(GetPluginRunning()));
 END
 
@@ -1120,7 +1128,7 @@ FUNCTION_M(MDota::giveItemToHero)
 
 	auto item = DCreateItem(*itemClsname, ent->ent, ent->ent);
 	if(item == NULL){
-		RETURN_SCOPED(v8::Null());
+		RETURN_NULL;
 	}
 
 	auto inventory = (CBaseEntity*)((intptr_t)ent->ent + offset);
@@ -1335,6 +1343,7 @@ FUNCTION_M(MDota::levelUpAbility)
 END
 
 FUNCTION_M(MDota::hasModifier)
+	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
 	PENT(unit);
 	PSTR(modifier);
 
@@ -1343,14 +1352,14 @@ FUNCTION_M(MDota::hasModifier)
 
 	if(unitEnt == NULL) THROW("Invalid entity");
 
-	void *modifierManager = (void*)((uintptr_t)unitEnt + 3008);
-	char *str = *modifier;
+	void *modifierManager = (void*)((uintptr_t)unitEnt + offset);
+	char *modifierStr = *modifier;
 
 	void *buff;
 
 	__asm {
 		push 0
-		push str 
+		push modifierStr 
 		push modifierManager
 		call FindModifierByName
 		mov buff, eax

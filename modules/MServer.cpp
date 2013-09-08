@@ -45,22 +45,22 @@ END
 FUNCTION_M(MServer::getPort)
 	ARG_COUNT(0);
 	auto cvar = icvar->FindVar("hostport");
-	if(cvar == NULL) return JS_undefined;
-	RETURN_SCOPED(v8::Int32::New(cvar->GetInt()));
+	if(cvar == NULL) RETURN_UNDEFINED;
+	RETURN_INT(cvar->GetInt());
 END
 
 FUNCTION_M(MServer::getIP)
 	ARG_COUNT(0);
 	auto cvar = icvar->FindVar("ip");
-	if(cvar == NULL) return JS_undefined;
-	RETURN_SCOPED(v8::String::New(cvar->GetString()));
+	if(cvar == NULL) RETURN_UNDEFINED;
+	RETURN_STRING(cvar->GetString());
 END
 
 FUNCTION_M(MServer::userIdToClient)
 	PINT(userid);
 	int client = playerhelpers->GetClientOfUserId(userid);
-	if(client <= 0) return v8::Null();
-	if(clients[client] == NULL) return v8::Null();
+	if(client <= 0) RETURN_NULL;
+	if(clients[client] == NULL) RETURN_NULL;
 	RETURN_SCOPED(clients[client]->GetWrapper(GetPluginRunning()));
 END
 
@@ -117,18 +117,18 @@ public:
 		}
 	}
 
-	static v8::Handle<v8::Value> GetClient(uint32_t index, const AccessorInfo& info){
+	static void GetClient(uint32_t index, const PropertyCallbackInfo<Value>& args){
 		if(index >= MAXCLIENTS) RETURN_UNDEF;
 
 		if(GetPluginRunning()->GetApiVersion() < 3){
-			if(index == 0) return v8::Null();
-			if(index >= MAXCLIENTS) return v8::Null();
-			if(clients[index] == NULL) return v8::Null();
-			return clients[index]->GetWrapper(GetPluginRunning());
+			if(index == 0) RETURN_NULL;
+			if(index >= MAXCLIENTS) RETURN_NULL;
+			if(clients[index] == NULL) RETURN_NULL;
+			RETURN(clients[index]->GetWrapper(GetPluginRunning()));
 		}else{
-			if(clients[index + 1] == NULL) return v8::Null();
-			if(index + 1 >= MAXCLIENTS) return v8::Null();
-			return clients[index + 1]->GetWrapper(GetPluginRunning());
+			if(clients[index + 1] == NULL) RETURN_NULL;
+			if(index + 1 >= MAXCLIENTS) RETURN_NULL;
+			RETURN(clients[index + 1]->GetWrapper(GetPluginRunning()));
 		}
 	}
 };

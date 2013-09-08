@@ -29,9 +29,8 @@ public:
 
 	void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper);
 
-	static Handle<Value> GetRulesProp(Local<String> property, const AccessorInfo& info);
-	static Handle<Value> SetRulesProp(Local<String> prop, Local<Value> value, const AccessorInfo& info);
-	
+	static void GetRulesProp(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& args);
+	static void SetRulesProp(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args);
 };
 
 #endif

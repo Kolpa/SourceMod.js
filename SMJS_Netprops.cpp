@@ -64,23 +64,23 @@ void SMJS_Netprops::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Va
 	cachedValues.insert(std::make_pair(plugin->id, std::map<std::string, v8::Persistent<v8::Value>>()));
 }
 
-v8::Handle<v8::Value> VectorGetter(Local<String> prop,  const AccessorInfo& info){
-	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(info.Data())->Value();
+void VectorGetter(Local<String> prop, const PropertyCallbackInfo<Value>& args){
+	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.Data())->Value();
 	
 	Vector *vec = (Vector*)data->addr;
 	if(prop == v8::String::New("x")){
-		return v8::Number::New(vec->x);
+		RETURN_NUMBER(vec->x);
 	}else if(prop == v8::String::New("y")){
-		return v8::Number::New(vec->y);
+		RETURN_NUMBER(vec->y);
 	}else if(prop == v8::String::New("z")){
-		return v8::Number::New(vec->z);
+		RETURN_NUMBER(vec->z);
 	}
 
-	return v8::Undefined();
+	RETURN_UNDEFINED;
 }
 
-void VectorSetter(Local<String> prop, Local<Value> value, const AccessorInfo& info){
-	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(info.Data())->Value();
+void VectorSetter(Local<String> prop, Local<Value> value, const PropertyCallbackInfo<void>& args){
+	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.Data())->Value();
 	
 	Vector *vec = (Vector*)data->addr;
 	if(prop == v8::String::New("x")){
@@ -94,15 +94,19 @@ void VectorSetter(Local<String> prop, Local<Value> value, const AccessorInfo& in
 	if(data->edict != NULL) gamehelpers->SetEdictStateChanged(data->edict, data->actual_offset);
 }
 
-v8::Handle<v8::Value> VectorToString(const v8::Arguments& args) {
+void VectorToString(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.Data())->Value();
+	Vector *vec = (Vector*)data->addr;
+
 	char buffer[256];
 	auto t = args.This();
 	snprintf(buffer, sizeof(buffer), "[Vector %f %f %f]",
-		(float) t->Get(v8::String::New("x"))->NumberValue(),
-		(float) t->Get(v8::String::New("y"))->NumberValue(),
-		(float) t->Get(v8::String::New("z"))->NumberValue()
+		vec->x,
+		vec->y,
+		vec->z
 	);
-	return v8::String::New(buffer);
+
+	RETURN_STRING(buffer);
 }
 
 unsigned int strncopy(char *dest, const char *src, size_t count){
@@ -142,17 +146,17 @@ bool SMJS_Netprops::GetClassPropInfo(const char *classname, const char *propName
 	return gamehelpers->FindSendPropInfo(classname, propName, propInfo);
 }
 
-v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(v8::Local<v8::String> prop, const v8::AccessorInfo &info){
-	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(info.This()->GetInternalField(0))->Value();
+void SMJS_Netprops::SGetNetProp(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& args){
+	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(args.This()->GetInternalField(0))->Value();
 
-	if(!self->entWrapper->valid) return v8::Undefined();
+	if(!self->entWrapper->valid) RETURN_UNDEFINED;
 
-	v8::String::AsciiValue str(prop);
+	v8::String::AsciiValue str(property);
 	
 	std::string propNameStdString(*str);
 
 	auto cachedValue = self->FindCachedValue(GetPluginRunning()->id, propNameStdString);
-	if(!cachedValue.IsEmpty()) return cachedValue;
+	if(!cachedValue.IsEmpty()) RETURN(cachedValue);
 
 	sm_sendprop_info_t propInfo;
 	
@@ -163,7 +167,7 @@ v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(v8::Local<v8::String> prop, con
 	}
 	
 	if(!gamehelpers->FindSendPropInfo(pNet->GetServerClass()->GetName(), *str, &propInfo)){
-		return v8::Undefined();
+		RETURN_UNDEFINED;
 	}
 
 	bool isCacheable;
@@ -173,16 +177,16 @@ v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(v8::Local<v8::String> prop, con
 		self->InsertCachedValue(GetPluginRunning()->id, propNameStdString, v8::Persistent<v8::Value>::New(ret));
 	}
 
-	return ret;
+	RETURN(ret);
 }
 
 
-v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::AccessorInfo &info){
-	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(info.This()->GetInternalField(0))->Value();
+void SMJS_Netprops::SSetNetProp(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args){
+	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(args.This()->GetInternalField(0))->Value();
 
-	if(!self->entWrapper->valid) return v8::Undefined();
+	if(!self->entWrapper->valid) RETURN_UNDEFINED;
 	
-	std::string propNameStdString(*v8::String::AsciiValue(prop));
+	std::string propNameStdString(*v8::String::AsciiValue(property));
 	sm_sendprop_info_t propInfo;
 	
 	IServerUnknown *pUnk = (IServerUnknown *)self->entWrapper->ent;
@@ -192,16 +196,16 @@ v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(v8::Local<v8::String> prop, v8:
 	}
 
 	
-	if(!gamehelpers->FindSendPropInfo(pNet->GetServerClass()->GetName(), *v8::String::AsciiValue(prop), &propInfo)){
-		return v8::Undefined();
+	if(!gamehelpers->FindSendPropInfo(pNet->GetServerClass()->GetName(), *v8::String::AsciiValue(property), &propInfo)){
+		RETURN_UNDEFINED;
 	}
 
 	boost::function<v8::Persistent<v8::Value> ()> f(boost::bind(&SMJS_Netprops::GenerateThenFindCachedValue, self, GetPluginRunning()->id, propNameStdString, self->entWrapper->ent, self->entWrapper->edict, propInfo.prop, propInfo.actual_offset));
 
-	return SSetNetProp(self->entWrapper->ent, self->entWrapper->edict, propInfo.prop, propInfo.actual_offset, value, f);
+	SSetNetProp(self->entWrapper->ent, self->entWrapper->edict, propInfo.prop, propInfo.actual_offset, value, f);
 }
 
-v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(void *ent, edict_t *edict, SendProp *p, size_t offset, v8::Local<v8::Value> value, boost::function<v8::Persistent<v8::Value> ()> getCache, const char *name){
+void SMJS_Netprops::SSetNetProp(void *ent, edict_t *edict, SendProp *p, size_t offset, v8::Local<v8::Value> value, boost::function<v8::Persistent<v8::Value> ()> getCache, const char *name){
 	std::string propNameStdString(name != NULL ? name : p->GetName());
 
 	int bit_count = p->m_nBits;
@@ -231,7 +235,8 @@ v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(void *ent, edict_t *edict, Send
 					Local<Value> _intfld = obj->GetInternalField(0);
 					SMJS_Entity* ent = dynamic_cast<SMJS_Entity*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 					if(ent == NULL){
-						return v8::ThrowException(v8::Exception::TypeError(v8::String::New("Entity field can only contain an entity")));
+						v8::ThrowException(v8::Exception::TypeError(v8::String::New("Entity field can only contain an entity")));
+						return;
 					}
 
 					
@@ -247,12 +252,14 @@ v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(void *ent, edict_t *edict, Send
 			if(!value->IsArray()) THROW("Value must be an array");
 			auto obj = value->ToObject();
 
-			if(obj->Get(v8::String::New("length"))->Uint32Value() != 2) THROW("Value must be an array with 2 elements");
+			if(obj->Get(v8::String::New("length"))->Uint32Value() != 2) {
+				THROW("Value must be an array with 2 elements");
+			}
 
 			auto lowBits = obj->Get(0);
 			auto highBits = obj->Get(1);
 			
-			if(!lowBits->IsNumber() || !highBits->IsNumber()) THROW("Value must be an array with 2 numberic elements");
+			if(!lowBits->IsNumber() || !highBits->IsNumber()) THROW("Value must be an array with 2 numeric elements");
 
 			*(uint32_t * )addr = lowBits->Uint32Value();
 			*(uint32_t * )((intptr_t) addr + 4) = highBits->Uint32Value();
@@ -279,9 +286,13 @@ v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(void *ent, edict_t *edict, Send
 		break;
 	case DPT_Vector: {
 		auto obj = value->ToObject();
-		if(obj.IsEmpty()) return v8::ThrowException(v8::Exception::TypeError(v8::String::New("You can only set a vector field to a vector object")));
+		if(obj.IsEmpty()){
+			v8::ThrowException(v8::Exception::TypeError(v8::String::New("You can only set a vector field to a vector object")));
+			return;
+		}
 		if(!obj->Has(v8::String::New("x")) || !obj->Has(v8::String::New("y")) || !obj->Has(v8::String::New("z"))){
-			 return v8::ThrowException(v8::Exception::TypeError(v8::String::New("You can only set a vector field to a vector object that has the properties x, y and z")));
+			v8::ThrowException(v8::Exception::TypeError(v8::String::New("You can only set a vector field to a vector object that has the properties x, y and z")));
+			return;
 		}
 
 		auto tmp = getCache();
@@ -311,7 +322,6 @@ v8::Handle<v8::Value> SMJS_Netprops::SSetNetProp(void *ent, edict_t *edict, Send
 	}
 
 	if(edict != NULL) gamehelpers->SetEdictStateChanged(edict, offset);
-	return value;
 }
 
 v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(void *ent, edict_t *edict, SendProp *p, size_t offset, bool *isCacheable, const char *name){
@@ -402,7 +412,12 @@ v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(void *ent, edict_t *edict, Send
 	case DPT_DataTable: {
 		SendTable *pTable = p->GetDataTable();
 		if (!pTable){
-			THROW_VERB("Error looking up DataTable for prop %s", name != NULL ? name : p->GetName());
+			{
+				char buffer[521];
+				snprintf(buffer, sizeof(buffer), "Error looking up DataTable for prop %s", name != NULL ? name : p->GetName());
+				v8::ThrowException(v8::String::New(buffer));
+			}
+			return v8::Undefined();
 		}
 
 		SMJS_DataTable *table = new SMJS_DataTable(GetPluginRunning(), ent, edict, pTable, offset);
@@ -410,7 +425,9 @@ v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(void *ent, edict_t *edict, Send
 		return table->GetWrapper();
 	}break;
 
-	default: THROW("Invalid Netprop Type");
+	default:
+		v8::ThrowException(v8::String::New("Invalid Netprop Type"));
+		return v8::Undefined();
 	}
 
 	return v8::Undefined();
@@ -418,15 +435,15 @@ v8::Handle<v8::Value> SMJS_Netprops::SGetNetProp(void *ent, edict_t *edict, Send
 
 SIMPLE_WRAPPED_CLS_CPP(SMJS_DataTable, SMJS_SimpleWrapped);
 
-v8::Handle<v8::Value> SMJS_DataTable::DTGetter(uint32_t index, const AccessorInfo& info){
-	SMJS_DataTable *self = (SMJS_DataTable*) v8::Handle<v8::External>::Cast(info.This()->GetInternalField(0))->Value();
+void SMJS_DataTable::DTGetter(uint32_t index, const PropertyCallbackInfo<Value>& args){
+	SMJS_DataTable *self = (SMJS_DataTable*) v8::Handle<v8::External>::Cast(args.This()->GetInternalField(0))->Value();
 
 	// Index can't be < 0, don't even test for it
 	if(index >= (uint32_t) self->pTable->GetNumProps()) THROW_VERB("Index %d out of bounds", index);
 
 	auto it = self->cachedValues.find(index);
 	if(it != self->cachedValues.end()){
-		return it->second;
+		RETURN(it->second);
 	}
 
 	auto pProp = self->pTable->GetProp(index);
@@ -434,19 +451,19 @@ v8::Handle<v8::Value> SMJS_DataTable::DTGetter(uint32_t index, const AccessorInf
 	bool isCacheable;
 	auto res = SMJS_Netprops::SGetNetProp(self->ent, self->edict, pProp, self->offset + pProp->GetOffset(), &isCacheable, self->pTable->GetName());
 	if(isCacheable){
-		self->cachedValues.insert(std::make_pair(index, res));
+		self->cachedValues.insert(std::make_pair(index, v8::Persistent<v8::Value>::New(res)));
 	}
 
-	return res;
+	RETURN(res);
 }
 
-v8::Handle<v8::Value> SMJS_DataTable::DTSetter(uint32_t index, Local<Value> value, const AccessorInfo& info){
-	SMJS_DataTable *self = (SMJS_DataTable*) v8::Handle<v8::External>::Cast(info.This()->GetInternalField(0))->Value();
+void SMJS_DataTable::DTSetter(uint32_t index, Local<Value> value, const PropertyCallbackInfo<Value>& args){
+	SMJS_DataTable *self = (SMJS_DataTable*) v8::Handle<v8::External>::Cast(args.This()->GetInternalField(0))->Value();
 
 	if(index >= (uint32_t) self->pTable->GetNumProps()) THROW_VERB("Index %d out of bounds", index);
 
 	auto pProp = self->pTable->GetProp(index);
 	boost::function<v8::Persistent<v8::Value> ()> f(boost::bind(&SMJS_DataTable::GenerateThenFindCachedValue, self, index, pProp, self->offset + pProp->GetOffset()));
 
-	return SMJS_Netprops::SSetNetProp(self->ent, self->edict, pProp, self->offset + pProp->GetOffset(), value, f, self->pTable->GetName());
+	SMJS_Netprops::SSetNetProp(self->ent, self->edict, pProp, self->offset + pProp->GetOffset(), value, f, self->pTable->GetName());
 }

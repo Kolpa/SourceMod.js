@@ -51,8 +51,8 @@ using namespace v8;
 * See the 'posix.cpp' module for examples. */
 #define ARGC                           args.Length()
 #define ARG_COUNT(c)                   if ( args.Length() != c ) { \
-	return ThrowException(v8::String::New("Invalid number of arguments")); } 
-#define ARG_BETWEEN(a,b)               if(args.Length() < a || args.Length() > b) return v8::ThrowException(v8::String::New("Must have between " #a " and " #b " arguments")); 
+	THROW("Invalid number of arguments"); } 
+#define ARG_BETWEEN(a,b)               if(args.Length() < a || args.Length() > b) THROW("Must have between " #a " and " #b " arguments"); 
 #define ARG_int(n,c)                   int n=(int)(args[c]->Int32Value())
 #define ARG_str(v,i)                   v8::String::AsciiValue v(args[i]);
 #define ARG_utf8(v,i)                  v8::String::Utf8Value  v(args[i])
@@ -67,9 +67,9 @@ using namespace v8;
 	Handle<Array> name = Handle<Array>::Cast(args[(c)]);
 #define ARG_fn(name, c) \
 	Handle<Function> name = Handle<Function>::Cast(args[(c)]); \
-	if(name.IsEmpty()) return ThrowException(v8::String::New("Invalid argument #" #c ", must be a function"))
+	if(name.IsEmpty()) THROW("Invalid argument #" #c ", must be a function")
 
-#define THROW(str)              return ThrowException(String::New(str))
+#define THROW(str)              v8::ThrowException(String::New(str));return
 #define THROW_VERB(tmpl,...)    { char msg[1024]; snprintf(msg,1000,tmpl,__VA_ARGS__); THROW(msg); }
 // performance freaks use this THROW_VERB :)
 //#define THROW_VERB(tmpl,...)  THROW("Invocation error")
@@ -156,29 +156,32 @@ using namespace v8;
 //
 // ----------------------------------------------------------------------------
 
-#define FUNCTION_DECL(f)        static v8::Handle<v8::Value> f(const v8::Arguments&);
-#define FUNCTION(f,...)         static v8::Handle<v8::Value> f(const v8::Arguments& args) { \
+#define FUNCTION_DECL(f)        static void f(const v8::FunctionCallbackInfo<v8::Value>&);
+#define FUNCTION(f,...)         static void f(const v8::FunctionCallbackInfo<v8::Value>& args) { \
 	v8::HandleScope handlescope; \
 	int _argn=0;    \
 	__VA_ARGS__;
-#define FUNCTION_M(f,...)       v8::Handle<v8::Value> f(const v8::Arguments& args) { \
+#define FUNCTION_M(f,...)       void f(const v8::FunctionCallbackInfo<v8::Value>& args) { \
 	v8::HandleScope handlescope; \
 	int _argn=0;    \
 	__VA_ARGS__;
-#define FUNCTION_C(f)           static v8::Handle<v8::Value> f(const v8::Arguments& args) {
+#define FUNCTION_C(f)           static void f(const v8::FunctionCallbackInfo<v8::Value>& args) {
 #define END                     }
 #define JS_THIS                 args.This()
 #define STUB                    return ThrowException(Exception::Error(String::New("Stub - Function not implemented")));
 #define SET_INTERNAL(ptr)       args.This()->SetInternalField(0, External::New((void*)ptr));
 #define GET_INTERNAL(type,var)  Local<Value> _intfld = args.This()->GetInternalField(0); \
 	type var = dynamic_cast<type>((SMJS_Base*)Handle<External>::Cast(_intfld)->Value());
-#define RETURN_SCOPED(x)        return handlescope.Close(x)
-#define RETURN_INT(i)           return handlescope.Close(Integer::New(i))
-#define RETURN_WRAPPED(ptr)     return v8::External::New(ptr)
-#define RETURN_UNDEF            return JS_undefined
-#define RETURN_WATCHED(ptr,f)   Persistent<External> watcher = Persistent<External>::New(External::New(ptr)); \
-	watcher.MakeWeak(ptr, f);   \
-	return watcher;
+#define RETURN(x)				{args.GetReturnValue().Set(x); return;}
+#define RETURN_SCOPED(x)        RETURN(x)
+#define RETURN_BOOL(i)          RETURN(Boolean::New(i))
+#define RETURN_INT(i)           RETURN(Integer::New(i))
+#define RETURN_NUMBER(i)        RETURN(Number::New(i))
+#define RETURN_STRING(i)        RETURN(String::New(i))
+#define RETURN_WRAPPED(ptr)     RETURN(v8::External::New(ptr))
+#define RETURN_UNDEF            RETURN(v8::Undefined())
+#define RETURN_UNDEFINED		RETURN(v8::Undefined())
+#define RETURN_NULL             RETURN(v8::Null())
 
 // ----------------------------------------------------------------------------
 //
