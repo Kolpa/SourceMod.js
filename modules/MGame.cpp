@@ -668,7 +668,6 @@ void MGame::OnEntityDestroyed(CBaseEntity *pEntity){
 		}
 	}
 
-	entWrapper->MarkInvalid();
 	entWrapper->Destroy(); // Doesn't actually destroy it, only when v8 releases all refs
 }
 
