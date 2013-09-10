@@ -146,7 +146,7 @@ using namespace v8;
 		} \
 		 \
 		ent = dynamic_cast<SMJS_Entity*>((SMJS_Base*) v8::Handle<v8::External>::Cast(ent##_inte)->Value()); \
-		if(ent == NULL) THROW("Invalid other entity"); \
+		if(ent == NULL || !ent->IsValid()) THROW("Invalid other entity"); \
 	}
 	
 

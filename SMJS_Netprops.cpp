@@ -149,7 +149,7 @@ bool SMJS_Netprops::GetClassPropInfo(const char *classname, const char *propName
 void SMJS_Netprops::SGetNetProp(v8::Local<v8::String> property, const v8::PropertyCallbackInfo<v8::Value>& args){
 	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(args.This()->GetInternalField(0))->Value();
 
-	if(!self->entWrapper->valid) RETURN_UNDEFINED;
+	if(!self->entWrapper->IsValid()) RETURN_UNDEFINED;
 
 	v8::String::AsciiValue str(property);
 	
@@ -184,7 +184,7 @@ void SMJS_Netprops::SGetNetProp(v8::Local<v8::String> property, const v8::Proper
 void SMJS_Netprops::SSetNetProp(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args){
 	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(args.This()->GetInternalField(0))->Value();
 
-	if(!self->entWrapper->valid) RETURN_UNDEFINED;
+	if(!self->entWrapper->IsValid()) RETURN_UNDEFINED;
 	
 	std::string propNameStdString(*v8::String::AsciiValue(property));
 	sm_sendprop_info_t propInfo;

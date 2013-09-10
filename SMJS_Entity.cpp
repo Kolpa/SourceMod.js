@@ -33,9 +33,8 @@ SMJS_Entity::SMJS_Entity(CBaseEntity *ent){
 void SMJS_Entity::Destroy(){
 	if(valid){
 		SetEntityWrapper(this->ent, NULL);
+		valid = false;
 	}
-
-	valid = false;
 
 	SMJS_BaseWrapped::Destroy();
 }
@@ -68,7 +67,7 @@ void GetEntityIndex(Local<String> property, const PropertyCallbackInfo<Value>& a
 	Local<Value> _intfld = args.This()->GetInternalField(0);
 	SMJS_Entity* self = dynamic_cast<SMJS_Entity*>((SMJS_Base*)Handle<External>::Cast(_intfld)->Value());
 
-	RETURN_INT(self->entIndex);
+	RETURN_INT(self->GetIndex());
 }
 
 void SMJS_Entity::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){

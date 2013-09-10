@@ -58,7 +58,7 @@ void MClient::RunAuthChecks(){
 		if(client->authStage == 2) continue;
 		
 		if(client->authStage == 0){
-			const char *authid = engine->GetPlayerNetworkIDString(client->entIndex);
+			const char *authid = engine->GetPlayerNetworkIDString(client->GetIndex());
 			if(authid == NULL) continue;
 			client->authStage = 1;
 
@@ -66,7 +66,7 @@ void MClient::RunAuthChecks(){
 		}
 
 		if(client->authStage == 1){
-			if(engine->IsClientFullyAuthenticated(client->entIndex)){
+			if(engine->IsClientFullyAuthenticated(client->GetIndex())){
 				client->authStage = 2;
 				self->CallGlobalFunctionWithWrapped("OnClientAuthorized", client);
 			}
@@ -78,7 +78,7 @@ void MClient::RunAuthChecks(){
 bool OnClientConnect(CEntityIndex clientIndex, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen){
 	edict_t *pEntity = gamehelpers->EdictOfIndex(clientIndex.Get());
 	auto client = new SMJS_Client(pEntity);
-	clients[client->entIndex] = client;
+	clients[client->GetIndex()] = client;
 
 	SMJS_Plugin *pl = NULL;
 	auto returnValue = self->CallGlobalFunctionWithWrapped("OnClientConnect", client, &pl, true);
@@ -110,7 +110,7 @@ void OnClientPutInServer(CEntityIndex clientIndex, const char *playername){
 	if(client == NULL){
 		edict_t *edict = gamehelpers->EdictOfIndex(clientIndex.Get());
 		client = new SMJS_Client(edict);
-		clients[client->entIndex] = client;
+		clients[client->GetIndex()] = client;
 		client->ReattachEntity();
 		clients[gamehelpers->IndexOfEdict(edict)] = client;
 	}
@@ -135,10 +135,10 @@ void OnClientDisconnect_Post(CEntityIndex clientIndex){
 	if(client == NULL) return;
 
 	client->ent = NULL;
-	client->valid = false;
+	client->MarkInvalid();
 	self->CallGlobalFunctionWithWrapped("OnClientDisconnected", client);
 
-	client->entIndex = -1;
+	// client->entIndex = -1;
 	client->Destroy();
 	clients[clientIndex.Get()] = NULL;
 }

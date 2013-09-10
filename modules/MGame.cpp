@@ -612,16 +612,12 @@ void MGame::SetupEntHooks()
 
 }
 
-void MGame::OnPluginDestroyed(SMJS_Plugin *plugin)
-{
-	for (int i = 0; i < ARRAYSIZE(m_EntHooks); ++i)
-	{
+void MGame::OnPluginDestroyed(SMJS_Plugin *plugin){
+	for (int i = 0; i < ARRAYSIZE(m_EntHooks); ++i){
 		EntHookList::iterator iter = m_EntHooks[i].begin();
-		while (iter != m_EntHooks[i].end())
-		{
+		while (iter != m_EntHooks[i].end()){
 			EntHookInfo *hookInfo = *iter;
-			if (plugin == hookInfo->plugin)
-			{
+			if (plugin == hookInfo->plugin){
 				Unhook(hookInfo->entity, (EntHookType)i);
 				hookInfo->callback.Dispose();
 				iter = m_EntHooks[i].erase(iter);
@@ -633,18 +629,36 @@ void MGame::OnPluginDestroyed(SMJS_Plugin *plugin)
 	}
 }
 
-void MGame::OnEntityDestroyed(CBaseEntity *pEntity)
-{
+void MGame::OnEntityDestroyed(CBaseEntity *pEntity){
 	int entIndex = gamehelpers->EntityToBCompatRef(pEntity);
+	auto entWrapper = GetEntityWrapper(pEntity);
 
-	for (int i = 0; i < ARRAYSIZE(m_EntHooks); ++i)
-	{
+	int len = GetNumPlugins();
+	for(int i = 0; i < len; ++i){
+		SMJS_Plugin *pl = GetPlugin(i);
+		if(pl == NULL) continue;
+		
+		HandleScope handle_scope(pl->GetIsolate());
+		Context::Scope context_scope(pl->GetContext());
+
+		auto hooks = pl->GetHooks("OnEntityDestroyed");
+
+		if(hooks->size() == 0) continue;
+		
+		v8::Handle<v8::Value> args[1];
+		args[0] = entWrapper->GetWrapper(pl);
+
+		for(auto it = hooks->begin(); it != hooks->end(); ++it){
+			auto func = *it;
+			func->Call(pl->GetContext()->Global(), 1, args);
+		}
+	}
+
+	for (int i = 0; i < ARRAYSIZE(m_EntHooks); ++i){
 		EntHookList::iterator iter = m_EntHooks[i].begin();
-		while (iter != m_EntHooks[i].end())
-		{
+		while (iter != m_EntHooks[i].end()){
 			EntHookInfo *hookInfo = *iter;
-			if (entIndex == hookInfo->entity)
-			{
+			if (entIndex == hookInfo->entity){
 				Unhook(entIndex, (EntHookType)i);
 				iter = m_EntHooks[i].erase(iter);
 				continue;
@@ -653,6 +667,9 @@ void MGame::OnEntityDestroyed(CBaseEntity *pEntity)
 			iter++;
 		}
 	}
+
+	entWrapper->MarkInvalid();
+	entWrapper->Destroy(); // Doesn't actually destroy it, only when v8 releases all refs
 }
 
 FUNCTION_M(MGame::hookEnt)
@@ -662,11 +679,10 @@ FUNCTION_M(MGame::hookEnt)
 
 	auto callback = v8::Persistent<v8::Function>::New(cbfunc);
 
-	EntHookReturn ret = self->HookInternal(entity->entIndex, (EntHookType)type, GetPluginRunning(), callback);
-	switch (ret)
-	{
+	EntHookReturn ret = self->HookInternal(entity->GetIndex(), (EntHookType)type, GetPluginRunning(), callback);
+	switch (ret){
 	case HookRet_InvalidEntity:
-		THROW_VERB("Entity %d is invalid", entity->entIndex);
+		THROW_VERB("Entity %d is invalid", entity->GetIndex());
 		break;
 	case HookRet_InvalidHookType:
 		THROW("Invalid hook type specified");
@@ -677,12 +693,9 @@ FUNCTION_M(MGame::hookEnt)
 	case HookRet_BadEntForHookType:
 		{
 			const char *pClassname = gamehelpers->GetEntityClassname(entity->ent);
-			if (!pClassname)
-			{
-				THROW_VERB("Hook type not valid for this type of entity (%i).", entity->entIndex);
-			}
-			else
-			{
+			if (!pClassname){
+				THROW_VERB("Hook type not valid for this type of entity (%i).", entity->GetIndex());
+			} else {
 				THROW_VERB("Hook type not valid for this type of entity (%s)", pClassname);
 			}
 
@@ -693,31 +706,25 @@ FUNCTION_M(MGame::hookEnt)
 	RETURN_UNDEF;
 END
 
-static bool UTIL_ContainsDataTable(SendTable *pTable, const char *name)
-{
+static bool UTIL_ContainsDataTable(SendTable *pTable, const char *name){
 	const char *pname;
 	int props = pTable->GetNumProps();
 	SendProp *prop;
 	SendTable *table;
 
 	pname = pTable->GetName(); 
-	if (pname && strcmp(name, pname) == 0)
-		return true;
+	if (pname && strcmp(name, pname) == 0) return true;
 
-	for (int i = 0; i < props; i++)
-	{
+	for (int i = 0; i < props; i++){
 		prop = pTable->GetProp(i);
 
-		if ((table = prop->GetDataTable()) != NULL)
-		{
+		if ((table = prop->GetDataTable()) != NULL){
 			pname = table->GetName();
-			if (pname && strcmp(name, pname) == 0)
-			{
+			if (pname && strcmp(name, pname) == 0){
 				return true;
 			}
 
-			if (UTIL_ContainsDataTable(table, name))
-			{
+			if (UTIL_ContainsDataTable(table, name)){
 				return true;
 			}
 		}
@@ -726,8 +733,7 @@ static bool UTIL_ContainsDataTable(SendTable *pTable, const char *name)
 	return false;
 }
 
-MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plugin *pPlugin, v8::Persistent<v8::Function> callback)
-{
+MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plugin *pPlugin, v8::Persistent<v8::Function> callback){
 	if (!g_EntHookTypes[type].supported)
 		return HookRet_NotSupported;
 
@@ -737,8 +743,7 @@ MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plug
 	if (type < 0 || type >= EntHookType_MAX)
 		return HookRet_InvalidHookType;
 
-	if (!!strcmp(g_EntHookTypes[type].dtReq, ""))
-	{
+	if (!!strcmp(g_EntHookTypes[type].dtReq, "")){
 		IServerUnknown *pUnk = (IServerUnknown *) pEntity;
 		IServerNetworkable *pNet = pUnk->GetNetworkable();
 
@@ -748,20 +753,16 @@ MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plug
 
 	bool bHooked = false;
 
-	for (auto iter = m_EntHooks[type].begin(); iter != m_EntHooks[type].end(); ++iter)
-	{
+	for (auto iter = m_EntHooks[type].begin(); iter != m_EntHooks[type].end(); ++iter){
 		EntHookInfo *hookInfo = *iter;
-		if (hookInfo->entity == entity)
-		{
+		if (hookInfo->entity == entity){
 			bHooked = true;
 			break;
 		}
 	}
 
-	if (!bHooked)
-	{
-		switch (type)
-		{
+	if (!bHooked){
+		switch (type){
 		case EntHookType_OnSpellStart:
 			SH_ADD_MANUALHOOK(OnSpellStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnSpellStart), false);
 			break;
@@ -770,34 +771,49 @@ MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plug
 			break;
 		case EntHookType_GetManaCost:
 			SH_ADD_MANUALHOOK(GetManaCost, pEntity, SH_MEMBER(self, &MGame::Hook_GetManaCost), false);
+			break;
 		case EntHookType_IsStealable:
 			SH_ADD_MANUALHOOK(IsStealable, pEntity, SH_MEMBER(self, &MGame::Hook_IsStealable), false);
+			break;
 		case EntHookType_GetChannelTime:
 			SH_ADD_MANUALHOOK(GetChannelTime, pEntity, SH_MEMBER(self, &MGame::Hook_GetChannelTime), false);
+			break;
 		case EntHookType_GetCastRange:
 			SH_ADD_MANUALHOOK(GetCastRange, pEntity, SH_MEMBER(self, &MGame::Hook_GetCastRange), false);
+			break;
 		case EntHookType_GetCastPoint:
 			SH_ADD_MANUALHOOK(GetCastPoint, pEntity, SH_MEMBER(self, &MGame::Hook_GetCastPoint), false);
+			break;
 		case EntHookType_GetCooldown:
 			SH_ADD_MANUALHOOK(GetCooldown, pEntity, SH_MEMBER(self, &MGame::Hook_GetCooldown), false);
+			break;
 		case EntHookType_GetAbilityDamage:
 			SH_ADD_MANUALHOOK(GetAbilityDamage, pEntity, SH_MEMBER(self, &MGame::Hook_GetAbilityDamage), false);
+			break;
 		case EntHookType_OnAbilityPhaseStart:
 			SH_ADD_MANUALHOOK(OnAbilityPhaseStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnAbilityPhaseStart), false);
+			break;
 		case EntHookType_OnAbilityPhaseInterrupted:
 			SH_ADD_MANUALHOOK(OnAbilityPhaseInterrupted, pEntity, SH_MEMBER(self, &MGame::Hook_OnAbilityPhaseInterrupted), false);
+			break;
 		case EntHookType_OnChannelFinish:
 			SH_ADD_MANUALHOOK(OnChannelFinish, pEntity, SH_MEMBER(self, &MGame::Hook_OnChannelFinish), false);
+			break;
 		case EntHookType_OnToggle:
 			SH_ADD_MANUALHOOK(OnToggle, pEntity, SH_MEMBER(self, &MGame::Hook_OnToggle), false);
+			break;
 		case EntHookType_OnProjectileHit:
 			SH_ADD_MANUALHOOK(OnProjectileHit, pEntity, SH_MEMBER(self, &MGame::Hook_OnProjectileHit), false);
+			break;
 		case EntHookType_OnProjectileThinkWithVector:
 			SH_ADD_MANUALHOOK(OnProjectileThinkWithVector, pEntity, SH_MEMBER(self, &MGame::Hook_OnProjectileThinkWithVector), false);
+			break;
 		case EntHookType_OnProjectileThinkWithInt:
 			SH_ADD_MANUALHOOK(OnProjectileThinkWithInt, pEntity, SH_MEMBER(self, &MGame::Hook_OnProjectileThinkWithInt), false);
+			break;
 		case EntHookType_OnStolen:
 			SH_ADD_MANUALHOOK(OnStolen, pEntity, SH_MEMBER(self, &MGame::Hook_OnStolen), false);
+			break;
 		}
 	}
 
@@ -814,14 +830,12 @@ MGame::EntHookReturn MGame::HookInternal(int entity, EntHookType type, SMJS_Plug
 	return HookRet_Successful;
 }
 
-void MGame::Unhook(int entIndex, EntHookType type)
-{
+void MGame::Unhook(int entIndex, EntHookType type){
 	CBaseEntity *pEntity = gamehelpers->ReferenceToEntity(entIndex);
 
 	int hookCount = 0;
 	EntHookList::iterator iter = m_EntHooks[type].begin();
-	while (iter != m_EntHooks[type].end())
-	{
+	while (iter != m_EntHooks[type].end()){
 		EntHookInfo *hookInfo = *iter;
 		if (entIndex == hookInfo->entity)
 			hookCount++;
@@ -829,10 +843,8 @@ void MGame::Unhook(int entIndex, EntHookType type)
 		iter++;
 	}
 
-	if (hookCount == 1)
-	{
-		switch (type)
-		{
+	if (hookCount == 1){
+		switch (type){
 		case EntHookType_OnSpellStart:
 			SH_REMOVE_MANUALHOOK(OnSpellStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnSpellStart), false);
 			break;
@@ -841,34 +853,49 @@ void MGame::Unhook(int entIndex, EntHookType type)
 			break;
 		case EntHookType_GetManaCost:
 			SH_REMOVE_MANUALHOOK(GetManaCost, pEntity, SH_MEMBER(self, &MGame::Hook_GetManaCost), false);
+			break;
 		case EntHookType_IsStealable:
 			SH_REMOVE_MANUALHOOK(IsStealable, pEntity, SH_MEMBER(self, &MGame::Hook_IsStealable), false);
+			break;
 		case EntHookType_GetChannelTime:
 			SH_REMOVE_MANUALHOOK(GetChannelTime, pEntity, SH_MEMBER(self, &MGame::Hook_GetChannelTime), false);
+			break;
 		case EntHookType_GetCastRange:
 			SH_REMOVE_MANUALHOOK(GetCastRange, pEntity, SH_MEMBER(self, &MGame::Hook_GetCastRange), false);
+			break;
 		case EntHookType_GetCastPoint:
 			SH_REMOVE_MANUALHOOK(GetCastPoint, pEntity, SH_MEMBER(self, &MGame::Hook_GetCastPoint), false);
+			break;
 		case EntHookType_GetCooldown:
 			SH_REMOVE_MANUALHOOK(GetCooldown, pEntity, SH_MEMBER(self, &MGame::Hook_GetCooldown), false);
+			break;
 		case EntHookType_GetAbilityDamage:
 			SH_REMOVE_MANUALHOOK(GetAbilityDamage, pEntity, SH_MEMBER(self, &MGame::Hook_GetAbilityDamage), false);
+			break;
 		case EntHookType_OnAbilityPhaseStart:
 			SH_REMOVE_MANUALHOOK(OnAbilityPhaseStart, pEntity, SH_MEMBER(self, &MGame::Hook_OnAbilityPhaseStart), false);
+			break;
 		case EntHookType_OnAbilityPhaseInterrupted:
 			SH_REMOVE_MANUALHOOK(OnAbilityPhaseInterrupted, pEntity, SH_MEMBER(self, &MGame::Hook_OnAbilityPhaseInterrupted), false);
+			break;
 		case EntHookType_OnChannelFinish:
 			SH_REMOVE_MANUALHOOK(OnChannelFinish, pEntity, SH_MEMBER(self, &MGame::Hook_OnChannelFinish), false);
+			break;
 		case EntHookType_OnToggle:
 			SH_REMOVE_MANUALHOOK(OnToggle, pEntity, SH_MEMBER(self, &MGame::Hook_OnToggle), false);
+			break;
 		case EntHookType_OnProjectileHit:
 			SH_REMOVE_MANUALHOOK(OnProjectileHit, pEntity, SH_MEMBER(self, &MGame::Hook_OnProjectileHit), false);
+			break;
 		case EntHookType_OnProjectileThinkWithVector:
 			SH_REMOVE_MANUALHOOK(OnProjectileThinkWithVector, pEntity, SH_MEMBER(self, &MGame::Hook_OnProjectileThinkWithVector), false);
+			break;
 		case EntHookType_OnProjectileThinkWithInt:
 			SH_REMOVE_MANUALHOOK(OnProjectileThinkWithInt, pEntity, SH_MEMBER(self, &MGame::Hook_OnProjectileThinkWithInt), false);
+			break;
 		case EntHookType_OnStolen:
 			SH_REMOVE_MANUALHOOK(OnStolen, pEntity, SH_MEMBER(self, &MGame::Hook_OnStolen), false);
+			break;
 		}
 	}
 }
@@ -1466,8 +1493,9 @@ void MGame::Hook_OnStolen(){
 			}
 		}
 	}
-	if(handled)
+	if(handled){
 		RETURN_META(MRES_SUPERCEDE);
+	}
 
 	RETURN_META(MRES_IGNORED);
 }

@@ -14,8 +14,7 @@ public:
 	CBaseEntity *ent;
 	edict_t *edict;
 
-	int entIndex;
-	bool valid;
+	
 	bool isEdict;
 	SMJS_Netprops netprops;
 	SMJS_EntKeyValues keyvalues;
@@ -25,6 +24,14 @@ public:
 	void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper);
 
 	void SetEntity(CBaseEntity *ent);
+	inline void MarkInvalid(){
+		valid = false;
+		ent = NULL;
+		edict = NULL;
+	}
+
+	inline bool IsValid(){ return valid; }
+	inline int GetIndex(){ return entIndex; }
 
 	virtual void Destroy();
 
@@ -61,6 +68,10 @@ public:
 		WRAPPED_FUNC(changeTeam);
 
 	}
+
+protected:
+	bool valid;
+	int entIndex;
 
 private:
 	SMJS_Entity();

@@ -418,18 +418,18 @@ FUNCTION_M(MDota::executeOrders)
 		auto target = dynamic_cast<SMJS_Entity*>((SMJS_Base*) v8::Handle<v8::External>::Cast(element->GetInternalField(0))->Value());
 		if(target == NULL) THROW("Invalid entity in array");
 	
-		vector.AddToTail(target->entIndex);
+		vector.AddToTail(target->GetIndex());
 	}
 
 	if(ability == NULL){
 		orders.m_iAbilityEntIndex = -1;
 	}else{
-		orders.m_iAbilityEntIndex = ability->entIndex;
+		orders.m_iAbilityEntIndex = ability->GetIndex();
 	}
 	if(target == NULL){
 		orders.m_iTargetEntIndex = -1;
 	}else{
-		orders.m_iTargetEntIndex = target->entIndex;
+		orders.m_iTargetEntIndex = target->GetIndex();
 	}
 
 	orders.m_bQueueOrder = queue;
@@ -651,12 +651,12 @@ FUNCTION_M(MDota::sendAudio)
 	POBJ(client);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 	
 	PBOL(stop);
 	PSTR(name);
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	CUserMsg_SendAudio audiomsg;
 	audiomsg.set_stop(stop);
 	audiomsg.set_name(*name);
@@ -670,9 +670,9 @@ FUNCTION_M(MDota::releaseParticle)
 	PINT(index);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	CDOTAUserMsg_ParticleManager particlemsg;
 	particlemsg.set_index(index);
 	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_RELEASE);
@@ -688,9 +688,9 @@ FUNCTION_M(MDota::destroyParticle)
 	PBOL(destroyImmediately);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	CDOTAUserMsg_ParticleManager particlemsg;
 	particlemsg.set_index(index);
 	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_DESTROY);
@@ -739,9 +739,9 @@ FUNCTION_M(MDota::setParticleOrient)
 	PVEC(xup, yup, zup);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	CDOTAUserMsg_ParticleManager particlemsg;
 	particlemsg.set_index(index);
 	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_UPDATE_ORIENTATION);
@@ -775,9 +775,9 @@ FUNCTION_M(MDota::setParticleControl)
 	PVEC(x,y,z);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(client->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	CDOTAUserMsg_ParticleManager particlemsg;
 	particlemsg.set_index(index);
 	particlemsg.set_type(DOTA_PARTICLE_MANAGER_EVENT_UPDATE);
@@ -841,7 +841,7 @@ FUNCTION_M(MDota::mapLine)
 	POBJ(receiving);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(receiving->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
 	PINT(playerId);
 	PBOL(initial);
@@ -854,7 +854,7 @@ FUNCTION_M(MDota::mapLine)
 	mapmsg.mutable_mapline()->set_y(y);
 	mapmsg.mutable_mapline()->set_initial(initial);
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	engine->SendUserMessage(filter, DOTA_UM_MapLine, mapmsg);
 	RETURN_UNDEF;
 END
@@ -863,7 +863,7 @@ FUNCTION_M(MDota::pingLocation)
 	POBJ(receiving);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(receiving->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
 	PINT(playerId);
 	PINT(pingTarget);
@@ -880,7 +880,7 @@ FUNCTION_M(MDota::pingLocation)
 	pingmsg.mutable_location_ping()->set_type(type);
 	pingmsg.mutable_location_ping()->set_direct_ping(directPing);
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	engine->SendUserMessage(filter, DOTA_UM_LocationPing, pingmsg);
 
 	RETURN_UNDEF;
@@ -890,14 +890,14 @@ FUNCTION_M(MDota::worldLine)
 	POBJ(receiving);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(receiving->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
 	PINT(playerId);
 	PBOL(end);
 	PBOL(initial);
 	PVEC(x,y,z);
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 
 	CDOTAUserMsg_WorldLine linemsg;
 	linemsg.set_player_id(playerId);
@@ -907,11 +907,8 @@ FUNCTION_M(MDota::worldLine)
 	internalmsg->set_x(x);
 	internalmsg->set_y(y);
 	internalmsg->set_z(z);
-	
-	
-		internalmsg->set_end(end);
-	
-		internalmsg->set_initial(initial);
+	internalmsg->set_end(end);
+	internalmsg->set_initial(initial);
 	
 
 	engine->SendUserMessage(filter, DOTA_UM_WorldLine, linemsg);
@@ -1189,7 +1186,7 @@ FUNCTION_M(MDota::sendStatPopup)
 	POBJ(targetObj);
 
 	auto target = dynamic_cast<SMJS_Client*>((SMJS_Base*) v8::Handle<v8::External>::Cast(targetObj->GetInternalField(0))->Value());
-	if(target == NULL) THROW("Invalid target");
+	if(target == NULL || !target->IsValid()) THROW("Invalid target");
 
 
 	PINT(type);
@@ -1207,7 +1204,7 @@ FUNCTION_M(MDota::sendStatPopup)
 		msg.mutable_statpopup()->add_stat_strings(*str, str.length());
 	}
 
-	SingleRecipientFilter filter(target->entIndex);
+	SingleRecipientFilter filter(target->GetIndex());
 	engine->SendUserMessage(filter, DOTA_UM_SendStatPopup, msg);
 	
 	RETURN_SCOPED(v8::Boolean::New(true));

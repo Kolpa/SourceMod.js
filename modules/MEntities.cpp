@@ -52,8 +52,8 @@ void SetEntityWrapper(CBaseEntity *pEntity, SMJS_Entity *wrapper){
 
 void ClearEntityWrappers(){
 	for(auto it = refs.begin(); it != refs.end(); ++it){
-		// Mark it as not valid so it doesn't call SetEntityWrapper
-		it->second->valid = false;
+		// Mark it as invalid so it doesn't call SetEntityWrapper
+		it->second->MarkInvalid();
 		it->second->Destroy();
 	}
 	refs.clear();
