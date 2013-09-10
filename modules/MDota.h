@@ -167,6 +167,7 @@ public:
 	FUNCTION_DECL(unitHasState);
 	FUNCTION_DECL(findUnitsInRadius);
 	FUNCTION_DECL(setUnitState);
+	FUNCTION_DECL(upgradeAbility);
 
 	FUNCTION_DECL(_unitInvade);
 	
@@ -219,6 +220,7 @@ public:
 		WRAPPED_FUNC(unitHasState);
 		WRAPPED_FUNC(findUnitsInRadius);
 		WRAPPED_FUNC(setUnitState);
+		WRAPPED_FUNC(upgradeAbility);
 
 		WRAPPED_FUNC(_unitInvade);
 		
