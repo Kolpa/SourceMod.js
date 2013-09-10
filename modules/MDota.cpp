@@ -37,8 +37,8 @@
 		name = *(type**)name; \
 	}
 	
-#define FIND_DOTA_PTR_NEW(name, signature, len) \
-	if((*((void**)&name) = g_MemUtils.FindPattern(serverFac, signature, len)) == NULL){ \
+#define FIND_DOTA_PTR_NEW(name, signature) \
+	if((*((void**)&name) = g_MemUtils.FindPattern(serverFac, signature, sizeof(signature) - 1)) == NULL){ \
 		smutils->LogError(myself, "Couldn't sigscan " #name); \
 	}
 
@@ -195,6 +195,7 @@ static void *ExecuteOrders;
 static void *GetCursorLocation;
 static void *SwapAbilities;
 static void *RemoveAbilityFromIndex;
+static void *UpgradeAbility;
 
 static uint8_t GetParticleManager[4];
 
@@ -289,7 +290,7 @@ MDota::MDota(){
 
 	FIND_DOTA_PTR(GameManager);
 
-	FIND_DOTA_PTR_NEW(UTIL_Remove, "\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74*\x8B\x46\x08\xF6\x80****\x01\x75*\x8B", 28);
+	FIND_DOTA_PTR_NEW(UTIL_Remove, "\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74*\x8B\x46\x08\xF6\x80****\x01\x75*\x8B");
 	FIND_DOTA_FUNC(FindUnitsInRadius);
 	FIND_DOTA_FUNC(LoadParticleFile);
 	FIND_DOTA_FUNC(SpawnRune);
@@ -320,6 +321,7 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(StealAbility);
 	FIND_DOTA_FUNC(DCreateItemDrop);
 	FIND_DOTA_FUNC(DLinkItemDrop);
+	FIND_DOTA_PTR_NEW(UpgradeAbility, "\x8B\x8F\x2A\x2A\x2A\x2A\x8B\x07\x8B\x90\x2A\x2A\x2A\x2A\x41\x56\x51\x8B\xCF\xFF\xD2\x8B\x07\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCF\xFF\xD2\x8B\x07\x8B");
 	
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
@@ -1516,6 +1518,15 @@ FUNCTION_M(MDota::setUnitState)
 	}
 
 	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::upgradeAbility)
+	PENT(ability);
+	CBaseEntity *abilityPointer = ability->ent;
+	__asm {
+		mov edi, abilityPointer
+		call UpgradeAbility
+	}
 END
 
 FUNCTION_M(MDota::_unitInvade)
