@@ -14,7 +14,6 @@ __pragma(warning(disable:4005) )
 #include "platform.h"
 #define V8STDINT_H_
 
-#include "v8config.h"
 #include "v8.h"
 #include "k7v8macros.h"
 #include "uv.h"

@@ -69,7 +69,7 @@ using namespace v8;
 	Handle<Function> name = Handle<Function>::Cast(args[(c)]); \
 	if(name.IsEmpty()) THROW("Invalid argument #" #c ", must be a function")
 
-#define THROW(str)              v8::ThrowException(String::New(str));return
+#define THROW(str)              {v8::ThrowException(String::New(str));return;}
 #define THROW_VERB(tmpl,...)    { char msg[1024]; snprintf(msg,1000,tmpl,__VA_ARGS__); THROW(msg); }
 // performance freaks use this THROW_VERB :)
 //#define THROW_VERB(tmpl,...)  THROW("Invocation error")

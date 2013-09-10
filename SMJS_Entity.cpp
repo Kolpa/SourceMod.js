@@ -89,7 +89,7 @@ FUNCTION_M(SMJS_Entity::getClassname)
 	GET_INTERNAL(SMJS_Entity*, self);
 	if(!self->valid) THROW("Invalid entity");
 	
-	RETURN_SCOPED(v8::String::New(gamehelpers->GetEntityClassname(self->ent)));
+	RETURN_STRING(gamehelpers->GetEntityClassname(self->ent));
 END
 
 FUNCTION_M(SMJS_Entity::input)
