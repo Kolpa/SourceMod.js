@@ -1078,9 +1078,10 @@ int MGame::Hook_GetCastRange()
 {
 	CBaseEntity *pAbility = META_IFACEPTR(CBaseEntity);
 	int entity = gamehelpers->EntityToBCompatRef(pAbility);
+	SMJS_Entity *entityWrapper = GetEntityWrapper(pAbility);
 
 	bool handled = false;
-	int returnValue = true;
+	int returnValue;
 
 	for (auto iter = m_EntHooks[EntHookType_GetCastRange].begin(); iter != m_EntHooks[EntHookType_GetCastRange].end(); ++iter)
 	{
@@ -1092,7 +1093,7 @@ int MGame::Hook_GetCastRange()
 		HandleScope handle_scope(pPlugin->GetIsolate());
 		Context::Scope context_scope(pPlugin->GetContext());
 
-		SMJS_Entity *entityWrapper = GetEntityWrapper(pAbility);
+		
 		v8::Handle<v8::Value> args[1];
 		args[0] = entityWrapper->GetWrapper(pPlugin);
 		auto res = pHook->callback->Call(pPlugin->GetContext()->Global(), 1, args);

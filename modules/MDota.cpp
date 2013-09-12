@@ -18,7 +18,7 @@
 	if(varName == 0){ \
 		sm_sendprop_info_t prop; \
 		if(!SMJS_Netprops::GetClassPropInfo(#clsName, #propName, &prop)){ \
-			THROW("Couldn't find netprop " #clsName " in " #propName); \
+			THROW("Couldn't find netprop " #propName " in " #clsName); \
 		} \
 		varName = prop.actual_offset; \
 	}
@@ -196,6 +196,8 @@ static void *GetCursorLocation;
 static void *SwapAbilities;
 static void *RemoveAbilityFromIndex;
 static void *UpgradeAbility;
+static void *ForceKill;
+static void *SetControllableByPlayer;
 
 static uint8_t GetParticleManager[4];
 
@@ -322,7 +324,9 @@ MDota::MDota(){
 	FIND_DOTA_FUNC(DCreateItemDrop);
 	FIND_DOTA_FUNC(DLinkItemDrop);
 	FIND_DOTA_PTR_NEW(UpgradeAbility, "\x8B\x8F\x2A\x2A\x2A\x2A\x8B\x07\x8B\x90\x2A\x2A\x2A\x2A\x41\x56\x51\x8B\xCF\xFF\xD2\x8B\x07\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCF\xFF\xD2\x8B\x07\x8B");
-	
+	FIND_DOTA_PTR_NEW(ForceKill, "\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x5C\x83\xBE\x2A\x2A\x2A\x2A\x00\x57\x8D\xBE\x2A\x2A\x2A\x2A\x7E\x2A\x8D\x44\x24\x08\xE8");
+	FIND_DOTA_PTR_NEW(SetControllableByPlayer, "\x51\x56\x89\x86\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xBE\x2A\x2A\x2A\x2A\xFF\x74\x2A\x8B\x8E\x2A\x2A\x2A\x2A\xC1\xE9\x0B\xF6\xC1\x01");
+
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
 		smutils->LogError(myself, "Couldn't find expRequiredForLevel\n");
@@ -1526,6 +1530,40 @@ FUNCTION_M(MDota::upgradeAbility)
 	__asm {
 		mov edi, abilityPointer
 		call UpgradeAbility
+	}
+END
+
+FUNCTION_M(MDota::forceKill)
+	PENT(ent);
+	PBOL(unknownBool);
+
+	CBaseEntity *pEntity = ent->ent;
+	__asm {
+		push dword ptr unknownBool
+		mov esi, pEntity
+		call ForceKill
+	}
+
+END
+
+FUNCTION_M(MDota::setUnitOwner)
+	USE_NETPROP_OFFSET(ownerOffset, CBaseEntity, m_hOwnerEntity);
+	USE_NETPROP_OFFSET(playerIdOffset, CDOTA_BaseNPC_Hero, m_iPlayerID);
+
+	PENT(unit);
+	PENT(hero);
+
+	CBaseEntity *pEntity = unit->ent;
+	int playerId = *(int*)((intptr_t) pEntity + playerIdOffset);
+
+	CBaseHandle &hndl = *(CBaseHandle *)((intptr_t) unit->ent + ownerOffset);
+
+	hndl.Set((IHandleEntity*) hero->ent);
+
+	__asm {
+		mov eax, playerId
+		mov esi, pEntity
+		call SetControllableByPlayer
 	}
 END
 
