@@ -138,7 +138,7 @@ using namespace v8;
 #define PENT(ent) 0; \
 	POBJ_NULLABLE(ent##_tmp); \
 	SMJS_Entity *ent = NULL; \
-	if(!ent##_tmp.IsEmpty()){ \
+	if(!ent##_tmp.IsEmpty() && !ent_##tmp->IsNull() && !ent_##tmp->IsUndefined()){ \
 		 \
 		auto ent##_inte = ent##_tmp->GetInternalField(0); \
 		if(ent##_inte.IsEmpty()){ \
