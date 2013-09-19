@@ -1051,22 +1051,6 @@ FUNCTION_M(MDota::addNewModifier)
 		mov  buff, eax
 	}
 
-/*	CBaseEntity *caster;
-
-
-
-	CBaseHandle &hndl = *(CBaseHandle *)((intptr_t) buff + 60);
-	gamehelpers->SetHandleEntity(hndl, gamehelpers->EdictOfIndex(test->GetIndex()));
-	//CBaseEntity *owner = gamehelpers->ReferenceToEntity(hndl.GetEntryIndex());
-
-	__asm {
-		mov eax, buff
-		call GetBuffCaster
-		mov caster, eax
-	}
-
-	printf("crash!!!!!\n");
-	RETURN_SCOPED(GetEntityWrapper(caster)->GetWrapper(GetPluginRunning()));*/
 	RETURN_UNDEF;
 END
 
