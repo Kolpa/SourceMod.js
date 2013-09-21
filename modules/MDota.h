@@ -133,7 +133,9 @@ public:
 	FUNCTION_DECL(getTotalExpRequiredForLevel);
 	FUNCTION_DECL(setTotalExpRequiredForLevel);
 	FUNCTION_DECL(sendAudio);
+	FUNCTION_DECL(getModifierCaster);
 	FUNCTION_DECL(createParticleEffect);
+	FUNCTION_DECL(getAbilityCaster);
 	FUNCTION_DECL(setParticleControlEnt);
 	FUNCTION_DECL(setParticleControl);
 	FUNCTION_DECL(setParticleOrient);
@@ -141,6 +143,7 @@ public:
 	FUNCTION_DECL(spawnRune);
 	FUNCTION_DECL(applyDamage);
 	FUNCTION_DECL(removeAbilityFromIndex);
+	FUNCTION_DECL(setPurchaser);
 	FUNCTION_DECL(removeModifier);
 	FUNCTION_DECL(getCursorTarget);
 	FUNCTION_DECL(sendStatPopup);
@@ -188,10 +191,13 @@ public:
 		WRAPPED_FUNC(pingLocation);
 		WRAPPED_FUNC(removeModifier);
 		WRAPPED_FUNC(worldLine);
+		WRAPPED_FUNC(setPurchaser);
 		WRAPPED_FUNC(executeOrders);
 		WRAPPED_FUNC(getCursorLocation);
 		WRAPPED_FUNC(swapAbilities);
+		WRAPPED_FUNC(getAbilityCaster);
 		WRAPPED_FUNC(removeAbilityFromIndex);
+		WRAPPED_FUNC(getModifierCaster);
 		WRAPPED_FUNC(findClearSpaceForUnit);
 		WRAPPED_FUNC(setWaitForPlayersCount);
 		WRAPPED_FUNC(getCursorTarget);

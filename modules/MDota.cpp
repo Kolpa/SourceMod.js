@@ -23,6 +23,16 @@
 		varName = prop.actual_offset; \
 	}
 
+#define USE_NETPROP_OFFSET_GENERAL(varName, clsName, propName) \
+	static int varName = 0; \
+	if(varName == 0){ \
+		sm_sendprop_info_t prop; \
+		if(!SMJS_Netprops::GetClassPropInfo(#clsName, #propName, &prop)){ \
+			printf("Couldn't find netprop"); \
+		} \
+		varName = prop.actual_offset; \
+	}
+
 #define FIND_DOTA_PTR(name) \
 	if(!dotaConf->GetMemSig(#name, (void**) &name) || name == NULL){ \
 		smutils->LogError(myself, "Couldn't sigscan " #name); \
@@ -198,6 +208,9 @@ static void *RemoveAbilityFromIndex;
 static void *UpgradeAbility;
 static void *ForceKill;
 static void *SetControllableByPlayer;
+static void *SetPurchaser;
+static void *GetBuffCaster;
+static void *GetAbilityCaster;
 
 static uint8_t GetParticleManager[4];
 
@@ -217,6 +230,7 @@ static CDetour *heroBuyItemDetour;
 static CDetour *unitThinkDetour;
 static CDetour *heroSpawnDetour;
 static CDetour *isDeniableDetour;
+static CDetour *pickupItemDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
@@ -290,6 +304,9 @@ MDota::MDota(){
 	isDeniableDetour = DETOUR_CREATE_STATIC(IsDeniable, "IsDeniable");
 	if(isDeniableDetour) isDeniableDetour->EnableDetour();
 
+	pickupItemDetour = DETOUR_CREATE_STATIC(PickupItem, "PickupItem");
+	if(pickupItemDetour) pickupItemDetour->EnableDetour();
+
 	FIND_DOTA_PTR(GameManager);
 
 	FIND_DOTA_PTR_NEW(UTIL_Remove, "\x55\x8B\xEC\x83\xE4\xF8\x56\x8B\x75\x08\x57\x85\xF6\x74*\x8B\x46\x08\xF6\x80****\x01\x75*\x8B");
@@ -326,6 +343,10 @@ MDota::MDota(){
 	FIND_DOTA_PTR_NEW(UpgradeAbility, "\x8B\x8F\x2A\x2A\x2A\x2A\x8B\x07\x8B\x90\x2A\x2A\x2A\x2A\x41\x56\x51\x8B\xCF\xFF\xD2\x8B\x07\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCF\xFF\xD2\x8B\x07\x8B");
 	FIND_DOTA_PTR_NEW(ForceKill, "\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x5C\x83\xBE\x2A\x2A\x2A\x2A\x00\x57\x8D\xBE\x2A\x2A\x2A\x2A\x7E\x2A\x8D\x44\x24\x08\xE8");
 	FIND_DOTA_PTR_NEW(SetControllableByPlayer, "\x51\x56\x89\x86\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xBE\x2A\x2A\x2A\x2A\xFF\x74\x2A\x8B\x8E\x2A\x2A\x2A\x2A\xC1\xE9\x0B\xF6\xC1\x01");
+	FIND_DOTA_PTR_NEW(SetPurchaser, "\x55\x8B\xEC\x53\x8B\x5D\x08\x57\x85\xC9\x74\x2A\x8B\x01\x8B\x50\x08\xFF\xD2\x8B\x38\x83\xFF\xFF\x74\x2A\x8B\xC7\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x8B\xCF\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x10\xEB\x2A\x83\xCF\xFF\x33\xD2\x8B\x8B\x40\x04\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04");
+	FIND_DOTA_PTR_NEW(GetBuffCaster, "\x8B\x50\x3C\x83\xFA\xFF\x74\x2A\x8B\xC2\x25\xFF\xFF\x00\x00\x8B\xC8\xC1\xE1\x04\x81\x2A\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x51\x04\x75\x2A\x8B\x09\x85\xC9\x75");
+	FIND_DOTA_PTR_NEW(GetAbilityCaster, "\x8B\x88\xC4\x01\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xC3\x33\xC0\xC3");
+	//55 8B EC 8B 55 0C 8B 82 F8 04 00 00 83 EC 08 83 F8 FF 74 ? 8B C8 81 E1 FF FF 00 00 C1 E1 04 81 ? ? ? ? ? C1 E8 10 39 41 04 75 ? 8B 09 89 4D FC 85 C9 75
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
@@ -401,6 +422,22 @@ void PatchWaitForPlayersCount(){
 	*((int **)((intptr_t) ptr + 2)) = &waitingForPlayersCount;
 }
 
+FUNCTION_M(MDota::setPurchaser)
+	PENT(item);
+	PENT(purchaser);
+
+	CBaseEntity *itemEnt = item->ent;
+	CBaseEntity *purchaserEnt = purchaser == NULL ? NULL : purchaser->ent;
+	
+	__asm {
+		mov ecx, purchaserEnt
+		push itemEnt
+		call SetPurchaser
+	}
+
+	RETURN_UNDEF;
+END
+
 FUNCTION_M(MDota::executeOrders)
 	PINT(playerId);
 	PINT(type);
@@ -474,7 +511,7 @@ FUNCTION_M(MDota::applyDamage)
 	CBaseEntity *abilityEnt;
 	abilityEnt = ability->ent;
 
-	if(attackerEnt == NULL || attackedEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
+	if(attacker == NULL || attacked == NULL || ability == NULL) THROW("Entity cannot be null");
 
 	auto pDamage = (float)damage;
 
@@ -528,7 +565,7 @@ FUNCTION_M(MDota::getCursorLocation)
 
 	CBaseEntity *abilityEnt;
 	abilityEnt = ability->ent;
-	if(abilityEnt == NULL) THROW("Invalid entity");
+	if(ability == NULL) THROW("Invalid entity");
 
 	Vector vec;
 	Vector *vecptr = &vec;
@@ -554,7 +591,7 @@ FUNCTION_M(MDota::removeAbilityFromIndex)
 
 	CBaseEntity *unitEnt;
 	unitEnt = unit->ent;
-	if(unitEnt == NULL) THROW("Invalid entity");
+	if(unit == NULL) THROW("Invalid entity");
 
 	__asm{
 		mov eax, unitEnt
@@ -578,7 +615,7 @@ FUNCTION_M(MDota::swapAbilities)
 
 	CBaseEntity *unitEnt;
 	unitEnt = unit->ent;
-	if(unitEnt == NULL) THROW("Invalid entity");
+	if(unit == NULL) THROW("Invalid entity");
 
 	__asm{
 		push dword ptr secondVisible
@@ -602,7 +639,7 @@ FUNCTION_M(MDota::setAbilityByIndex)
 	CBaseEntity *abilityEnt;
 	abilityEnt = ability->ent;
 	
-	if(unitEnt == NULL || abilityEnt == NULL) THROW("Invalid entity");
+	if(unit == NULL || ability == NULL) THROW("Invalid entity");
 
 	__asm {
 		push index
@@ -704,6 +741,22 @@ FUNCTION_M(MDota::destroyParticle)
 
 	engine->SendUserMessage(filter, DOTA_UM_ParticleManager, particlemsg);
 	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::getAbilityCaster)
+	PENT(ability);
+	
+	if(ability == NULL) THROW("Entity cannot be null");
+	CBaseEntity *abilityEnt = ability->ent;
+	CBaseEntity *caster;
+	
+	__asm {
+		mov eax, abilityEnt
+		call GetAbilityCaster
+		mov caster, eax
+	}
+
+	RETURN_SCOPED(GetEntityWrapper(caster)->GetWrapper(GetPluginRunning()));
 END
 
 FUNCTION_M(MDota::setParticleControlEnt)
@@ -946,12 +999,18 @@ END
 
 FUNCTION_M(MDota::addNewModifier) 
 	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
-
 	PENT(target);
 	PENT(ability);
 	PSTR(modifierName);
 	PSTR(setName);
 	POBJ(options);
+
+	CBaseEntity *casterEnt = NULL;
+
+
+// use variable "caster"
+
+	if(target == NULL || ability == NULL) THROW("Entity cannot be null");
 
 	CBaseEntity *targetEnt;
 	targetEnt = target->ent;
@@ -959,7 +1018,16 @@ FUNCTION_M(MDota::addNewModifier)
 	CBaseEntity *abilityEnt;
 	abilityEnt = ability->ent;
 
-	if(targetEnt == NULL || abilityEnt == NULL) THROW("Entity cannot be null");
+	if(GetPluginRunning()->GetApiVersion() < 6){
+		casterEnt = targetEnt;
+	}else{
+		PENT(caster);
+		if(caster == NULL){
+			THROW("Invalid caster");
+		}else{
+			casterEnt = caster->ent;
+		}
+	}
 
 	void *modifierManager = (void*)((uintptr_t)targetEnt + offset);
 
@@ -969,6 +1037,8 @@ FUNCTION_M(MDota::addNewModifier)
 
 	char *modifier = *modifierName;
 
+	void *buff;
+
 	__asm {
 		mov ecx, modifierManager
 		push 0
@@ -976,8 +1046,9 @@ FUNCTION_M(MDota::addNewModifier)
 		push kv
 		push modifier
 		push abilityEnt
-		push targetEnt
+		push casterEnt
 		call AddNewModifier
+		mov  buff, eax
 	}
 
 	RETURN_UNDEF;
@@ -1524,6 +1595,40 @@ FUNCTION_M(MDota::setUnitState)
 	RETURN_UNDEF;
 END
 
+FUNCTION_M(MDota::getModifierCaster)
+	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
+	PENT(unit);
+	PSTR(modifier);
+
+	CBaseEntity *unitEnt;
+	unitEnt = unit->ent;
+
+	if(unit == NULL) THROW("Invalid entity");
+
+	void *modifierManager = (void*)((uintptr_t)unitEnt + offset);
+	char *modifierStr = *modifier;
+
+	void *buff;
+
+	__asm {
+		push 0
+		push modifierStr 
+		push modifierManager
+		call FindModifierByName
+		mov buff, eax
+	}
+	
+	CBaseEntity *caster;
+
+	__asm {
+		mov eax, buff
+		call GetBuffCaster
+		mov caster, eax
+	}
+
+	RETURN_SCOPED(GetEntityWrapper(caster)->GetWrapper(GetPluginRunning()));
+END
+
 FUNCTION_M(MDota::upgradeAbility)
 	PENT(ability);
 	CBaseEntity *abilityPointer = ability->ent;
@@ -1565,6 +1670,8 @@ FUNCTION_M(MDota::setUnitOwner)
 		mov esi, pEntity
 		call SetControllableByPlayer
 	}
+
+	RETURN_UNDEF;
 END
 
 FUNCTION_M(MDota::_unitInvade)

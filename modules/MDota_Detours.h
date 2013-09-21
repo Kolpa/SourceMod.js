@@ -257,6 +257,44 @@ DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
 }
 
 
+DETOUR_DECL_STATIC2_STDCALL(PickupItem, bool, void *, inventory, CBaseEntity *, item){
+	USE_NETPROP_OFFSET_GENERAL(fromNpc, CDOTA_BaseNPC, m_Inventory);
+	USE_NETPROP_OFFSET_GENERAL(fromInventory, CDOTA_BaseNPC, m_hInventoryParent);
+
+	static int ownerFromInventory = fromInventory - fromNpc; 
+
+	CBaseHandle &hndl = *(CBaseHandle *)((intptr_t) inventory + ownerFromInventory);
+	CBaseEntity *owner = gamehelpers->ReferenceToEntity(hndl.GetEntryIndex());
+	auto unitWrapper = GetEntityWrapper(owner);
+	auto itemWrapper = GetEntityWrapper(item);
+
+	int len = GetNumPlugins();
+	for(int i = 0; i < len; ++i){
+		SMJS_Plugin *pl = GetPlugin(i);
+		if(pl == NULL) continue;
+		
+		HandleScope handle_scope(pl->GetIsolate()); 
+		Context::Scope context_scope(pl->GetContext());
+
+		auto hooks = pl->GetHooks("Dota_OnPickupItem");
+
+		if(hooks->size() == 0) continue;
+
+		v8::Handle<v8::Value> args[2];
+		args[0] = unitWrapper->GetWrapper(pl);
+		args[1] = itemWrapper->GetWrapper(pl);
+
+		for(auto it = hooks->begin(); it != hooks->end(); ++it){
+			auto func = *it;
+			auto res = func->Call(pl->GetContext()->Global(), 2, args);
+			if(!res.IsEmpty() && !res->IsUndefined()){
+				return false;
+			}
+		}
+	}
+	DETOUR_STATIC_CALL(PickupItem)(inventory, item);
+}
+
 DETOUR_DECL_STATIC4_STDCALL(HeroBuyItem, signed int, CBaseEntity*, unit, char*, item, int, playerID, signed int, a4){
 	auto unitWrapper = GetEntityWrapper(unit);
 
