@@ -304,6 +304,7 @@ Entity.prototype.isHero = function(){
 
 dota.removeAll = function(type){
 	game.findEntitiesByClassname(type).forEach(function(ent){
+		if(!ent.isValid()) return;
 		dota.remove(ent);
 	});
 }
