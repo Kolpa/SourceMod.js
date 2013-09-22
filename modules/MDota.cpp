@@ -1094,6 +1094,8 @@ FUNCTION_M(MDota::forceWin)
 		gamerules = sdkTools->GetGameRules();
 	}
 
+	team = team == 2 ? 3 : 2;
+
 	__asm {
 		mov eax, gamerules
 		push team
@@ -1295,6 +1297,7 @@ FUNCTION_M(MDota::setHeroAvailable)
 	PINT(hero);
 	PBOL(available);
 
+	if(hero < 0) THROW("Hero index too small!");
 	if (hero > 128) THROW("Hero index too large!");
 
 	*(bool*)((intptr_t) GameManager + stableOffset + hero) = available;
