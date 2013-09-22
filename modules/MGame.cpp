@@ -384,10 +384,16 @@ FUNCTION_M(MGame::findEntitiesByClassname)
 		
 		if (searchname[lastletterpos] == '*'){
 			if (strncasecmp(searchname, classname, lastletterpos) == 0){
-				arr->Set(length++, GetEntityWrapper(pEntity)->GetWrapper(GetPluginRunning()));
+				auto wrapper = GetEntityWrapper(pEntity);
+				if(wrapper->IsValid()){
+					arr->Set(length++, wrapper->GetWrapper(GetPluginRunning()));
+				}
 			}
 		}else if (strcasecmp(searchname, classname) == 0){
-			arr->Set(length++, GetEntityWrapper(pEntity)->GetWrapper(GetPluginRunning()));
+			auto wrapper = GetEntityWrapper(pEntity);
+			if(wrapper->IsValid()){
+				arr->Set(length++, wrapper->GetWrapper(GetPluginRunning()));
+			}
 		}
 
 		pEntity = (CBaseEntity *)serverTools->NextEntity(pEntity);
