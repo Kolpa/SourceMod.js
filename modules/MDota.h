@@ -162,6 +162,7 @@ public:
 	FUNCTION_DECL(pingLocation)
 	FUNCTION_DECL(setAbilityByIndex);
 	FUNCTION_DECL(createItemDrop);
+	FUNCTION_DECL(createIllusions);
 	FUNCTION_DECL(setRuneType);
 	FUNCTION_DECL(levelUpHero);
 	FUNCTION_DECL(levelUpAbility);
@@ -189,6 +190,7 @@ public:
 		WRAPPED_FUNC(setAbilityByIndex);
 		WRAPPED_FUNC(createUnit);
 		WRAPPED_FUNC(pingLocation);
+		WRAPPED_FUNC(createIllusions);
 		WRAPPED_FUNC(removeModifier);
 		WRAPPED_FUNC(worldLine);
 		WRAPPED_FUNC(setPurchaser);

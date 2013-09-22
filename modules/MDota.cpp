@@ -210,6 +210,7 @@ static void *ForceKill;
 static void *SetControllableByPlayer;
 static void *SetPurchaser;
 static void *GetBuffCaster;
+static void *CreateIllusions;
 static void *GetAbilityCaster;
 
 static uint8_t GetParticleManager[4];
@@ -346,6 +347,7 @@ MDota::MDota(){
 	FIND_DOTA_PTR_NEW(SetPurchaser, "\x55\x8B\xEC\x53\x8B\x5D\x08\x57\x85\xC9\x74\x2A\x8B\x01\x8B\x50\x08\xFF\xD2\x8B\x38\x83\xFF\xFF\x74\x2A\x8B\xC7\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x8B\xCF\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x10\xEB\x2A\x83\xCF\xFF\x33\xD2\x8B\x8B\x40\x04\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04");
 	FIND_DOTA_PTR_NEW(GetBuffCaster, "\x8B\x50\x3C\x83\xFA\xFF\x74\x2A\x8B\xC2\x25\xFF\xFF\x00\x00\x8B\xC8\xC1\xE1\x04\x81\x2A\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x51\x04\x75\x2A\x8B\x09\x85\xC9\x75");
 	FIND_DOTA_PTR_NEW(GetAbilityCaster, "\x8B\x88\xC4\x01\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xC3\x33\xC0\xC3");
+	FIND_DOTA_PTR_NEW(CreateIllusions, "\x55\x8B\xEC\x83\xE4\xF8\xA1\x2A\x2A\x2A\x2A\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x11\x83\xEC\x74\x53\x56\x8B");
 	//55 8B EC 8B 55 0C 8B 82 F8 04 00 00 83 EC 08 83 F8 FF 74 ? 8B C8 81 E1 FF FF 00 00 C1 E1 04 81 ? ? ? ? ? C1 E8 10 39 41 04 75 ? 8B 09 89 4D FC 85 C9 75
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
@@ -369,6 +371,28 @@ void MDota::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wra
 	auto obj = wrapper->ToObject();
 }
 
+KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *setName){
+
+	KeyValues *kv = new KeyValues(setName);
+
+	auto properties = options->GetOwnPropertyNames();
+
+	v8::String::Utf8Value str(properties->Get(0));
+
+	for(size_t i = 0; i < properties->Length(); i++){
+		v8::String::Utf8Value prop(properties->Get(i));
+		auto value = options->Get(properties->Get(i));
+		if(value->IsString()){
+			v8::String::Utf8Value str(value);
+			kv->SetString(*prop, *str);
+		}else if(value->IsNumber()){
+			kv->SetFloat(*prop, (float)value->NumberValue());
+		}else if(value->IsInt32()){
+			kv->SetInt(*prop, value->Int32Value());
+		}
+	}
+	return kv;
+}
 
 void PatchVersionCheck(){
 
@@ -789,6 +813,46 @@ FUNCTION_M(MDota::setParticleControlEnt)
 	RETURN_UNDEF;
 END
 
+FUNCTION_M(MDota::createIllusions)
+	PENT(unit);
+	PINT(count);
+	PINT(xOffset);
+	PBOL(unknownBool);
+	POBJ(options);
+	PSTR(setName);
+	PVEC(x, y, z);
+	PENT(owner);
+
+	CBaseEntity *unitEnt = unit->ent;
+	CBaseEntity *ownerEnt = owner->ent;
+	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
+
+	findClearSpaceForUnitOutput.RemoveAll();
+	auto output = &findClearSpaceForUnitOutput;
+
+	__asm{
+		push ownerEnt
+		push output
+		push kv
+		push dword ptr unknownBool
+		push xOffset
+		push count
+		push unitEnt
+		call CreateIllusions
+		add esp, 1Ch
+	}
+
+	auto pl = GetPluginRunning();
+	auto arr = v8::Array::New(findClearSpaceForUnitOutput.Count());
+	for(int i = 0; i < findClearSpaceForUnitOutput.Count(); ++i){
+		CBaseEntity *foundEnt = gamehelpers->ReferenceToEntity(findClearSpaceForUnitOutput[i].GetEntryIndex());
+		auto entWrapper = GetEntityWrapper(foundEnt);
+		arr->Set(i, entWrapper->GetWrapper(pl));
+	}
+
+	RETURN_SCOPED(arr);
+END
+
 FUNCTION_M(MDota::setParticleOrient)
 	POBJ(client);
 	PINT(index);
@@ -881,20 +945,7 @@ FUNCTION_M(MDota::createParticleEffect)
 	RETURN_SCOPED(v8::Int32::New(particleIndex - 1));
 END
 
-KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *setName){
 
-	KeyValues *kv = new KeyValues(setName);
-
-	auto properties = options->GetOwnPropertyNames();
-
-	v8::String::Utf8Value str(properties->Get(0));
-
-	for(size_t i = 0; i < properties->Length(); i++){
-		v8::String::Utf8Value prop(properties->Get(i));
-		kv->SetFloat(*prop, options->Get(properties->Get(i))->Int32Value());	
-	}
-	return kv;
-}
 
 FUNCTION_M(MDota::mapLine)
 	POBJ(receiving);
