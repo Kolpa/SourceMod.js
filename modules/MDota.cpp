@@ -820,8 +820,9 @@ FUNCTION_M(MDota::createIllusions)
 	PBOL(unknownBool);
 	POBJ(options);
 	PSTR(setName);
-	PVEC(x, y, z);
 	PENT(owner);
+
+	if(unit == NULL || owner == NULL) THROW("Invalid entity");
 
 	CBaseEntity *unitEnt = unit->ent;
 	CBaseEntity *ownerEnt = owner->ent;
