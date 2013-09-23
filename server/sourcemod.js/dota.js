@@ -324,7 +324,7 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	}else{
 		ent.netprops.m_iIsControllableByPlayer &= ~(1 << playerId);
 	}
-}
+};
 
 (function(){
 	// Custom unit creator

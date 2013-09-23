@@ -233,7 +233,7 @@ void SMJS_Plugin::ReportException(TryCatch* try_catch){
 			snprintf(buffer, sizeof(buffer), "%s%c", buffer, '^');
 		}
 		snprintf(buffer, sizeof(buffer), "%s%c", buffer, '\n');
-
+		
 		auto stackTrace = message->GetStackTrace();
 		if(!stackTrace.IsEmpty()){
 			int len = stackTrace->GetFrameCount();
