@@ -2,6 +2,7 @@
 #include "extension.h"
 #include "modules/MSocket.h"
 #include "modules/MPlugin.h"
+#include <cstdlib>
 
 v8::Isolate *mainIsolate;
 
@@ -61,7 +62,11 @@ void checkerThreadFunc(void*){
 #ifdef DEBUG
 			abort();
 #else
+#ifdef WIN32
+			ExitProcess(3);
+#else
 			exit(3);
+#endif
 #endif
 		}
 
