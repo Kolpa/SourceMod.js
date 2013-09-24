@@ -1,7 +1,5 @@
 (function(){
 
-var playerManager = null;
-
 dota.MAX_PLAYERS = 24;
 
 dota.STATE_INIT = 0;
@@ -266,10 +264,6 @@ dota.findClientByPlayerID = function(playerId){
 	}
 	return null;
 }
-/*
-game.hook("OnMapStart", function(){
-	playerManager = game.findEntityByClassname(-1, "dota_player_manager");
-});*/
 
 Client.prototype.getPlayerID = function(){
 	if(this._cachedPlayerID && this._cachedPlayerID != -1) return this._cachedPlayerID;
@@ -330,6 +324,43 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	}else{
 		ent.netprops.m_iIsControllableByPlayer &= ~(1 << playerId);
 	}
-}
+};
+
+(function(){
+	// Custom unit creator
+	var hasUnitParsedHook = false;
+	var creatingCustomUnit = false;
+	var customUnitKV = null;
+	dota.initCustomUnitHook = function(){
+		if(hasUnitParsedHook) return;
+		hasUnitParsedHook = true;
+		
+		game.hook("Dota_OnUnitParsed", customUnitCreatorHook);
+	}
+
+	dota.createCustomUnit = function(baseUnit, team, kv){
+		dota.initCustomUnitHook();
+		
+		creatingCustomUnit = true;
+		customUnitKV = kv;
+		
+		var unit = dota.createUnit(baseUnit, team);
+		
+		creatingCustomUnit = false;
+		customUnitKV = null;
+		
+		return unit;
+	}
+
+	function customUnitCreatorHook(unit, keyvalues){
+		if(creatingCustomUnit){
+			for(i in customUnitKV){
+				if(customUnitKV.hasOwnProperty(i)){
+					keyvalues[i] = customUnitKV[i];
+				}
+			}
+		}
+	}
+})();
 
 })();

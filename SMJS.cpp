@@ -2,6 +2,7 @@
 #include "extension.h"
 #include "modules/MSocket.h"
 #include "modules/MPlugin.h"
+#include <cstdlib>
 
 v8::Isolate *mainIsolate;
 
@@ -27,6 +28,8 @@ void SMJS_Init(){
 
 	mainIsolate = v8::Isolate::GetCurrent();
 	HandleScope handle_scope(mainIsolate);
+
+	V8::SetCaptureStackTraceForUncaughtExceptions(true, 10);
 
 	char smjsPath[512];
 	smutils->BuildPath(Path_SM, smjsPath, sizeof(smjsPath), "sourcemod.js");
@@ -61,7 +64,11 @@ void checkerThreadFunc(void*){
 #ifdef DEBUG
 			abort();
 #else
+#ifdef WIN32
+			ExitProcess(3);
+#else
 			exit(3);
+#endif
 #endif
 		}
 
