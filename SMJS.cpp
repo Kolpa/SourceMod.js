@@ -65,7 +65,7 @@ void checkerThreadFunc(void*){
 			abort();
 #else
 #ifdef WIN32
-			ExitProcess(3);
+			_exit(3);
 #else
 			exit(3);
 #endif

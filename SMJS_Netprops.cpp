@@ -439,7 +439,7 @@ void SMJS_DataTable::DTGetter(uint32_t index, const PropertyCallbackInfo<Value>&
 	SMJS_DataTable *self = (SMJS_DataTable*) v8::Handle<v8::External>::Cast(args.This()->GetInternalField(0))->Value();
 
 	// Index can't be < 0, don't even test for it
-	if(index >= (uint32_t) self->pTable->GetNumProps()) THROW_VERB("Index %d out of bounds", index);
+	if(index >= (uint32_t) self->pTable->GetNumProps()) THROW_VERB("Index %d out of bounds (length %d)", index, self->pTable->GetNumProps());
 
 	auto it = self->cachedValues.find(index);
 	if(it != self->cachedValues.end()){
@@ -460,7 +460,7 @@ void SMJS_DataTable::DTGetter(uint32_t index, const PropertyCallbackInfo<Value>&
 void SMJS_DataTable::DTSetter(uint32_t index, Local<Value> value, const PropertyCallbackInfo<Value>& args){
 	SMJS_DataTable *self = (SMJS_DataTable*) v8::Handle<v8::External>::Cast(args.This()->GetInternalField(0))->Value();
 
-	if(index >= (uint32_t) self->pTable->GetNumProps()) THROW_VERB("Index %d out of bounds", index);
+	if(index >= (uint32_t) self->pTable->GetNumProps()) THROW_VERB("Index %d out of bounds (length %d)", index, self->pTable->GetNumProps());
 
 	auto pProp = self->pTable->GetProp(index);
 	boost::function<v8::Persistent<v8::Value> ()> f(boost::bind(&SMJS_DataTable::GenerateThenFindCachedValue, self, index, pProp, self->offset + pProp->GetOffset()));

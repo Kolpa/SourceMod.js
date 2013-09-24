@@ -180,11 +180,13 @@ bool SMJS_Plugin::RunString(const char* name, const char *source, bool asGlobal,
 		delete buffer;
 	}
 
+
 	if(script.IsEmpty()) {
 		// Print errors that happened during compilation.
 		ReportException(&try_catch);
 		return false;
 	} else {
+		
 		v8::Handle<v8::Value> res = script->Run();
 		if (res.IsEmpty()) {
 			ReportException(&try_catch);
@@ -240,7 +242,7 @@ void SMJS_Plugin::ReportException(TryCatch* try_catch){
 
 			for(int i = 0; i < len; ++i){
 				auto frame = stackTrace->GetFrame(i);
-				v8::String::Utf8Value scriptName(frame->GetScriptNameOrSourceURL());
+				v8::String::Utf8Value scriptName(frame->GetScriptName());
 				v8::String::Utf8Value funName(frame->GetFunctionName());
 				
 				snprintf(buffer, sizeof(buffer), "%s%s - %s @ line %d\n", buffer, *scriptName, *funName, frame->GetLineNumber());
