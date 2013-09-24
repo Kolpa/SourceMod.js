@@ -360,8 +360,8 @@ MDota::MDota(){
 	uint8_t *ptr = (uint8_t*)ParticleManagerFunc; //GetParticleManager is inlined in windows, this is a function that happens to contain the inlined dword. The rest is history
 	SourceHook::SetMemAccess(ptr, 60, SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
 
-	for(int i = 45; i < 49; i++){
-		GetParticleManager[i-45] = ptr[i];
+	for(int i = 25; i < 29; i++){
+		GetParticleManager[i-25] = ptr[i];
 	}
 
 	printf("Done!\n");
@@ -1149,7 +1149,7 @@ FUNCTION_M(MDota::forceWin)
 	team = team == 2 ? 3 : 2;
 
 	__asm {
-		mov eax, gamerules
+		mov ecx, gamerules
 		push team
 		call MakeTeamLose
 	}
@@ -1267,9 +1267,9 @@ FUNCTION_M(MDota::giveItemToHero)
 		push	0
 		push	-1
 		push	3
+		push    item
 		push	inventory
 		mov		eax, 0
-		mov		ecx, item
 		call	DGiveItem
 		mov		res, eax
 	}

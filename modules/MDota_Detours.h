@@ -226,7 +226,7 @@ DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
 	if(!block){
 		if(newHero == NULL){
 			__asm {
-				push	cmd
+				mov	    ecx, cmd
 				mov		eax, client
 				call	ClientPickHero_Actual
 			}
@@ -238,7 +238,7 @@ DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
 			tmp->ArgV()[1] = newHero;
 
 			__asm {
-				push	tmp
+				mov   	ecx, tmp
 				mov		eax, client
 				call	ClientPickHero_Actual
 			}
