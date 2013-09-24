@@ -203,33 +203,17 @@ const char* CallClientPickHero(CBaseEntity *client, CCommand *cmd, bool* block){
 }
 
 
-DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
-	CBaseEntity *client;
+DETOUR_DECL_STATIC2_STDCALL(ClientPickHero, void, CBaseEntity*, client, CCommand*, cmd){
 	const char *newHero;
 	bool block;
 	CCommand *tmp;
-
-	__asm {
-		push	ebp
-		mov		ebp, esp
-		sub		esp, 64
-
-		mov		client, eax
-	}
-
-	__asm pushad
-	__asm pushfd
 	
 	block = false;
 	newHero = CallClientPickHero(client, cmd, &block);
-
+	printf("%s", newHero);
 	if(!block){
 		if(newHero == NULL){
-			__asm {
-				push	cmd
-				mov		eax, client
-				call	ClientPickHero_Actual
-			}
+			DETOUR_STATIC_CALL(ClientPickHero)(client, cmd);
 		}else{
 			// It has to be a pointer because I'm too lazy to calculate how much space
 			// CCommand would use in the stack
@@ -237,23 +221,13 @@ DETOUR_DECL_STATIC1_STDCALL_NAKED(ClientPickHero, void, CCommand*, cmd){
 
 			tmp->ArgV()[1] = newHero;
 
-			__asm {
-				push	tmp
-				mov		eax, client
-				call	ClientPickHero_Actual
-			}
+			DETOUR_STATIC_CALL(ClientPickHero)(client, tmp);
 
 			delete newHero;
 			delete tmp;
 		}
 	}
 
-	__asm{
-		popfd
-		popad
-		leave
-		ret		4
-	}
 }
 
 
