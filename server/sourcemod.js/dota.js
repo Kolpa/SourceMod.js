@@ -384,7 +384,7 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	
 	function onUnitThink(unit){
 		if(unit.__automaticCleanup){
-			if(unit.isValid()){
+			if(unit.isValid() && unit.netprops.m_iHealth <= 0){
 				dota.remove(ent);
 			}
 		}
