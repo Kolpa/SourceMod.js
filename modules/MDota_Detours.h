@@ -377,6 +377,7 @@ DETOUR_DECL_MEMBER0(UnitThink, void){
 	int len = GetNumPlugins();
 	auto entWrapper = GetEntityWrapper(ent);
 
+	
 	for(int i = 0; i < len; ++i){
 		SMJS_Plugin *pl = GetPlugin(i);
 		if(pl == NULL) continue;
@@ -394,10 +395,15 @@ DETOUR_DECL_MEMBER0(UnitThink, void){
 		for(auto it = hooks->begin(); it != hooks->end(); ++it){
 			auto func = *it;
 			func->Call(pl->GetContext()->Global(),1, args);
+			if(!entWrapper->IsValid()) goto ActualCall;
 		}
 	}
 
+ActualCall:
+
 	DETOUR_MEMBER_CALL(UnitThink)();
+
+	if(!entWrapper->IsValid()) goto EndOfFunction;
 
 	canSetState = true;
 	for(int i = 0; i < len; ++i){
@@ -417,8 +423,12 @@ DETOUR_DECL_MEMBER0(UnitThink, void){
 		for(auto it = hooks->begin(); it != hooks->end(); ++it){
 			auto func = *it;
 			func->Call(pl->GetContext()->Global(), 1, args);
+			if(!entWrapper->IsValid()) goto EndOfFunction;
 		}
 	}
+
+EndOfFunction:
+
 	canSetState = false;
 }
 
