@@ -363,4 +363,32 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	}
 })();
 
+(function(){
+	// Unit cleanup
+	
+	Entity.prototype.__automaticCleanup = false;
+	
+	var hasCleanupHook = false;
+	dota.initCleanupHook = function(){
+		if(hasCleanupHook) return;
+		hasCleanupHook = true;
+		
+		game.hook("Dota_OnUnitThink", onUnitThink);
+	}
+	
+	dota.autoRemoveEntity = function(ent){
+		dota.initCleanupHook();
+		
+		ent.__automaticCleanup = true;
+	}
+	
+	function onUnitThink(unit){
+		if(unit.__automaticCleanup){
+			if(unit.isValid()){
+				dota.remove(ent);
+			}
+		}
+	}
+})();
+
 })();

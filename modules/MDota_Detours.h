@@ -266,7 +266,7 @@ DETOUR_DECL_STATIC2_STDCALL(PickupItem, bool, void *, inventory, CBaseEntity *, 
 			}
 		}
 	}
-	DETOUR_STATIC_CALL(PickupItem)(inventory, item);
+	return DETOUR_STATIC_CALL(PickupItem)(inventory, item);
 }
 
 DETOUR_DECL_STATIC4_STDCALL(HeroBuyItem, signed int, CBaseEntity*, unit, char*, item, int, playerID, signed int, a4){
