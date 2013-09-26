@@ -128,7 +128,11 @@ void OnMessage(Handle<Message> message, Handle<Value> error){
 				v8::String::Utf8Value scriptName(frame->GetScriptNameOrSourceURL());
 				v8::String::Utf8Value funName(frame->GetFunctionName());
 				
-				snprintf(buffer, sizeof(buffer), "%s%s - %s @ line %d\n", buffer, *scriptName, *funName, frame->GetLineNumber());
+				snprintf(buffer, sizeof(buffer), "%s%s: %s:%d\n",
+					buffer,
+					*scriptName == NULL ? "(?)" : *scriptName,
+					*funName,
+					frame->GetLineNumber());
 			}
 		}
 	}
