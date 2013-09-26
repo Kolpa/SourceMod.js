@@ -29,7 +29,7 @@ void SMJS_Init(){
 	mainIsolate = v8::Isolate::GetCurrent();
 	HandleScope handle_scope(mainIsolate);
 
-	V8::SetCaptureStackTraceForUncaughtExceptions(true, 10);
+	V8::SetCaptureStackTraceForUncaughtExceptions(true, 10, (StackTrace::StackTraceOptions)(StackTrace::kLineNumber | StackTrace::kColumnOffset | StackTrace::kScriptName | StackTrace::kFunctionName | StackTrace::kScriptNameOrSourceURL));
 
 	char smjsPath[512];
 	smutils->BuildPath(Path_SM, smjsPath, sizeof(smjsPath), "sourcemod.js");

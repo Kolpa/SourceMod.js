@@ -186,7 +186,6 @@ bool SMJS_Plugin::RunString(const char* name, const char *source, bool asGlobal,
 		ReportException(&try_catch);
 		return false;
 	} else {
-		script->SetData(v8::String::New(name));
 		v8::Handle<v8::Value> res = script->Run();
 		if (res.IsEmpty()) {
 			ReportException(&try_catch);
