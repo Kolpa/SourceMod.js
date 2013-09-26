@@ -376,7 +376,7 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 		game.hook("Dota_OnUnitThink", onUnitThink);
 	}
 	
-	dota.autoRemoveEntity = function(ent){
+	dota.autoRemoveUnit = function(ent){
 		dota.initCleanupHook();
 		
 		ent.__automaticCleanup = true;
