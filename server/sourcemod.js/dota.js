@@ -327,6 +327,35 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 };
 
 (function(){
+	// String formatter
+	
+	var formatMap = {
+		"red":   "\x12",
+		"green": "\x15",
+		"blue":  "\x19"
+		
+	};
+	
+	dota.format = function(str){
+		var args = arguments;
+		return str.replace(/\{([a-z0-9]+)\}/gi, function(all, id){
+			if(/^[0-9]+$/.test(id)){
+				var i = parseInt(id);
+				if(i <= 0 || i >= args.length) return all;
+				return args[i];
+			}
+			
+			if(formatMap.hasOwnProperty(id)){
+				return formatMap[id];
+			}
+			
+			return all;
+		});
+	}
+})();
+
+
+(function(){
 	// Custom unit creator
 	var hasUnitParsedHook = false;
 	var creatingCustomUnit = false;
