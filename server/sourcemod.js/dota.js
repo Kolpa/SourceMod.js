@@ -330,6 +330,9 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	// String formatter
 	
 	var formatMap = {
+		"none":  "\x06",
+		"gray":  "\x06", 
+		"grey":  "\x06", 
 		"red":   "\x12",
 		"green": "\x15",
 		"blue":  "\x19"
@@ -351,6 +354,10 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 			
 			return all;
 		});
+	}
+	
+	dota.addFormatAlias = function(key, value){
+		formatMap[key] = value;
 	}
 })();
 
