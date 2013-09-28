@@ -288,6 +288,26 @@ Client.prototype.getHeroes = function(){
 	}
 }
 
+Client.prototype.forEachHero = function(func){
+	if(typeof func != "function") throw new Error("Argument must be a function");
+	
+	var hero = this.netprops.m_hAssignedHero;
+	if(hero == null){
+		return;
+	}
+	
+	// Cache the check if this client has meepo
+	if(typeof this._isMeepo == 'undefined'){
+		this._isMeepo = (hero.getClassname() == 'npc_dota_hero_meepo');
+	}
+	
+	if(this._isMeepo){
+		return game.findEntitiesByClassname('npc_dota_hero_meepo').forEach(func);
+	}else{
+		return func(hero);
+	}
+}
+
 Entity.prototype.isHero = function(){
 	if(typeof this._isHero != 'undefined') return this._isHero;
 	
@@ -354,8 +374,8 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 		"gold":    "\x1D"
 	};
 	
-	dota.format = function(str){
-		var args = arguments;
+	dota.format = function(str, arr){
+		var args = Array.isArray(arr) ? arr : arguments;
 		return str.replace(/\{([a-z0-9]+)\}/gi, function(all, id){
 			if(/^[0-9]+$/.test(id)){
 				var i = parseInt(id);
