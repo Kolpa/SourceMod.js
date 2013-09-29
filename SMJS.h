@@ -47,6 +47,9 @@ char* SMJS_FileToString(const char *file, const char* dir = NULL);
 
 extern v8::Isolate *mainIsolate;
 
+extern const char *scriptSMStr;
+extern v8::ScriptData *scriptSMData;
+
 extern const char *scriptDotaStr;
 extern v8::ScriptData *scriptDotaData;
 

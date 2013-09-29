@@ -50,7 +50,7 @@ SMJS_Plugin::SMJS_Plugin(bool isSandboxed){
 	v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
 
 	global->Set(v8::String::New("print"), v8::FunctionTemplate::New(JSN_Print));
-	global->Set(v8::String::New("require"), v8::FunctionTemplate::New(JSN_Require));
+	global->Set(v8::String::New("__require"), v8::FunctionTemplate::New(JSN_Require));
 	
 	context = v8::Persistent<v8::Context>::New(isolate, v8::Context::New(isolate, NULL, global));
 	context->SetEmbedderData(1, v8::External::New(this));
@@ -73,6 +73,7 @@ void SMJS_Plugin::LoadModules(){
 		context->Global()->Set(v8::String::New(module->identifier.c_str()), module->GetWrapper(this), ReadOnly);
 	}
 	
+	v8::Script::New(v8::String::New(scriptSMStr), &v8::ScriptOrigin(v8::String::New("sm.js")), scriptSMData, v8::String::New(dir.c_str()))->Run();
 	v8::Script::New(v8::String::New(scriptDotaStr), &v8::ScriptOrigin(v8::String::New("dota.js")), scriptDotaData, v8::String::New(dir.c_str()))->Run();
 }
 

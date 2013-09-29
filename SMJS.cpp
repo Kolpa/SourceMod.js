@@ -14,7 +14,8 @@ uv_thread_t checkerThread;
 uv_mutex_t primaryMutex;
 uv_loop_t *uvLoop;
 
-//TODO: Read this from sourcemod.js/dota.js
+const char *scriptSMStr = NULL;
+v8::ScriptData *scriptSMData;
 const char *scriptDotaStr = NULL;
 v8::ScriptData *scriptDotaData;
 
@@ -30,9 +31,18 @@ void SMJS_Init(){
 	HandleScope handle_scope(mainIsolate);
 
 	V8::SetCaptureStackTraceForUncaughtExceptions(true, 10, (StackTrace::StackTraceOptions)(StackTrace::kLineNumber | StackTrace::kColumnOffset | StackTrace::kScriptName | StackTrace::kFunctionName | StackTrace::kScriptNameOrSourceURL));
+	V8::AddMessageListener(OnMessage);
 
 	char smjsPath[512];
 	smutils->BuildPath(Path_SM, smjsPath, sizeof(smjsPath), "sourcemod.js");
+
+	scriptSMStr = SMJS_FileToString("sm.js", smjsPath);
+	if(scriptSMStr == NULL){
+		printf("File \"sm.js\" missing\n");
+		getchar();
+	}
+	scriptSMData = v8::ScriptData::PreCompile(v8::String::New(scriptSMStr));
+
 
 	scriptDotaStr = SMJS_FileToString("dota.js", smjsPath);
 	if(scriptDotaStr == NULL){
@@ -41,7 +51,7 @@ void SMJS_Init(){
 	}
 	scriptDotaData = v8::ScriptData::PreCompile(v8::String::New(scriptDotaStr));
 
-	v8::V8::AddMessageListener(OnMessage);
+	
 
 	uv_mutex_init(&primaryMutex);
 	SMJS_Ping();
