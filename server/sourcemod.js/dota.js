@@ -451,11 +451,12 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 		dota.initCleanupHook();
 		
 		ent.__automaticCleanup = true;
+		ent.__automaticCleanupDelay = 30;
 	}
 	
 	function onUnitThink(unit){
 		if(unit.__automaticCleanup){
-			if(unit.isValid() && unit.netprops.m_iHealth <= 0){
+			if(unit.isValid() && unit.netprops.m_iHealth <= 0 && --ent.__automaticCleanupDelay == 0){
 				dota.remove(unit);
 			}
 		}
