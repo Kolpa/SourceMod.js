@@ -376,8 +376,8 @@ DETOUR_DECL_MEMBER0(UnitThink, void){
 
 	int len = GetNumPlugins();
 	auto entWrapper = GetEntityWrapper(ent);
-
-	
+	entWrapper->IncRef();
+	/*
 	for(int i = 0; i < len; ++i){
 		SMJS_Plugin *pl = GetPlugin(i);
 		if(pl == NULL) continue;
@@ -399,7 +399,7 @@ DETOUR_DECL_MEMBER0(UnitThink, void){
 		}
 	}
 
-ActualCall:
+ActualCall:*/
 
 	DETOUR_MEMBER_CALL(UnitThink)();
 
@@ -409,14 +409,13 @@ ActualCall:
 	for(int i = 0; i < len; ++i){
 		SMJS_Plugin *pl = GetPlugin(i);
 		if(pl == NULL) continue;
-		
-		HandleScope handle_scope(pl->GetIsolate());
-		Context::Scope context_scope(pl->GetContext());
-
 		auto hooks = pl->GetHooks("Dota_OnUnitThink");
 
 		if(hooks->size() == 0) continue;
 		
+		HandleScope handle_scope(pl->GetIsolate());
+		Context::Scope context_scope(pl->GetContext());
+
 		v8::Handle<v8::Value> args[1];
 		args[0] = entWrapper->GetWrapper(pl);
 
@@ -428,7 +427,7 @@ ActualCall:
 	}
 
 EndOfFunction:
-
+	entWrapper->DecRef();
 	canSetState = false;
 }
 

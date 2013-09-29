@@ -11,9 +11,8 @@
 class SMJS_BaseWrapped : public SMJS_Base, public IPluginDestroyedHandler {
 public:
 	std::unordered_map<PLUGIN_ID, v8::Persistent<v8::Value>> wrappers;
-	int refCount;
-
-	SMJS_BaseWrapped();
+	
+	SMJS_BaseWrapped() : refCount(0), destroying(false) {}
 
 	virtual void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){};
 
@@ -27,9 +26,25 @@ public:
 	static void SetupTemplate(v8::Persistent<v8::FunctionTemplate> temp, v8::Persistent<v8::Template> proto) {}
 
 	static v8::Persistent<v8::FunctionTemplate> GetTemplateForPlugin(SMJS_Plugin *plugin, bool cache = true);
+
+	inline void IncRef(){
+		++refCount;
+	}
+
+	inline void DecRef(){
+		--refCount;
+		if(refCount == 0 && destroying){
+			delete this;
+		}
+	}
+
+protected:
+	bool destroying;
+	int refCount;
 };
 
 #define WRAPPED_CLS(cls, super) \
+public: \
 	virtual v8::Persistent<v8::Value> GetWrapper(SMJS_Plugin *plugin); \
 	static std::unordered_map<PLUGIN_ID, v8::Persistent<FunctionTemplate>> templates; \
 	static v8::Persistent<v8::FunctionTemplate> GetTemplateForPlugin(SMJS_Plugin *plugin, bool cache = true); \
@@ -68,7 +83,7 @@ public:
 		auto it = wrappers.find(plugin->id); \
 		if(it != wrappers.end()) return it->second; \
 		auto wrapper = CreateWrapper(plugin, this); \
-		++refCount;	\
+		IncRef();	\
 		wrappers.insert(std::pair<PLUGIN_ID, v8::Persistent<v8::Value>>(plugin->id, wrapper)); \
 		OnWrapperAttached(plugin, wrapper); \
 		plugin->RegisterDestroyCallback(this); \

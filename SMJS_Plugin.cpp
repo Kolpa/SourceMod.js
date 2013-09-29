@@ -14,6 +14,7 @@ inline const char* ToCString(const String::Utf8Value& value) {
 }
 
 void SMJS_AddModule(SMJS_Module *module){
+	module->IncRef();
 	modules.push_back(module);
 }
 

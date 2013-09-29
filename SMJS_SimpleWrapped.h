@@ -15,6 +15,7 @@ private:
 protected:
 	v8::Persistent<v8::Value> wrapper;
 	int refCount;
+	bool destroying;
 	SMJS_Plugin *plugin;
 
 public:
@@ -53,6 +54,17 @@ public:
 		temp = nTemp;
 		return temp;
 	}
+
+	inline void IncRef(){
+		++refCount;
+	}
+
+	inline void DecRef(){
+		--refCount;
+		if(refCount == 0 && destroying){
+			delete this;
+		}
+	}
 };
 
 #define SIMPLE_WRAPPED_CLS(cls, super) \
@@ -88,7 +100,7 @@ public:
 	v8::Persistent<v8::Value> cls::GetWrapper() { \
 		if(!wrapper.IsEmpty()) return wrapper; \
 		wrapper = CreateWrapper(this); \
-		++refCount;	\
+		IncRef();	\
 		OnWrapperAttached(); \
 		return wrapper; \
 	}

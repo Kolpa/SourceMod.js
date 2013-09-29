@@ -37,7 +37,7 @@ public:
 	std::map<PLUGIN_ID, std::map<std::string, v8::Persistent<v8::Value>>> cachedValues;
 
 	SMJS_Netprops();
-	~SMJS_Netprops();
+	virtual ~SMJS_Netprops();
 
 	void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper);
 
@@ -98,11 +98,12 @@ public:
 
 	SIMPLE_WRAPPED_CLS(SMJS_DataTable, SMJS_SimpleWrapped){
 		temp->SetClassName(v8::String::NewSymbol("DataTable"));
+		// temp->InstanceTemplate()->Set(v8::String::New("length"), v8::Int32::New(pTable->GetNumProps()), v8::ReadOnly);
 		temp->InstanceTemplate()->SetIndexedPropertyHandler(DTGetter, DTSetter, NULL, NULL, NULL);
 	}
 
 	void OnWrapperAttached(){
-		auto obj = wrapper->ToObject();
+		
 	}
 };
 

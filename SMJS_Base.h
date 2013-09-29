@@ -2,8 +2,8 @@
 #define _INCLUDE_SMJS_BASE_H_
 
 class SMJS_Base {
-private:
-	virtual void Nothing(){}
+public:
+	virtual ~SMJS_Base(){}
 };
 
 #define WRAPPED_FUNC(name) proto->Set(v8::String::NewSymbol(#name), v8::FunctionTemplate::New(name));

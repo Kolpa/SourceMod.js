@@ -11,8 +11,6 @@ PLUGIN_ID MPlugin::masterPlugin = -1;
 MPlugin::MPlugin(){
 	identifier = "plugin";
 	g_MPlugin = this;
-
-	HandleScope handle_scope(mainIsolate);
 }
 
 void MPlugin::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){

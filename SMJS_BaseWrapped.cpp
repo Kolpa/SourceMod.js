@@ -4,16 +4,10 @@
 
 void DecWrappedRefCount(Isolate* isolate, v8::Persistent<v8::Value> *object, SMJS_BaseWrapped *parameter){
 	SMJS_BaseWrapped *wrapped = (SMJS_BaseWrapped*) parameter;
-	if(--wrapped->refCount == 0){
-		delete wrapped;
-	}
+	wrapped->DecRef();
 
 	object->Dispose();
     object->Clear();
-}
-
-SMJS_BaseWrapped::SMJS_BaseWrapped(){
-	refCount = 0;
 }
 
 v8::Persistent<v8::Value> SMJS_BaseWrapped::GetWrapper(SMJS_Plugin *plugin){
@@ -21,7 +15,7 @@ v8::Persistent<v8::Value> SMJS_BaseWrapped::GetWrapper(SMJS_Plugin *plugin){
 }
 
 void SMJS_BaseWrapped::OnPluginDestroyed(SMJS_Plugin *plugin){
-	--refCount;
+	DecRef();
 	wrappers.erase(plugin->id);
 }
 
@@ -29,6 +23,7 @@ void SMJS_BaseWrapped::Destroy(){
 	if(refCount == 0){
 		delete this;
 	}else{
+		destroying = true;
 		for(auto it = wrappers.begin(); it != wrappers.end(); ++it){
 			it->second.MakeWeak<v8::Value, SMJS_BaseWrapped>(this, DecWrappedRefCount);
 		}

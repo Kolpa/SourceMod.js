@@ -36,6 +36,8 @@ void SMJS_DataMaps::SGetDataMap(v8::Local<v8::String> prop, const v8::PropertyCa
 }
 
 void SMJS_DataMaps::SSetDataMap(v8::Local<v8::String> prop, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args){
+	args.GetReturnValue().Set(value);
+	
 	Local<Value> _intfld = args.This()->GetInternalField(0); 
 	SMJS_DataMaps *self = dynamic_cast<SMJS_DataMaps*>((SMJS_BaseWrapped*)Handle<External>::Cast(_intfld)->Value());
 

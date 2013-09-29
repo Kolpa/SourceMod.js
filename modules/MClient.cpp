@@ -19,7 +19,7 @@ SMJS_Client *clients[MAXCLIENTS];
 
 WRAPPED_CLS_CPP(MClient, SMJS_Module)
 
-MClient *self;
+static MClient *self;
 
 MClient::MClient(){
 	self = this;

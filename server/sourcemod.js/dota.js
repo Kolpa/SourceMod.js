@@ -336,6 +336,7 @@ dota.clearMap = function(){
 	dota.removeAll("npc_dota_scripted_spawner*");
 	dota.removeAll("npc_dota_spawner*");
 	dota.removeAll("npc_dota_roshan*");
+	dota.removeAll("trigger_shop*");
 }
 
 dota.setUnitControllableByPlayer = function(ent, playerId, value){
@@ -410,7 +411,7 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	}
 
 	dota.createCustomUnit = function(baseUnit, team, kv){
-		dota.initCustomUnitHook();
+		if(!hasUnitParsedHook) throw new Error("You must initialize the cleanup hoo kwith dota.initCustomUnitHook");
 		
 		creatingCustomUnit = true;
 		customUnitKV = kv;
@@ -427,6 +428,8 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 		if(creatingCustomUnit){
 			for(i in customUnitKV){
 				if(customUnitKV.hasOwnProperty(i)){
+					if(typeof customUnitKV[i] == 'object') continue;
+					
 					keyvalues[i] = customUnitKV[i];
 				}
 			}
@@ -444,17 +447,17 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 		if(hasCleanupHook) return;
 		hasCleanupHook = true;
 		
-		game.hook("Dota_OnUnitThink", onUnitThink);
+		game.hook("Dota_OnUnitThink", onUnitThinkCleanup);
 	}
 	
 	dota.autoRemoveUnit = function(ent){
-		dota.initCleanupHook();
+		if(!hasCleanupHook) throw new Error("You must initialize the cleanup hoo kwith dota.initCleanupHook");
 		
 		ent.__automaticCleanup = true;
 		ent.__automaticCleanupDelay = 30;
 	}
 	
-	function onUnitThink(unit){
+	function onUnitThinkCleanup(unit){
 		if(unit.__automaticCleanup){
 			if(unit.isValid() && unit.netprops.m_iHealth <= 0 && --unit.__automaticCleanupDelay == 0){
 				dota.remove(unit);

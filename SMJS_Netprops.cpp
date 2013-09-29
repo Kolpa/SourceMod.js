@@ -182,6 +182,8 @@ void SMJS_Netprops::SGetNetProp(v8::Local<v8::String> property, const v8::Proper
 
 
 void SMJS_Netprops::SSetNetProp(v8::Local<v8::String> property, v8::Local<v8::Value> value, const v8::PropertyCallbackInfo<Value>& args){
+	args.GetReturnValue().Set(value);
+	
 	SMJS_Netprops *self = (SMJS_Netprops*) Handle<External>::Cast(args.This()->GetInternalField(0))->Value();
 
 	if(!self->entWrapper->IsValid()) RETURN_UNDEFINED;
@@ -466,4 +468,5 @@ void SMJS_DataTable::DTSetter(uint32_t index, Local<Value> value, const Property
 	boost::function<v8::Persistent<v8::Value> ()> f(boost::bind(&SMJS_DataTable::GenerateThenFindCachedValue, self, index, pProp, self->offset + pProp->GetOffset()));
 
 	SMJS_Netprops::SSetNetProp(self->ent, self->edict, pProp, self->offset + pProp->GetOffset(), value, f, self->pTable->GetName());
+	args.GetReturnValue().Set(value);
 }

@@ -11,7 +11,7 @@ SH_DECL_HOOK2_void(ConCommand, Dispatch, SH_NOATTRIB, false, const CCommandConte
 
 SH_DECL_HOOK1_void(IServerGameClients, SetCommandClient, SH_NOATTRIB, false, int);
 
-MConsole *g_MConsole;
+static MConsole *g_MConsole;
 
 MConsole::MConsole(){
 	g_MConsole = this;
