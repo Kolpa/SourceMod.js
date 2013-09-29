@@ -426,8 +426,9 @@
 			*/
 			"HeroGiveExperience"
 			{
-				"windows"	"424"
+				"windows"	"429"
 			}
+			
 			"GetRefEHandle"
 			{
 				"windows"	"2"
