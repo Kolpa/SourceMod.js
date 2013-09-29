@@ -65,7 +65,7 @@ void SMJS_Netprops::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Va
 }
 
 void VectorGetter(Local<String> prop, const PropertyCallbackInfo<Value>& args){
-	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.Data())->Value();
+	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.This()->GetHiddenValue(v8::String::New("SMJS::dataPtr")))->Value();
 	
 	Vector *vec = (Vector*)data->addr;
 	if(prop == v8::String::New("x")){
@@ -80,7 +80,7 @@ void VectorGetter(Local<String> prop, const PropertyCallbackInfo<Value>& args){
 }
 
 void VectorSetter(Local<String> prop, Local<Value> value, const PropertyCallbackInfo<void>& args){
-	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.Data())->Value();
+	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.This()->GetHiddenValue(v8::String::New("SMJS::dataPtr")))->Value();
 	
 	Vector *vec = (Vector*)data->addr;
 	if(prop == v8::String::New("x")){
@@ -95,7 +95,7 @@ void VectorSetter(Local<String> prop, Local<Value> value, const PropertyCallback
 }
 
 void VectorToString(const v8::FunctionCallbackInfo<v8::Value>& args) {
-	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.Data())->Value();
+	SMJS_Netprops_CachedValueData *data = (SMJS_Netprops_CachedValueData *) v8::Handle<External>::Cast(args.This()->GetHiddenValue(v8::String::New("SMJS::dataPtr")))->Value();
 	Vector *vec = (Vector*)data->addr;
 
 	char buffer[256];
