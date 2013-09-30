@@ -212,6 +212,7 @@ static void *SetPurchaser;
 static void *GetBuffCaster;
 static void *CreateIllusions;
 static void *GetAbilityCaster;
+static void *GivePlayerGold;
 
 static uint8_t GetParticleManager[4];
 
@@ -348,15 +349,13 @@ MDota::MDota(){
 	FIND_DOTA_PTR_NEW(GetBuffCaster, "\x8B\x50\x3C\x83\xFA\xFF\x74\x2A\x8B\xC2\x25\xFF\xFF\x00\x00\x8B\xC8\xC1\xE1\x04\x81\x2A\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x51\x04\x75\x2A\x8B\x09\x85\xC9\x75");
 	FIND_DOTA_PTR_NEW(GetAbilityCaster, "\x8B\x88\xC4\x01\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xC3\x33\xC0\xC3");
 	FIND_DOTA_PTR_NEW(CreateIllusions, "\x55\x8B\xEC\x83\xE4\xF8\xA1\x2A\x2A\x2A\x2A\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x11\x83\xEC\x74\x53\x56\x8B");
-	//55 8B EC 8B 55 0C 8B 82 F8 04 00 00 83 EC 08 83 F8 FF 74 ? 8B C8 81 E1 FF FF 00 00 C1 E1 04 81 ? ? ? ? ? C1 E8 10 39 41 04 75 ? 8B 09 89 4D FC 85 C9 75
+	FIND_DOTA_PTR_NEW(GivePlayerGold, "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x53\x8B\x5D\x08\x56\x8B\x35\x2A\x2A\x2A\x2A\x57\x83\xFB\x09\x76\x2A\x33\xC0\x5F\x5E\x5B\x8B\xE5\x5D\xC2\x10\x00");
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
 		smutils->LogError(myself, "Couldn't find expRequiredForLevel\n");
 	}
 	
-	//\x56\x57\x8B\xF9\xBE\x64\x0B\x00\x00\x8D\xA4\x24\x00\x00\x00\x00\x8B\xC7\xE8\x2A\x2A\x2A\x2A\x8B\x0C\x30\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xEB
-
 	uint8_t *ptr = (uint8_t*)ParticleManagerFunc; //GetParticleManager is inlined in windows, this is a function that happens to contain the inlined dword. The rest is history
 	SourceHook::SetMemAccess(ptr, 60, SH_MEM_READ | SH_MEM_WRITE | SH_MEM_EXEC);
 
@@ -1724,6 +1723,22 @@ FUNCTION_M(MDota::setUnitOwner)
 		mov eax, playerId
 		mov esi, pEntity
 		call SetControllableByPlayer
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::givePlayerGold)
+	PINT(playerId);
+	PINT(amount);
+	PBOL(reliable);
+
+	__asm {
+		push 0 // a4, unknown
+		push dword ptr reliable
+		push amount
+		push playerId
+		call GivePlayerGold
 	}
 
 	RETURN_UNDEF;
