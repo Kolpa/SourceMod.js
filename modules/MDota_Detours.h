@@ -210,7 +210,6 @@ DETOUR_DECL_STATIC2_STDCALL(ClientPickHero, void, CBaseEntity*, client, CCommand
 	
 	block = false;
 	newHero = CallClientPickHero(client, cmd, &block);
-	printf("%s", newHero);
 	if(!block){
 		if(newHero == NULL){
 			DETOUR_STATIC_CALL(ClientPickHero)(client, cmd);
