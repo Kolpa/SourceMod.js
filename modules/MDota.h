@@ -174,6 +174,7 @@ public:
 	FUNCTION_DECL(upgradeAbility);
 	FUNCTION_DECL(forceKill);
 	FUNCTION_DECL(setUnitOwner);
+	FUNCTION_DECL(givePlayerGold);
 	FUNCTION_DECL(_unitInvade);
 	
 
@@ -232,6 +233,7 @@ public:
 		WRAPPED_FUNC(upgradeAbility);
 		WRAPPED_FUNC(forceKill);
 		WRAPPED_FUNC(setUnitOwner);
+		WRAPPED_FUNC(givePlayerGold);
 		WRAPPED_FUNC(_unitInvade);
 		
 
