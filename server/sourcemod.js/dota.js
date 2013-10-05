@@ -345,9 +345,23 @@ dota.setUnitControllableByPlayer = function(ent, playerId, value){
 	}else{
 		ent.netprops.m_iIsControllableByPlayer &= ~(1 << playerId);
 	}
-};
+}
 
-(function(){
+dota.executeOrdersEx = function(type, units, target, ability, loc){
+	var oldMask = new Array(units.length);
+	for (var i = 0; i < units.length; i++) {
+		oldMask[i] = units[i].netprops.m_iIsControllableByPlayer;
+		units[i].netprops.m_iIsControllableByPlayer = 1;
+	}
+	
+	dota.executeOrders(0, type, units, target, ability, false, loc);
+	
+	for (var i = 0; i < units.length; i++) {
+		units[i].netprops.m_iIsControllableByPlayer = oldMask[i];
+	}
+}
+
+;(function(){
 	// String formatter
 	
 	var formatMap = {

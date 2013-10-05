@@ -527,14 +527,16 @@ FUNCTION_M(MDota::applyDamage)
 	PNUM(damage);
 	PINT(damageType);
 
+	if(attacker == NULL || attacked == NULL) THROW("Entity cannot be null");
+
 	CBaseEntity *attackerEnt;
 	attackerEnt = attacker->ent;
 	CBaseEntity *attackedEnt;
 	attackedEnt = attacked->ent;
 	CBaseEntity *abilityEnt;
-	abilityEnt = ability->ent;
+	abilityEnt = ability == NULL ? NULL : ability->ent;
 
-	if(attacker == NULL || attacked == NULL || ability == NULL) THROW("Entity cannot be null");
+	
 
 	auto pDamage = (float)damage;
 
