@@ -213,6 +213,7 @@ static void *GetBuffCaster;
 static void *CreateIllusions;
 static void *GetAbilityCaster;
 static void *GivePlayerGold;
+static void *SetGamePaused;
 
 static uint8_t GetParticleManager[4];
 
@@ -261,8 +262,9 @@ static void PatchWaitForPlayersCount();
 #include "modules/MDota_Detours.h"
 
 
-
+MDota* g_dota;
 MDota::MDota(){
+	g_dota = this;
 
 	identifier = "dota";
 
@@ -350,6 +352,7 @@ MDota::MDota(){
 	FIND_DOTA_PTR_NEW(GetAbilityCaster, "\x8B\x88\xC4\x01\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xC3\x33\xC0\xC3");
 	FIND_DOTA_PTR_NEW(CreateIllusions, "\x55\x8B\xEC\x83\xE4\xF8\xA1\x2A\x2A\x2A\x2A\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x11\x83\xEC\x74\x53\x56\x8B");
 	FIND_DOTA_PTR_NEW(GivePlayerGold, "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x53\x8B\x5D\x08\x56\x8B\x35\x2A\x2A\x2A\x2A\x57\x83\xFB\x09\x76\x2A\x33\xC0\x5F\x5E\x5B\x8B\xE5\x5D\xC2\x10\x00");
+	FIND_DOTA_PTR_NEW(SetGamePaused, "\x55\x8B\xEC\x83\xE4\xF8\x81\xEC\x34\x01\x00\x00\x53\x56\x57\x8B\xF9\x33\xD2\x33\xC9\x83\xCB\xFF\xF6\x05\x2A\x2A\x2A\x2A\x01\x8B\xF0\x8B\xC3\x66\x89\x4C\x24\x22");
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
@@ -364,6 +367,10 @@ MDota::MDota(){
 	}
 
 	printf("Done!\n");
+}
+
+void MDota::OnMapStart(){
+	gamerules = sdkTools->GetGameRules();
 }
 
 void MDota::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){
@@ -508,9 +515,9 @@ FUNCTION_M(MDota::executeOrders)
 	auto tmp = &orders;
 
 	__asm {
-		push 1;
-		push 1;
-		push 1;
+		push 1
+		push 1
+		push 1
 		push tmp
 		mov edi, 0
 		call ExecuteOrders
@@ -1108,9 +1115,6 @@ FUNCTION_M(MDota::addNewModifier)
 END
 
 FUNCTION_M(MDota::spawnRune)
-	if (gamerules == NULL){
-		gamerules = sdkTools->GetGameRules();
-	}
 	__asm {
 		push gamerules
 		call SpawnRune
@@ -1143,10 +1147,6 @@ FUNCTION_M(MDota::forceWin)
 	PINT(team);
 	if(team != 2 && team != 3) THROW_VERB("Invalid team %d", team);
 	
-	if (gamerules == NULL){
-		gamerules = sdkTools->GetGameRules();
-	}
-
 	team = team == 2 ? 3 : 2;
 
 	__asm {
@@ -1741,6 +1741,20 @@ FUNCTION_M(MDota::givePlayerGold)
 		push amount
 		push playerId
 		call GivePlayerGold
+	}
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::setGamePaused)
+	PBOL(value);
+
+	__asm {
+		push 0 // broadcast unpauser 
+		push dword ptr value // pause state
+		mov ecx, gamerules
+		mov eax, -1 // unpauser/pauser player id
+		call SetGamePaused
 	}
 
 	RETURN_UNDEF;

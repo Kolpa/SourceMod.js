@@ -7,6 +7,7 @@
 #include "SMJS_Interfaces.h"
 #include "SMJS_GameRules.h"
 #include "SMJS_Event.h"
+#include "MDota.h"
 
 SH_DECL_HOOK6(IServerGameDLL, LevelInit, SH_NOATTRIB, false, bool, const char *, const char *, const char *, const char *, bool, bool);
 SH_DECL_HOOK0_void(IServerGameDLL, LevelShutdown, SH_NOATTRIB, false);
@@ -88,6 +89,7 @@ void MGame::OnPreServerActivate(){
 
 void MGame::OnServerActivate(){
 	InitTeamNatives();
+	g_dota->OnMapStart();
 
 	self->rules.rulesProps.proxy = FindEntityByClassname(-1, "dota_gamerules");
 	self->rules.rulesProps.gamerules = sdkTools->GetGameRules();

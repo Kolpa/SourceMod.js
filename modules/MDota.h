@@ -113,10 +113,15 @@ enum Dota_Hero {
 	Hero_Count
 };
 
+class MDota;
+
+extern MDota* g_dota;
+
 class MDota : public SMJS_Module {
 public:
 	MDota();
 
+	void OnMapStart();
 	void OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper);
 	void OnPluginDestroyed(SMJS_Plugin *plugin){};
 
@@ -175,6 +180,7 @@ public:
 	FUNCTION_DECL(forceKill);
 	FUNCTION_DECL(setUnitOwner);
 	FUNCTION_DECL(givePlayerGold);
+	FUNCTION_DECL(setGamePaused);
 	FUNCTION_DECL(_unitInvade);
 	
 
@@ -234,6 +240,7 @@ public:
 		WRAPPED_FUNC(forceKill);
 		WRAPPED_FUNC(setUnitOwner);
 		WRAPPED_FUNC(givePlayerGold);
+		WRAPPED_FUNC(setGamePaused);
 		WRAPPED_FUNC(_unitInvade);
 		
 
