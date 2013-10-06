@@ -13,5 +13,10 @@
 		}
 	}
 	
+	Array.prototype.last = function(){
+		if(this.length == 0) throw new Error("Array is empty");
+		return this[this.length - 1];
+	}
+	
 })();
 
