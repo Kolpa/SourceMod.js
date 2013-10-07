@@ -74,7 +74,7 @@ dota.UNIT_TARGET_TEAM_CUSTOM = 4;
 dota.UNIT_STATE_ROOTED = 0;
 // 1 +
 dota.UNIT_STATE_NO_AUTOATTACKS = 2;
-// 3 +
+dota.UNIT_STATE_CANNOT_BE_ATTACKED = 3;
 dota.UNIT_STATE_SILENCED = 4;
 dota.UNIT_STATE_HEXED = 5;
 dota.UNIT_STATE_STUNNED = 6;
@@ -315,6 +315,13 @@ Entity.prototype.isHero = function(){
 	
 	return this._isHero;
 }
+
+/*
+// This function (getDataString) could be exploited to read anything from any part of the memory,
+// we can't add it.
+Entity.prototype.getUnitName = function(){
+	return this.getDataString(this, 11936);
+}*/
 
 dota.removeAll = function(type){
 	game.findEntitiesByClassname(type).forEach(function(ent){
