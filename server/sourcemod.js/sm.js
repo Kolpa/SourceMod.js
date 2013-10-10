@@ -48,12 +48,21 @@
 		};
 		
 		format = function(str, arr){
-			var args = Array.isArray(arr) ? arr : arguments;
+			var indexing;
+			var args;
+			if(Array.isArray(arr)){
+				args = arr;
+				indexing = 1;
+			} else{
+				args = arguments;
+				indexing = 0;
+			}
+			
 			return str.replace(/\{([a-z0-9]+)\}/gi, function(all, id){
 				if(/^[0-9]+$/.test(id)){
-					var i = parseInt(id);
-					if(i <= 0 || i >= args.length) return all;
-					return args[i];
+					var i = parseInt(id, 10);
+					if(i <= 0 || i >= args.length + indexing) return all;
+					return args[i - indexing];
 				}
 				
 				if(formatMap.hasOwnProperty(id)){
@@ -66,6 +75,10 @@
 		
 		format.addAlias = function(key, value){
 			formatMap[key] = value;
+		}
+		
+		String.prototype.format = function(){
+			return format(this, Array.prototype.slice.call(arguments));
 		}
 	})();
 	
