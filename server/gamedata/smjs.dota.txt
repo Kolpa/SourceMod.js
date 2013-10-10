@@ -394,7 +394,7 @@
 			*/
 			"HeroLevelUp"
 			{
-				"windows"	"423"
+				"windows"	"428"
 			}
 
 			/*
