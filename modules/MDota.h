@@ -182,6 +182,7 @@ public:
 	FUNCTION_DECL(givePlayerGold);
 	FUNCTION_DECL(setGamePaused);
 	FUNCTION_DECL(canEntityBeSeenByTeam);
+	FUNCTION_DECL(changeToRandomHero);
 	FUNCTION_DECL(_unitInvade);
 	
 
@@ -243,6 +244,7 @@ public:
 		WRAPPED_FUNC(givePlayerGold);
 		WRAPPED_FUNC(setGamePaused);
 		WRAPPED_FUNC(canEntityBeSeenByTeam);
+		WRAPPED_FUNC(changeToRandomHero);
 		WRAPPED_FUNC(_unitInvade);
 		
 
