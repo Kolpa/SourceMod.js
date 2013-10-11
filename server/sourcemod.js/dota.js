@@ -74,7 +74,7 @@ dota.UNIT_TARGET_TEAM_CUSTOM = 4;
 dota.UNIT_STATE_ROOTED = 0;
 // 1 +
 dota.UNIT_STATE_NO_AUTOATTACKS = 2;
-// 3 +
+dota.UNIT_STATE_CANNOT_BE_ATTACKED = 3;
 dota.UNIT_STATE_SILENCED = 4;
 dota.UNIT_STATE_HEXED = 5;
 dota.UNIT_STATE_STUNNED = 6;
@@ -316,6 +316,13 @@ Entity.prototype.isHero = function(){
 	return this._isHero;
 }
 
+/*
+// This function (getDataString) could be exploited to read anything from any part of the memory,
+// we can't add it.
+Entity.prototype.getUnitName = function(){
+	return this.getDataString(this, 11936);
+}*/
+
 dota.removeAll = function(type){
 	game.findEntitiesByClassname(type).forEach(function(ent){
 		if(!ent.isValid()) return;
@@ -361,56 +368,8 @@ dota.executeOrdersEx = function(type, units, target, ability, loc){
 	}
 }
 
-;(function(){
-	// String formatter
-	
-	var formatMap = {
-		"none":   "\x06",
-		"gray":   "\x06", 
-		"grey":   "\x06", 
-		
-		"green":  "\x0C", 
-		"dpurple": "\x0D", 
-		"spink":  "\x0E",
-		//"orange":  "\x0F",
-		"dyellow":  "\x10",
-		"pink":  "\x11",
-		
-		"red":    "\x12",
-		//"orange":    "\x13",
-		//"gold":    "\x14",
-		"lgreen":  "\x15",
-		"blue":  "\x16",
-		"dgreen":   "\x18",
-		"sblue":   "\x19",
-		"purple": "\x1A", 
-		"orange":    "\x1B",
-		"lred":    "\x1C",
-		"gold":    "\x1D"
-	};
-	
-	dota.format = function(str, arr){
-		var args = Array.isArray(arr) ? arr : arguments;
-		return str.replace(/\{([a-z0-9]+)\}/gi, function(all, id){
-			if(/^[0-9]+$/.test(id)){
-				var i = parseInt(id);
-				if(i <= 0 || i >= args.length) return all;
-				return args[i];
-			}
-			
-			if(formatMap.hasOwnProperty(id)){
-				return formatMap[id];
-			}
-			
-			return all;
-		});
-	}
-	
-	dota.addFormatAlias = function(key, value){
-		formatMap[key] = value;
-	}
-})();
 
+; // Submodules (this semicolon is required)
 
 (function(){
 	// Custom unit creator
