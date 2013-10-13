@@ -1,8 +1,18 @@
 var timers = [];
 var gametime = 0;
+var mapStarted = false;
+var nextFrameFuncs = [];
 
-function processTimers(){
+
+game.hook("OnGameFrame", function(){
 	gametime = game.rules.props.m_fGameTime;
+	
+	var arr = nextFrameFuncs;
+	nextFrameFuncs = [];
+	for (var i = 0; i < arr.length; ++i) {
+		arr[i]();
+	}
+	
 	for(var i = 0; i < timers.length; ++i){
 		var t = timers[i];
 		
@@ -22,10 +32,19 @@ function processTimers(){
 		}
 	}
 }
+);
 
-game.hook("OnGameFrame", processTimers);
+
+game.hook("OnMapStart", function(){
+	mapStarted = true;
+	gametime = game.rules.props.m_fGameTime;
+	for (var i = 0; i < timers.length; i++) {
+		timers[i].next += gametime;
+	}
+});
 
 exports.setInterval = function(func, interval){
+	if(typeof func != 'function') throw new Error("Argument 1 must be a function");
 	var timer = {
 		func: func,
 		interval: interval / 1000,
@@ -38,6 +57,7 @@ exports.setInterval = function(func, interval){
 };
 
 exports.setTimeout = function(func, interval){
+	if(typeof func != 'function') throw new Error("Argument 1 must be a function");
 	var timer = {
 		func: func,
 		interval: interval / 1000,
@@ -59,4 +79,9 @@ exports.clearTimer = exports.clearTimeout = exports.clearInterval = function(tim
 	}
 	
 	return false;
+}
+
+exports.nextFrame = function(func){
+	if(typeof func != 'function') throw new Error("Argument 1 must be a function");
+	nextFrameFuncs.push(func);
 }
