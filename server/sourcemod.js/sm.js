@@ -22,6 +22,17 @@
 		return this[~~(Math.random() * this.length)];
 	}
 	
+	server.printToChatAll = function(str){
+		for (var i = 0; i < server.clients.length; i++) {
+			if(server.clients[i] == null || !server.clients[i].isInGame()) continue;
+			server.clients[i].printToChat(str);
+		}
+	}
+	
+	server.formatToChatAll = function(str){
+		server.printToChatAll(format(str, Array.prototype.slice.call(arguments, 1)));
+	}
+	
 	
 	;(function(){
 		// String formatter
