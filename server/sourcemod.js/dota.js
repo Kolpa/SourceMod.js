@@ -435,8 +435,8 @@ dota.executeOrdersEx = function(type, units, target, ability, loc){
 		if(unit.__automaticCleanup){
 			if(unit.isValid() && unit.netprops.m_iHealth <= 0 && --unit.__automaticCleanupDelay == 0){
 				dota.remove(unit);
-				if(ent.__automaticCleanupFunc){
-					ent.__automaticCleanupFunc();
+				if(unit.__automaticCleanupFunc){
+					unit.__automaticCleanupFunc();
 				}
 			}
 		}
