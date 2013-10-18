@@ -123,7 +123,7 @@ using namespace v8;
 	n = vec_tmp_##n->NumberValue();
 
 #define PVEC(x, y, z) 0  ;if (args.Length()<=_argn) THROW_VERB("Argument %i of %s, must be a vector \n",_argn+1,FUN_NAME); \
-	double x, y, z; \
+	float x, y, z; \
 	if(args[_argn]->IsNumber()) { \
 		PNUM2(x); \
 		PNUM2(y); \

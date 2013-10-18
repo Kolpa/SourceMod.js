@@ -183,6 +183,7 @@ public:
 	FUNCTION_DECL(setGamePaused);
 	FUNCTION_DECL(canEntityBeSeenByTeam);
 	FUNCTION_DECL(changeToRandomHero);
+	FUNCTION_DECL(destroyTreesAroundPoint);
 	FUNCTION_DECL(_unitInvade);
 	
 
@@ -245,6 +246,7 @@ public:
 		WRAPPED_FUNC(setGamePaused);
 		WRAPPED_FUNC(canEntityBeSeenByTeam);
 		WRAPPED_FUNC(changeToRandomHero);
+		WRAPPED_FUNC(destroyTreesAroundPoint);
 		WRAPPED_FUNC(_unitInvade);
 		
 
