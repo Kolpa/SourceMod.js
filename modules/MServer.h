@@ -20,6 +20,7 @@ public:
 	FUNCTION_DECL(getMap);
 	FUNCTION_DECL(isMapValid);
 	FUNCTION_DECL(log);
+	FUNCTION_DECL(quit);
 
 	WRAPPED_CLS(MServer, SMJS_Module) {
 		temp->SetClassName(v8::String::NewSymbol("ServerModule"));
@@ -37,5 +38,6 @@ public:
 		WRAPPED_FUNC(getMap);
 		WRAPPED_FUNC(isMapValid);
 		WRAPPED_FUNC(log);
+		WRAPPED_FUNC(quit);
 	}
 };

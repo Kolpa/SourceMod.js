@@ -96,6 +96,12 @@ FUNCTION_M(MServer::log)
 	RETURN_UNDEF;
 END
 
+FUNCTION_M(MServer::quit)
+	engine->ServerCommand("quit\n");
+	engine->ServerExecute();
+	RETURN_UNDEF;
+END
+
 class ClientArray : public SMJS_BaseWrapped {
 public:
 
