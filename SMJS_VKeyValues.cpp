@@ -29,6 +29,22 @@ void SMJS_VKeyValues::Restore(){
 	}
 }
 
+inline static int IsNumericString(const char *str){
+	size_t len = strlen(str);
+	int type = 1;
+	for(size_t i = 0; i < len; ++i){
+		if((str[i] >= '0' && str[i] <= '9') || (i == 0 && str[i] == '-')){
+			// Ignore
+		} else if(str[i] == '.'){
+			type = 2;
+		} else {
+			return 0;
+		}
+	}
+
+	return type;
+}
+
  void SMJS_VKeyValues::GetKeyValue(Local<String> prop, const PropertyCallbackInfo<Value>& args){
 	SMJS_VKeyValues *self = dynamic_cast<SMJS_VKeyValues*>((SMJS_BaseWrapped*)Handle<External>::Cast(args.This()->GetInternalField(0))->Value());
 	if(self->kv == NULL) THROW("Invalid keyvalue object");
@@ -36,7 +52,15 @@ void SMJS_VKeyValues::Restore(){
 	v8::String::Utf8Value str(prop);
 	switch(self->kv->GetDataType(*str)){
 		case KeyValues::TYPE_NONE: RETURN_UNDEF;
-		case KeyValues::TYPE_STRING: RETURN_STRING(self->kv->GetString(*str));
+		case KeyValues::TYPE_STRING: {
+			int intType = IsNumericString(self->kv->GetString(*str));
+			switch(intType){
+				case 1:  RETURN_INT(atoi(self->kv->GetString(*str)));
+				case 2:  RETURN_NUMBER(atof(self->kv->GetString(*str)));
+				default: RETURN_STRING(self->kv->GetString(*str));
+			}
+			
+		}
 		case KeyValues::TYPE_INT: RETURN_INT(self->kv->GetInt(*str));
 		case KeyValues::TYPE_FLOAT: RETURN_NUMBER(self->kv->GetFloat(*str));
 		default: THROW_VERB("Unknown data type %d", self->kv->GetDataType(*str));
