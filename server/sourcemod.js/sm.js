@@ -6,6 +6,14 @@
 	
 	require.cache = {};
 	
+	Math.randomPointInCircle = function(center, radius){
+		// Returns a random point in a circle with uniform distribution
+		var t = 2 * Math.PI * Math.random();
+		var u = Math.random() + Math.random();
+		var r = u > 1 ? 2 - u : u;
+		return {x: r * Math.cos(t), y: r * Math.sin(t), z: 0}; // z provided for convinience
+	}
+	
 	Array.prototype.remove = function(e){
 		var i = this.indexOf(e);
 		if(i != -1){
