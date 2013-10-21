@@ -9,6 +9,7 @@
 #include "game/shared/protobuf/usermessages.pb.h"
 #include "game/shared/dota/protobuf/dota_usermessages.pb.h"
 #include "MemoryUtils.h"
+#include "MGame.h"
 
 #define WAIT_FOR_PLAYERS_COUNT_SIG "\x83\x3D****\x00\x7E\x19\x8B\x0D****\x83\x79\x30\x00"
 #define WAIT_FOR_PLAYERS_COUNT_SIG_LEN 19
@@ -225,12 +226,14 @@ static void *SetGamePaused;
 static void *CanBeSeenByTeam;
 static void (*ChangeToRandomHero)(void *player);
 static void *DestroyTreesAroundPoint;
+static void *FindOrCreatePlayerID;
 
 static uint8_t GetParticleManager[4];
 
 static void *gamerules;
 static void *GameManager;
 static void *GridNav;
+static void *PlayerResource;
 
 static int particleIndex = 100000; //i don't know how to properly hook into the particle index system yet so i'll just do this bullshit
 
@@ -264,7 +267,7 @@ static void **DLinkItemDrop;
 // (we're not using Valve's allocator)
 // So we need to create a vector large enough that the game won't try to expand it
 // and we'll be fine.
-static CUtlVector<CBaseHandle> findClearSpaceForUnitOutput(0, 2048);
+static CUtlVector<CBaseHandle> findUnitsOutput(0, 2048);
 
 static bool canSetState = false;
 
@@ -369,6 +372,7 @@ MDota::MDota(){
 	FIND_DOTA_FUNC_NEW(CanBeSeenByTeam, "\x55\x8B\xEC\x8B\x06\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCE\xFF\xD2\x84\xC0\x75\x06\xB0\x01\x5D\xC2\x04\x00\x80\xBE\x2A\x2A\x2A\x2A\x00\x74\x0C\x8B\x06\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCE\xFF\xD2\x8B\x4D\x08\xB8\x01\x00\x00\x00\xD3\xE0\x8B\x8E\x2A\x2A\x2A\x2A\x33\xD2\x23\xC8\x3B\xC8\x0F\x94\xC0\x5D\xC2\x04\x00");
 	FIND_DOTA_FUNC_NEW(ChangeToRandomHero, "\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x54\x53\x56\x8B\x75\x08\x8B\x06\x8B\x90\x2A\x2A\x2A\x2A\x57\x8B\xCE\xFF\xD2\xE8\x2A\x2A\x2A\x2A\x89\x44\x24\x1C\x8B\x86\x2A\x2A\x2A\x2A\x33\xF6\x83\xF8\xFF\x74\x28\x8B\xC8");
 	FIND_DOTA_FUNC_NEW(DestroyTreesAroundPoint, "\x55\x8B\xEC\x83\xEC\x14\x8B\x4D\x14\x53\x56\x57\x50\x83\xEC\x10\xF3\x0F\x11\x44\x24\x0C\xF3\x0F\x7E\x45\x0C");
+	FIND_DOTA_FUNC_NEW(FindOrCreatePlayerID, "\x55\x8B\xEC\x83\xEC\x08\x53\x83\xC9\xFF\x80\x7D\x14\x00\x56\x8B\x75\x08\x57\x89\x4D\xF8\x89\x4D\xFC");
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){
@@ -387,6 +391,8 @@ MDota::MDota(){
 
 void MDota::OnMapStart(){
 	gamerules = sdkTools->GetGameRules();
+	PlayerResource = MGame::FindEntityByClassname(-1, "dota_player_manager");
+	if(PlayerResource == NULL) printf("Couldn't find PlayerResource!");
 }
 
 void MDota::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wrapper){
@@ -852,8 +858,8 @@ FUNCTION_M(MDota::createIllusions)
 	CBaseEntity *ownerEnt = owner->ent;
 	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
 
-	findClearSpaceForUnitOutput.RemoveAll();
-	auto output = &findClearSpaceForUnitOutput;
+	findUnitsOutput.RemoveAll();
+	auto output = &findUnitsOutput;
 
 	__asm{
 		push ownerEnt
@@ -868,12 +874,14 @@ FUNCTION_M(MDota::createIllusions)
 	}
 
 	auto pl = GetPluginRunning();
-	auto arr = v8::Array::New(findClearSpaceForUnitOutput.Count());
-	for(int i = 0; i < findClearSpaceForUnitOutput.Count(); ++i){
-		CBaseEntity *foundEnt = gamehelpers->ReferenceToEntity(findClearSpaceForUnitOutput[i].GetEntryIndex());
+	auto arr = v8::Array::New(findUnitsOutput.Count());
+	for(int i = 0; i < findUnitsOutput.Count(); ++i){
+		CBaseEntity *foundEnt = gamehelpers->ReferenceToEntity(findUnitsOutput[i].GetEntryIndex());
 		auto entWrapper = GetEntityWrapper(foundEnt);
 		arr->Set(i, entWrapper->GetWrapper(pl));
 	}
+
+	kv->deleteThis();
 
 	RETURN_SCOPED(arr);
 END
@@ -1244,7 +1252,7 @@ FUNCTION_M(MDota::findClearSpaceForUnit)
 END
 
 FUNCTION_M(MDota::setWaitForPlayersCount)
-	if(GetPluginRunning()->IsSandboxed()) THROW("This function is not allowed to be called in sandboxed plugins");	
+	if(GetPluginRunning()->IsSandboxed()) THROW("This function is not allowed to be called in sandboxed plugins");
 
 	PINT(c);
 
@@ -1618,10 +1626,10 @@ FUNCTION_M(MDota::findUnitsInRadius)
 	
 	Vector pos(x, y, 0.0f);
 
-	findClearSpaceForUnitOutput.RemoveAll();
+	findUnitsOutput.RemoveAll();
 
 	Vector *posPointer = &pos;
-	auto outputPointer = &findClearSpaceForUnitOutput;
+	auto outputPointer = &findUnitsOutput;
 
 	__asm {
 		push    0
@@ -1639,9 +1647,9 @@ FUNCTION_M(MDota::findUnitsInRadius)
 	}
 
 	auto pl = GetPluginRunning();
-	auto arr = v8::Array::New(findClearSpaceForUnitOutput.Count());
-	for(int i = 0; i < findClearSpaceForUnitOutput.Count(); ++i){
-		CBaseEntity *foundEnt = gamehelpers->ReferenceToEntity(findClearSpaceForUnitOutput[i].GetEntryIndex());
+	auto arr = v8::Array::New(findUnitsOutput.Count());
+	for(int i = 0; i < findUnitsOutput.Count(); ++i){
+		CBaseEntity *foundEnt = gamehelpers->ReferenceToEntity(findUnitsOutput[i].GetEntryIndex());
 		auto entWrapper = GetEntityWrapper(foundEnt);
 		arr->Set(i, entWrapper->GetWrapper(pl));
 	}
@@ -1818,6 +1826,41 @@ FUNCTION_M(MDota::destroyTreesAroundPoint)
 	}
 
 	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::findOrCreatePlayerID)
+	if(GetPluginRunning()->IsSandboxed()) THROW("This function is not allowed to be called in sandboxed plugins");
+
+	PSTR(steamIdJsStr);
+	const char *steamIdStr = *steamIdJsStr;
+
+	bool isBot = false;
+	bool isTeamPlayer = true;
+
+#ifdef WIN32
+	#define atoll(S) _atoi64(S)
+#endif
+
+	if(args.Length() >= 2){
+		PBOL(tmpIsTeamPlayer);
+		isTeamPlayer = tmpIsTeamPlayer;
+	}
+
+	uint64 steamid = atoll(steamIdStr);
+	
+	int result;
+
+	__asm {
+		push dword ptr isTeamPlayer
+		push dword ptr isBot
+		push dword ptr steamid + 4
+		push dword ptr steamid
+		push PlayerResource
+		call FindOrCreatePlayerID
+		mov result, eax
+	}
+
+	RETURN_INT(result);
 END
 
 FUNCTION_M(MDota::_unitInvade)

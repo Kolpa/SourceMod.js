@@ -423,17 +423,21 @@ dota.executeOrdersEx = function(type, units, target, ability, loc){
 		game.hook("Dota_OnUnitThink", onUnitThinkCleanup);
 	}
 	
-	dota.autoRemoveUnit = function(ent){
+	dota.autoRemoveUnit = function(ent, func){
 		if(!hasCleanupHook) throw new Error("You must initialize the cleanup hoo kwith dota.initCleanupHook");
 		
 		ent.__automaticCleanup = true;
 		ent.__automaticCleanupDelay = 30;
+		ent.__automaticCleanupFunc = func;
 	}
 	
 	function onUnitThinkCleanup(unit){
 		if(unit.__automaticCleanup){
 			if(unit.isValid() && unit.netprops.m_iHealth <= 0 && --unit.__automaticCleanupDelay == 0){
 				dota.remove(unit);
+				if(unit.__automaticCleanupFunc){
+					unit.__automaticCleanupFunc();
+				}
 			}
 		}
 	}

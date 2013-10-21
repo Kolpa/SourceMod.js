@@ -268,6 +268,8 @@ FUNCTION_M(MConsole::addServerCommand)
 	PSTR(cmdName);
 	PFUN(callback);
 
+	if(GetPluginRunning()->IsSandboxed() && cmdName.length() < 3) THROW("Sandboxed plugins cannot have commands with less than 3 characters");
+
 	AddCommand(GetPluginRunning(), *cmdName, callback, true);
 	
 	RETURN_UNDEF;
@@ -278,6 +280,8 @@ FUNCTION_M(MConsole::addClientCommand)
 	ARG_COUNT(2);
 	PSTR(cmdName);
 	PFUN(callback);
+
+	if(GetPluginRunning()->IsSandboxed() && cmdName.length() < 3) THROW("Sandboxed plugins cannot have commands with less than 3 characters");
 
 	AddCommand(GetPluginRunning(), *cmdName, callback, false);
 	
