@@ -1,6 +1,7 @@
 #pragma once
 #include "SMJS_Module.h"
 #include <map>
+#include "MDotaWrappers.h"
 
 enum Dota_Hero {
 	Hero_Invalid = -1,
@@ -917,6 +918,3 @@ public:
 	}
 	
 };
-
-
-
