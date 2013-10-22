@@ -152,6 +152,9 @@
     <ClCompile Include="..\..\..\hl2sdk-dota\public\engine\protobuf\netmessages.pb.cc">
       <Filter>Dota</Filter>
     </ClCompile>
+    <ClCompile Include="..\modules\MDotaWrappers.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extension.h">
@@ -309,6 +312,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\hl2sdk-dota\public\engine\protobuf\networkbasetypes.pb.h">
       <Filter>Dota</Filter>
+    </ClInclude>
+    <ClInclude Include="..\modules\MDotaWrappers.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
