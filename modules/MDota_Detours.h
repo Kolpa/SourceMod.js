@@ -148,6 +148,76 @@ FEND:
 	}
 }
 
+bool CallUpgradeAbilityHook(CBaseEntity *ability){
+               
+        SMJS_Entity *entityWrapper;
+        entityWrapper = GetEntityWrapper(ability);
+ 
+        int len = GetNumPlugins();
+        for(int i = 0; i < len; ++i){
+                SMJS_Plugin *pl = GetPlugin(i);
+                if(pl == NULL) continue;
+                       
+                HandleScope handle_scope(pl->GetIsolate());
+                Context::Scope context_scope(pl->GetContext());
+ 
+                auto *hooks = pl->GetHooks("Dota_OnUpgradeAbility");
+ 
+                if(hooks->size() == 0) continue;
+ 
+                v8::Handle<v8::Value> args[1];
+                args[0] = entityWrapper->GetWrapper(pl);
+ 
+                for(auto it = hooks->begin(); it != hooks->end(); ++it){
+                        auto func = *it;
+                        auto res = func->Call(pl->GetContext()->Global(), 1, args);
+                        if(!res.IsEmpty() && !res->IsUndefined()){
+                                if(res->IsFalse()){
+                                        return false;
+                                }
+                                if(res->IsTrue()){
+                                        return true;
+                                }
+                        }
+                }
+        }
+        return true;
+}
+ 
+DETOUR_DECL_NAKED(UpgradeAbilityDetour, bool){
+               
+        CBaseEntity *ability;
+ 
+        __asm {
+                push    ebp
+                mov             ebp, esp
+                sub             esp, 64
+ 
+                mov             ability, edi
+        }
+               
+        __asm pushad
+        __asm pushfd
+               
+        bool res;
+        res = false;
+        res = CallUpgradeAbilityHook(ability);
+ 
+        if(res == true){       
+                __asm {
+                        mov edi, ability
+                        call UpgradeAbilityDetour_Actual
+                }
+        }
+		
+        __asm{
+                popfd
+                popad
+                leave
+                retn
+        }
+}
+
 const char* CallClientPickHero(CBaseEntity *client, CCommand *cmd, bool* block){
 	int len = GetNumPlugins();
 
