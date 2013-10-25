@@ -321,9 +321,6 @@ MDota::MDota(){
 	heroBuyItemDetour = DETOUR_CREATE_STATIC(HeroBuyItem, "HeroBuyItem");
 	if(heroBuyItemDetour) heroBuyItemDetour->EnableDetour();
 
-	upgradeAbilityDetour = DETOUR_CREATE_STATIC(UpgradeAbilityDetour, "UpgradeAbility");
-    if(upgradeAbilityDetour) upgradeAbilityDetour->EnableDetour();
-
 	unitThinkDetour = DETOUR_CREATE_MEMBER(UnitThink, "UnitThink");
 	if(unitThinkDetour) unitThinkDetour->EnableDetour();
 
@@ -391,6 +388,8 @@ MDota::MDota(){
 	FIND_DOTA_FUNC_NEW(DestroyTreesAroundPoint, "\x55\x8B\xEC\x83\xEC\x14\x8B\x4D\x14\x53\x56\x57\x50\x83\xEC\x10\xF3\x0F\x11\x44\x24\x0C\xF3\x0F\x7E\x45\x0C");
 	FIND_DOTA_FUNC_NEW(FindOrCreatePlayerID, "\x55\x8B\xEC\x83\xEC\x08\x53\x83\xC9\xFF\x80\x7D\x14\x00\x56\x8B\x75\x08\x57\x89\x4D\xF8\x89\x4D\xFC");
 
+	upgradeAbilityDetour = DETOUR_CREATE_STATIC(UpgradeAbilityDetour, "UpgradeAbility");
+    if(upgradeAbilityDetour) upgradeAbilityDetour->EnableDetour();
 
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
