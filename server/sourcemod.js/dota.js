@@ -51,58 +51,39 @@ dota.UNIT_TARGET_TEAM_BOTH = 3;
 dota.UNIT_TARGET_TEAM_CUSTOM = 4;
 
 /////////////// Unit states ///////////////
-// ethereal: 1 + 3
-// manta: 6 + 9 + 10 + 15 + 23
-// brewmaster during ult: 6 + 9 + 15 + 18 + 23 + 31
-// hex: 2 + 4 + 5 + 7 + 13 + 14
-// void's ult: 6 + 18 + 28
-// jugger during ult: 0 + 9 + 10 + 15 + 23
-// OD's banish: 6 + 9 + 15 + 18 + 23 + 31
-// lifestealer during ult: 0 + 2 + 3 + 8 + 9 + 10 + 15 + 19 + 23 + 25 + 31
-// naga's ult: 0 + 2 + 6 + 9
-// bane nightmare, first second: 0 + 2 + 6 + 9 + 12 + 23
-// bane nightmare: 0 + 2 + 6 + 12
-// bh invis: 2 + 3 + 6 + 8 + 9 + 12 + 13 + 16 + 17 + 20 + 21
-//
-// 1 and 2 prevent the unit from auto attacking
-// 3 prevents units from attacking it
-// 15 no health bar, cannot be clicked but can still be attacked
-// 23 no health bar
-// 28 gyro's Q only works if this is 0
-// 30 makes the unit not give vision
-/// Unit can still turn around and attack
+// Use the ones on the left, the right ones are obsolete names
 dota.UNIT_STATE_ROOTED = 0;
-// 1 +
-dota.UNIT_STATE_NO_AUTOATTACKS = 2;
-dota.UNIT_STATE_CANNOT_BE_ATTACKED = 3;
+dota.UNIT_STATE_SOFT_DISARMED = 1;
+dota.UNIT_STATE_DISARMED = dota.UNIT_STATE_NO_AUTOATTACKS = 2;
+dota.UNIT_STATE_ATTACK_IMMUNE = dota.UNIT_STATE_CANNOT_BE_ATTACKED = 3;
 dota.UNIT_STATE_SILENCED = 4;
-dota.UNIT_STATE_HEXED = 5;
+dota.UNIT_STATE_MUTED = 5;
 dota.UNIT_STATE_STUNNED = 6;
-// 7 +
+dota.UNIT_STATE_HEXED = 7;
 dota.UNIT_STATE_INVISIBLE = 8;
 dota.UNIT_STATE_INVULNERABLE = 9;
 dota.UNIT_STATE_MAGIC_IMMUNE = 10;
-dota.UNIT_STATE_REVEALED = 11;
-// 12 sleeping? (bane)
-// 13 +
-// 14 +
-// 15 +
-// 16 +
-// 17 +
-dota.UNIT_STATE_PAUSED = 18;
-dota.UNIT_STATE_CANT_ACT = 19;
-// 20 +
-// 21 +
-// 22
+dota.UNIT_STATE_PROVIDES_VISION = dota.UNIT_STATE_REVEALED = 11;
+dota.UNIT_STATE_NIGHTMARED = 12;
+dota.UNIT_STATE_BLOCK_DISABLED = 13;
+dota.UNIT_STATE_EVADE_DISABLED = 14;
+dota.UNIT_STATE_UNSELECTABLE = 15;
+dota.UNIT_STATE_CANNOT_MISS = 16;
+dota.UNIT_STATE_SPECIALLY_DENIABLE = 17;
+dota.UNIT_STATE_FROZEN = dota.UNIT_STATE_PAUSED = 18;
+dota.UNIT_STATE_COMMAND_RESTRICTED = dota.UNIT_STATE_CANT_ACT = 19;
+dota.UNIT_STATE_NOT_ON_MINIMAP_FOR_ENEMIES = 20;
+dota.UNIT_STATE_NOT_ON_MINIMAP = 21;
+dota.UNIT_STATE_LOW_ATTACK_PRIORITY = 21;
 dota.UNIT_STATE_NO_HEALTHBAR = 23;
 dota.UNIT_STATE_FLYING = 24;
-dota.UNIT_STATE_PHASE = 25;
-// 26
-// 27
-// 28 +
+dota.UNIT_STATE_NO_UNIT_COLLISION = dota.UNIT_STATE_PHASE = 25;
+dota.UNIT_STATE_NO_TEAM_MOVE_TO = 26;
+dota.UNIT_STATE_NO_TEAM_SELECT = 27;
+dota.UNIT_STATE_PASSIVES_DISABLED = 28;
 dota.UNIT_STATE_DOMINATED = 29;
-dota.UNIT_STATE_NO_VISION = 30;
-dota.UNIT_STATE_BANISHED = 31;
+dota.UNIT_STATE_BLIND = dota.UNIT_STATE_NO_VISION = 30;
+dota.UNIT_STATE_OUT_OF_GAME = dota.UNIT_STATE_BANISHED = 31;
 
 /////////////// Unit target flags ///////////////
 
