@@ -249,6 +249,7 @@ static CDetour *heroBuyItemDetour;
 static CDetour *unitThinkDetour;
 static CDetour *heroSpawnDetour;
 static CDetour *isDeniableDetour;
+static CDetour *upgradeAbilityDetour;
 static CDetour *pickupItemDetour;
 static CDetour *createModifierDetour;
 
@@ -319,6 +320,9 @@ MDota::MDota(){
 	
 	heroBuyItemDetour = DETOUR_CREATE_STATIC(HeroBuyItem, "HeroBuyItem");
 	if(heroBuyItemDetour) heroBuyItemDetour->EnableDetour();
+
+	upgradeAbilityDetour = DETOUR_CREATE_STATIC(UpgradeAbilityDetour, "UpgradeAbility");
+    if(upgradeAbilityDetour) upgradeAbilityDetour->EnableDetour();
 
 	unitThinkDetour = DETOUR_CREATE_MEMBER(UnitThink, "UnitThink");
 	if(unitThinkDetour) unitThinkDetour->EnableDetour();
@@ -844,14 +848,15 @@ FUNCTION_M(MDota::setParticleControlEnt)
 	char *attachPointStr = *attachPoint;
 
 	__asm {
+		push 1
 		push entOffset
-		push control
 		push unknown //idk
-		push attachPointStr
+		push index
 		push attachType //attach_type
 		push controlPoint //control_point
 		push index
-		mov eax, control
+		mov eax, attachPointStr
+		mov ecx, control
 		call SetParticleControlEnt
 	}
 
