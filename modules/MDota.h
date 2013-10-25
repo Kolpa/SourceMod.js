@@ -146,6 +146,7 @@ public:
 	FUNCTION_DECL(setParticleControl);
 	FUNCTION_DECL(setParticleOrient);
 	FUNCTION_DECL(addNewModifier);
+	FUNCTION_DECL(attachMasterModifier);
 	FUNCTION_DECL(spawnRune);
 	FUNCTION_DECL(applyDamage);
 	FUNCTION_DECL(removeAbilityFromIndex);
@@ -224,6 +225,7 @@ public:
 		WRAPPED_FUNC(setParticleControl);
 		WRAPPED_FUNC(setParticleOrient);
 		WRAPPED_FUNC(addNewModifier);
+		WRAPPED_FUNC(attachMasterModifier);
 		WRAPPED_FUNC(getTotalExpRequiredForLevel);
 		WRAPPED_FUNC(setHealth);
 		WRAPPED_FUNC(heal);

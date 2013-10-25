@@ -316,6 +316,9 @@
     <ClInclude Include="..\modules\MDotaWrappers.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="..\modules\MDotaWrappersWrappers.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\hl2sdk-dota\public\game\shared\dota\protobuf\dota_usermessages.proto">

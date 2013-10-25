@@ -10,6 +10,7 @@
 #include "game/shared/dota/protobuf/dota_usermessages.pb.h"
 #include "MemoryUtils.h"
 #include "MGame.h"
+#include "MDotaWrappersWrappers.h"
 
 #define WAIT_FOR_PLAYERS_COUNT_SIG "\x83\x3D****\x00\x7E\x19\x8B\x0D****\x83\x79\x30\x00"
 #define WAIT_FOR_PLAYERS_COUNT_SIG_LEN 19
@@ -218,7 +219,7 @@ static void *UpgradeAbility;
 static void *ForceKill;
 static void *SetControllableByPlayer;
 static void *SetPurchaser;
-static void *GetBuffCaster;
+void *GetBuffCaster; // Needed for MDotaWrappers
 static void *CreateIllusions;
 static void *GetAbilityCaster;
 static void *GivePlayerGold;
@@ -250,6 +251,7 @@ static CDetour *heroSpawnDetour;
 static CDetour *isDeniableDetour;
 static CDetour *upgradeAbilityDetour;
 static CDetour *pickupItemDetour;
+static CDetour *createModifierDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
@@ -274,6 +276,10 @@ static bool canSetState = false;
 
 static void PatchVersionCheck();
 static void PatchWaitForPlayersCount();
+
+const char *nextMasterModifierID;
+DMasterBuff *nextMasterModifier;
+static int nextMasterModifierNumber = 0;
 
 #include "modules/MDota_Detours.h"
 
@@ -326,6 +332,11 @@ MDota::MDota(){
 
 	pickupItemDetour = DETOUR_CREATE_STATIC(PickupItem, "PickupItem");
 	if(pickupItemDetour) pickupItemDetour->EnableDetour();
+
+	createModifierDetour = DETOUR_CREATE_MEMBER(CreateModifier, "CreateModifier");
+	if(createModifierDetour) createModifierDetour->EnableDetour();
+
+	
 
 	FIND_DOTA_PTR(GameManager);
 	FIND_DOTA_PTR_NEW(GridNav, "\x32\xC0\xE8\x2A\x2A\x2A\x2A\x8B\x97\x2A\x2A\x2A\x2A\xF3\x0F\x7E\x87\x2A\x2A\x2A\x2A\x6A\x01\x83\xEC\x0C\x8B\xC4", -4);
@@ -406,7 +417,7 @@ void MDota::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wra
 	auto obj = wrapper->ToObject();
 }
 
-KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *setName){
+KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> &options, const char *setName){
 
 	KeyValues *kv = new KeyValues(setName);
 
@@ -1099,9 +1110,6 @@ FUNCTION_M(MDota::addNewModifier)
 
 	CBaseEntity *casterEnt = NULL;
 
-
-// use variable "caster"
-
 	if(target == NULL || ability == NULL) THROW("Entity cannot be null");
 
 	CBaseEntity *targetEnt;
@@ -1125,7 +1133,6 @@ FUNCTION_M(MDota::addNewModifier)
 
 	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
 
-	if(kv == NULL) THROW("options object misconfigured");
 
 	char *modifier = *modifierName;
 
@@ -1142,6 +1149,62 @@ FUNCTION_M(MDota::addNewModifier)
 		call AddNewModifier
 		mov  buff, eax
 	}
+
+	kv->deleteThis();
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::attachMasterModifier) 
+	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
+	USE_NETPROP_OFFSET(abilityOffset, CDOTA_BaseNPC, m_hAbilities);
+	PENT(target);
+	POBJ(modifier);
+
+	CBaseEntity *casterEnt = NULL;
+
+	if(target == NULL) THROW("Entity cannot be null");
+
+	// FIXME: This is leaking, I don't know the appropriate time to free this, since
+	// the game may still use it after we give it to it.
+	char *modifierName = new char[32];
+	snprintf(modifierName, 32, "smjs_modifier_%d", nextMasterModifierNumber++);
+	nextMasterModifierID = modifierName;
+
+
+	CBaseEntity *targetEnt;
+	targetEnt = target->ent;
+
+	CBaseEntity *abilityEnt;
+	// Grab the first ability from this hero
+	abilityEnt = NULL; //gamehelpers->ReferenceToEntity(((CBaseHandle*)((uintptr_t)targetEnt + abilityOffset))->GetEntryIndex());
+	casterEnt = targetEnt;
+
+	void *modifierManager = (void*)((uintptr_t)targetEnt + offset);
+
+	KeyValues *kv = new KeyValues(modifierName);
+	kv->SetString("BaseClass", modifierName);
+	void *buff;
+
+	// Force it to use malloc, because we'll need to free it with "free",
+	// since the game will be calling the destructor for us.
+	nextMasterModifier = new (malloc(sizeof(DMasterBuff))) DMasterBuff(GetPluginRunning(), targetEnt, modifier);
+
+	__asm {
+		mov ecx, modifierManager
+		push 0
+		push -1
+		push kv
+		push modifierName
+		push abilityEnt
+		push casterEnt
+		call AddNewModifier
+		mov  buff, eax
+	}
+
+	kv->deleteThis();
+
+	Assert(nextMasterModifier == buff);
 
 	RETURN_UNDEF;
 END
