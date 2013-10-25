@@ -157,6 +157,11 @@ public:
 			if(!res.IsEmpty()) { \
 				if(res->IsNumber()){ \
 					params.result.Set((float) res->NumberValue()); \
+				} else if(res->IsString()){ \
+					v8::String::Utf8Value str(res); \
+					params.result.Set(*str); \
+				} else if(res->IsBoolean()) { \
+					params.result.Set(res->BooleanValue()); \
 				} \
 			} \
 		} \
