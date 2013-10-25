@@ -135,12 +135,15 @@ dota.UNIT_TYPE_FLAG_ROSHAN =     1 << 11;
 
 
 /////////////// Unit target type flags ///////////////
-dota.UNIT_TARGET_TYPE_MECHANICAL = 1 << 0;
-dota.UNIT_TARGET_TYPE_GENERAL =    1 << 1;
-dota.UNIT_TARGET_TYPE_BUILDINGS =  1 << 2;
-dota.UNIT_TARGET_TYPE_SIEGES =     1 << 3;
-dota.UNIT_TARGET_TYPE_COURIERS =   1 << 4;
-dota.UNIT_TARGET_TYPE_WARDS =      1 << 5;
+dota.UNIT_TARGET_TYPE_HERO =       1 << 0;
+dota.UNIT_TARGET_TYPE_CREEP =      1 << 1;
+dota.UNIT_TARGET_TYPE_BUILDING =   1 << 2;
+dota.UNIT_TARGET_TYPE_MECHANICAL = 1 << 3;
+dota.UNIT_TARGET_TYPE_COURIER =    1 << 4;
+dota.UNIT_TARGET_TYPE_OTHER =      1 << 5;
+dota.UNIT_TARGET_TYPE_TREE =       1 << 6;
+dota.UNIT_TARGET_TYPE_CUSTOM =     1 << 7;
+dota.UNIT_TARGET_TYPE_BASIC =      1 << 8;
 
 /////////////// executeOrders order type /////////////
 dota.ORDER_TYPE_MOVE_TO_LOCATION = 1;
