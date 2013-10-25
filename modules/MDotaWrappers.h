@@ -281,8 +281,8 @@ protected:
 	MODIFIER_CALLBACK(Event_OnTakeDamage_ReaperScythe);
 
 	MODIFIER_CALLBACK(GetTooltip); // This seems to be the number that floats above an unit
-	MODIFIER_CALLBACK(OnModelChange);
-	MODIFIER_CALLBACK(OnModelScale);
+	MODIFIER_CALLBACK(GetModelChange);
+	MODIFIER_CALLBACK(GetModelScale);
 	MODIFIER_CALLBACK(IsScepter);
 	MODIFIER_CALLBACK(GetActivityModifiers);
 	MODIFIER_CALLBACK(GetActivityTranslationModifiers);

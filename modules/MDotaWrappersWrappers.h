@@ -136,8 +136,8 @@ public:
 		USE_CALLBACK2(Event_OnTakeDamage_ReaperScythe, onTakeDamageReaperScythe);
 
 		USE_CALLBACK2(GetTooltip, getTooltip);
-		USE_CALLBACK2(OnModelChange, onModelChange);
-		USE_CALLBACK2(OnModelScale, onModelScale);
+		USE_CALLBACK2(GetModelChange, getModelChange);
+		USE_CALLBACK2(GetModelScale, getModelScale);
 		USE_CALLBACK2(IsScepter, isScepter);
 		USE_CALLBACK2(GetActivityModifiers, getActivityModifiers);
 		USE_CALLBACK2(GetActivityTranslationModifiers, getActivityTranslationModifiers);
@@ -272,8 +272,8 @@ public:
 	DEF_CALLBACK(onTakeDamageReaperScythe);
 
 	DEF_CALLBACK(getTooltip);
-	DEF_CALLBACK(onModelChange);
-	DEF_CALLBACK(onModelScale);
+	DEF_CALLBACK(getModelChange);
+	DEF_CALLBACK(getModelScale);
 	DEF_CALLBACK(isScepter);
 	DEF_CALLBACK(getActivityModifiers);
 	DEF_CALLBACK(getActivityTranslationModifiers);
