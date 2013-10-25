@@ -544,9 +544,10 @@ class TestModifier : public CDOTA_Buff {
 	}
 };*/
 
-DETOUR_DECL_MEMBER1(CreateModifier, CDOTA_Buff*, const char *, name){
-	extern const char *nextMasterModifierID;
+extern const char *nextMasterModifierID;
 	extern DMasterBuff *nextMasterModifier;
+
+DETOUR_DECL_MEMBER1(CreateModifier, CDOTA_Buff*, const char *, name){
 
 	/*if(strcmp(name, "m28_test_modifier") == 0){
 		// Force it to use malloc, because we'll need to free it with "free",

@@ -1166,22 +1166,25 @@ FUNCTION_M(MDota::attachMasterModifier)
 
 	if(target == NULL) THROW("Entity cannot be null");
 
+	// FIXME: This is leaking, I don't know the appropriate time to free this, since
+	// the game may still use it after we give it to it.
 	char *modifierName = new char[32];
-	snprintf(modifierName, sizeof(modifierName), "smjs_modifier_%d", nextMasterModifierNumber++);
+	snprintf(modifierName, 32, "smjs_modifier_%d", nextMasterModifierNumber++);
 	nextMasterModifierID = modifierName;
+
 
 	CBaseEntity *targetEnt;
 	targetEnt = target->ent;
 
 	CBaseEntity *abilityEnt;
 	// Grab the first ability from this hero
-	abilityEnt = gamehelpers->ReferenceToEntity(((CBaseHandle*)((uintptr_t)targetEnt + abilityOffset))->GetEntryIndex());
+	abilityEnt = NULL; //gamehelpers->ReferenceToEntity(((CBaseHandle*)((uintptr_t)targetEnt + abilityOffset))->GetEntryIndex());
 	casterEnt = targetEnt;
 
 	void *modifierManager = (void*)((uintptr_t)targetEnt + offset);
 
 	KeyValues *kv = new KeyValues(modifierName);
-
+	kv->SetString("BaseClass", modifierName);
 	void *buff;
 
 	// Force it to use malloc, because we'll need to free it with "free",
