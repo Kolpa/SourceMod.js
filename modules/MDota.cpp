@@ -1158,6 +1158,7 @@ END
 
 FUNCTION_M(MDota::attachMasterModifier) 
 	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
+	USE_NETPROP_OFFSET(abilityOffset, CDOTA_BaseNPC, m_hAbilities);
 	PENT(target);
 	POBJ(modifier);
 
@@ -1173,7 +1174,8 @@ FUNCTION_M(MDota::attachMasterModifier)
 	targetEnt = target->ent;
 
 	CBaseEntity *abilityEnt;
-	abilityEnt = NULL;
+	// Grab the first ability from this hero
+	abilityEnt = gamehelpers->ReferenceToEntity(((CBaseHandle*)((uintptr_t)targetEnt + abilityOffset))->GetEntryIndex());
 	casterEnt = targetEnt;
 
 	void *modifierManager = (void*)((uintptr_t)targetEnt + offset);
