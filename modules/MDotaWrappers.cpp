@@ -17,9 +17,16 @@ void *CDOTA_Buff_VTable;
 void *CDOTA_Buff_Constructor;
 
 
-redirector CDOTA_Buff::~CDOTA_Buff() {
-	__asm mov byte ptr [ebp + 8], 0;
-	REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 0);
+void CDOTA_Buff::Destructor(bool unallocate) {
+
+	__asm {
+		push 0
+		mov eax, [CDOTA_Buff_VTable]
+		mov eax, [eax]
+		call eax
+	}
+
+	free(this);
 }
 redirector int  CDOTA_Buff::GetAttributes() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 3);
 redirector void CDOTA_Buff::AddCustomTransmiterData(CDOTAModifierBuffTableEntry &) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 6);

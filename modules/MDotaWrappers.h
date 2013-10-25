@@ -52,7 +52,7 @@ class __declspec(novtable) CDOTA_Buff {
 public:
 	CDOTA_Buff() CALL_REAL_CONSTRUCTOR(CDOTA_Buff_Constructor);
 
-	virtual ~CDOTA_Buff();
+	virtual void Destructor(bool unallocate);
 
 	// Seems to be called for each state to check if it should be applied (1), removed (0), or ignored(-1)
 	virtual int  CheckState(int stateID) { return -1; }
@@ -150,7 +150,24 @@ protected:
 	#define PADDING_HELPER(len, n) char CONCAT(padding, n)[len];
 	#define PADDING(len) PADDING_HELPER(len, __COUNTER__)
 
-	#define MODIFIER_CALLBACK(name) CModifierCallbackResult& (__thiscall *name)(CModifierParams);
+	#define MODIFIER_CALLBACK(name) CModifierCallbackResult& (*name)(CModifierParams);
+
+	// Use this macro to use a callback
+	
+	#define USE_CALLBACK(cls, callbackName, function) { \
+		SourceHook::MemFuncInfo info; \
+		SourceHook::GetFuncInfo<cls, cls, CModifierCallbackResult&, CModifierParams>(this, &cls::function, info); \
+		*(void**)&callbackName = (*(void***)this)[info.vtblindex]; \
+	}
+	
+	/*
+	#define USE_CALLBACK(cls, callbackName, function) { \
+		callbackName = [](CModifierParams params) -> CModifierCallbackResult& { \
+			cls *self; \
+			__asm { mov self, ecx }; \
+			return self->function(params); \
+		}; \
+	}*/
 
 	PADDING(176);
 

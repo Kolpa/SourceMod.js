@@ -460,12 +460,10 @@ DETOUR_DECL_MEMBER1(HeroSpawn, void, int, something){
 	}
 }
 
+/*
 class TestModifier : public CDOTA_Buff {
 	void DeclareFunctions(){
-		printf("Declaring functions, yay\n");
-		SourceHook::MemFuncInfo info;
-		SourceHook::GetFuncInfo<TestModifier, TestModifier, CModifierCallbackResult&, CModifierParams>(this, &TestModifier::BonusDamage, info);
-		*(void**)&GetBaseAttack_BonusDamage = (*(void***)this)[info.vtblindex];
+		USE_CALLBACK(TestModifier, GetBaseAttack_BonusDamage, BonusDamage);
 	}
 
 	//void DoCreate(KeyValues *){};
@@ -474,13 +472,21 @@ class TestModifier : public CDOTA_Buff {
 		params.result.Set(500.0f);
 		return params.result;
 	}
-};
+};*/
 
 DETOUR_DECL_MEMBER1(CreateModifier, CDOTA_Buff*, const char *, name){
-	printf("Create modifier %s\n", name);
-	if(strcmp(name, "m28_test_modifier") == 0){
-		return new TestModifier();
-	}
+	extern const char *nextMasterModifierID;
+	extern DMasterBuff *nextMasterModifier;
 
+	/*if(strcmp(name, "m28_test_modifier") == 0){
+		// Force it to use malloc, because we'll need to free it with "free",
+		// since the game will be calling the destructor for us.
+		return new (malloc(sizeof(TestModifier))) TestModifier();
+	}*/
+
+	if(nextMasterModifierID != NULL && (name == nextMasterModifierID || strcmp(name, nextMasterModifierID) == 0)){
+		nextMasterModifierID = NULL;
+		return nextMasterModifier;
+	}
 	return DETOUR_MEMBER_CALL(CreateModifier)(name);
 }

@@ -10,6 +10,7 @@
 #include "game/shared/dota/protobuf/dota_usermessages.pb.h"
 #include "MemoryUtils.h"
 #include "MGame.h"
+#include "MDotaWrappersWrappers.h"
 
 #define WAIT_FOR_PLAYERS_COUNT_SIG "\x83\x3D****\x00\x7E\x19\x8B\x0D****\x83\x79\x30\x00"
 #define WAIT_FOR_PLAYERS_COUNT_SIG_LEN 19
@@ -274,6 +275,10 @@ static bool canSetState = false;
 
 static void PatchVersionCheck();
 static void PatchWaitForPlayersCount();
+
+const char *nextMasterModifierID;
+DMasterBuff *nextMasterModifier;
+static int nextMasterModifierNumber = 0;
 
 #include "modules/MDota_Detours.h"
 
@@ -1142,6 +1147,55 @@ FUNCTION_M(MDota::addNewModifier)
 	}
 
 	kv->deleteThis();
+
+	RETURN_UNDEF;
+END
+
+FUNCTION_M(MDota::attachMasterModifier) 
+	USE_NETPROP_OFFSET(offset, CDOTA_BaseNPC, m_ModifierManager);
+	PENT(target);
+	POBJ(modifier);
+
+	CBaseEntity *casterEnt = NULL;
+
+	if(target == NULL) THROW("Entity cannot be null");
+
+	char *modifierName = new char[32];
+	snprintf(modifierName, sizeof(modifierName), "smjs_modifier_%d", nextMasterModifierNumber++);
+	nextMasterModifierID = modifierName;
+
+	CBaseEntity *targetEnt;
+	targetEnt = target->ent;
+
+	CBaseEntity *abilityEnt;
+	abilityEnt = NULL;
+	casterEnt = targetEnt;
+
+	void *modifierManager = (void*)((uintptr_t)targetEnt + offset);
+
+	KeyValues *kv = new KeyValues(modifierName);
+
+	void *buff;
+
+	// Force it to use malloc, because we'll need to free it with "free",
+	// since the game will be calling the destructor for us.
+	nextMasterModifier = new (malloc(sizeof(DMasterBuff))) DMasterBuff(GetPluginRunning(), targetEnt, modifier);
+
+	__asm {
+		mov ecx, modifierManager
+		push 0
+		push -1
+		push kv
+		push modifierName
+		push abilityEnt
+		push casterEnt
+		call AddNewModifier
+		mov  buff, eax
+	}
+
+	kv->deleteThis();
+
+	Assert(nextMasterModifier == buff);
 
 	RETURN_UNDEF;
 END

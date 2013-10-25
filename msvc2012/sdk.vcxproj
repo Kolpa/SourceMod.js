@@ -313,6 +313,7 @@
     <ClInclude Include="..\clsocket\StatTimer.h" />
     <ClInclude Include="..\modules\MDota.h" />
     <ClInclude Include="..\modules\MDotaWrappers.h" />
+    <ClInclude Include="..\modules\MDotaWrappersWrappers.h" />
     <ClInclude Include="..\modules\MDota_Detours.h" />
     <ClInclude Include="..\modules\MEngine.h" />
     <ClInclude Include="..\modules\MEntities.h" />
