@@ -1,13 +1,8 @@
 #pragma once
 #include <stdlib.h>
 #include "mathlib\vector.h"
-
-// Jumps to the vtable function at the given offset
-#define REDIRECT_TO_VTABLE(vtable, offset) { \
-		__asm { mov eax, [vtable] }; \
-		__asm { mov eax, [eax + 4 * offset] }; \
-		__asm { jmp eax }; \
-	}
+#include "sourcehook.h"
+#include "sh_memfuncinfo.h"
 
 #define CALL_REAL_CONSTRUCTOR(ctor) { \
 		void *self = this; \
@@ -33,29 +28,31 @@ struct AvoidLocation {
 };
 
 
-struct ModifierCallbackResult {
-	int type;
-	float fValue;
-	const char *szValue;
-
+struct CModifierCallbackResult {
 	// I know, this is stupid, blame volvo and tell them to learn how to use unions
 	void Set(bool value) { type = 1; fValue = (float) value; szValue = NULL; }
 	void Set(int value) { type = 1; fValue = (float) value; szValue = NULL; }
 	void Set(float value) { type = 1; fValue = value; szValue = NULL; }
 	void Set(const char *value) { type = 2; fValue = 0.0f; szValue = value; }
+
+private:
+	int type;
+	float fValue;
+	const char *szValue;
 };
 
 struct CModifierParams {
-	ModifierCallbackResult *result;
+	CModifierCallbackResult &result;
 	void *param;
 };
 
 // Just a base class that will redirect any non-complex virtual to the real vtable
-// Simple ones are inlined here for perfomance.
-class CDOTA_Buff {
+// Simple ones are inlined here for perfomance (to avoid an extra jump to the real vtable).
+class __declspec(novtable) CDOTA_Buff {
 public:
 	CDOTA_Buff() CALL_REAL_CONSTRUCTOR(CDOTA_Buff_Constructor);
-	virtual ~CDOTA_Buff() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 0);
+
+	virtual ~CDOTA_Buff();
 
 	// Seems to be called for each state to check if it should be applied (1), removed (0), or ignored(-1)
 	virtual int  CheckState(int stateID) { return -1; }
@@ -63,39 +60,39 @@ public:
 	// Probably the priority for the CheckState function
 	virtual int  GetPriority(){ return 1; }
 
-	virtual int  GetAttributes() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 3);
+	virtual int  GetAttributes();
 	virtual bool ShouldSendToClients() { return true; }
 	virtual bool ShouldSendToTeam(int team) { return true; }
-	virtual void AddCustomTransmiterData(CDOTAModifierBuffTableEntry &) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 6);
-	virtual bool IsHidden() { return true ; }
-	virtual bool IsDebuff() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 8);
+	virtual void AddCustomTransmiterData(CDOTAModifierBuffTableEntry &);
+	virtual bool IsHidden() { return true; }
+	virtual bool IsDebuff();
 	virtual bool CanParentBeAutoAttacked(){ return true; }
-	virtual bool IsPurgable() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 10);
+	virtual bool IsPurgable();
 	virtual bool IsPurgeException() { return false; }
 	virtual bool IsStunDebuff() { return false; }
 	virtual bool AllowIllusionDuplicate() { return false; }
-	virtual CDOTA_Buff* DuplicateForIllusion(CDOTA_BaseNPC*) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 14);
-	virtual bool  IsPermanent() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 15);
+	virtual CDOTA_Buff* DuplicateForIllusion(CDOTA_BaseNPC*);
+	virtual bool  IsPermanent();
 	virtual int   RefreshTexture(){ return 0; }
-	virtual void  IncrementStackCount() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 17);
-	virtual void  DecrementStackCount() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 18);
-	virtual int   GetStackCount() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 19);
-	virtual void  SetStackCount(int) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 20);
+	virtual void  IncrementStackCount();
+	virtual void  DecrementStackCount();
+	virtual int   GetStackCount();
+	virtual void  SetStackCount(int);
 	virtual void  OnStackCountChanged(int){};
-	virtual float GetDieTime() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 22);
-	virtual float GetDuration() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 23);
-	virtual void* GetTexture() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 24);
-	virtual float GetRemainingTime() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 25);
-	virtual float GetElapsedTime() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 26);
-	virtual bool  IsAura() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 27);
-	virtual const char * GetModifierAura() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 28);
-	virtual int   GetAuraSearchTeam() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 29);
-	virtual int   GetAuraSearchType() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 30);
-	virtual int   GetAuraSearchFlags() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 31);
-	virtual float GetAuraRadius() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 32);
+	virtual float GetDieTime();
+	virtual float GetDuration();
+	virtual void* GetTexture();
+	virtual float GetRemainingTime();
+	virtual float GetElapsedTime();
+	virtual bool  IsAura();
+	virtual const char * GetModifierAura();
+	virtual int   GetAuraSearchTeam();
+	virtual int   GetAuraSearchType();
+	virtual int   GetAuraSearchFlags();
+	virtual float GetAuraRadius();
 	virtual bool  GetAuraEntityReject(CDOTA_BaseNPC *){ return false; }
 	virtual void  SetAuraCreateData(KeyValues *) {};
-	virtual bool  IsHealingAura() REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 35);
+	virtual bool  IsHealingAura();
 	virtual int   GetCustomOrb(CDOTA_AttackRecord *) { return 0; }
 	virtual int   GetOrbPriority(CDOTA_AttackRecord *) { return 1; }
 	virtual void* GetOrbLabel(CDOTA_AttackRecord *) { return 0; }
@@ -108,8 +105,8 @@ public:
 	virtual void OnDestroy(){};
 	virtual bool DestroyOnExpire() { return true; }
 	virtual void OnThinkInternal() {};
-	virtual void SetDuration(float newDuration, bool sendBuffRefresh) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 48);
-	virtual void PerformDOT(float timeElapsed) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 49);
+	virtual void SetDuration(float newDuration, bool sendBuffRefresh);
+	virtual void PerformDOT(float timeElapsed);
 
 	// Declare the GetModifier* callbacks here
 	virtual void DeclareFunctions(){};
@@ -122,7 +119,7 @@ public:
 	virtual const char *GetHeroEffectName() { return NULL; };
 	virtual int HeroEffectPriority() { return -1; }
 	virtual int GetNumAvoidLocations() { return 0; }
-	virtual void GetAvoidLocation(AvoidLocation &dest) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 59); // probably incorrect
+	virtual void GetAvoidLocation(AvoidLocation &dest); // probably incorrect
 	virtual int AvoidFilter(CDOTA_BaseNPC *){ return 1; }
 	virtual float AvoidStrength(CDOTA_Bot *){ return 0.0f; }
 	virtual float GetAvoidRadius(int){ return 0.0f; };
@@ -131,171 +128,152 @@ public:
 	virtual bool IsPersistentAvoidance() { return false; }
 	virtual bool IsCastAttack(){ return false; }
 	virtual float GetAuraDuration() { return 0.5f; }
-	virtual void DoCreate(KeyValues *) REDIRECT_TO_VTABLE(CDOTA_Buff_VTable, 68);
+	virtual void DoCreate(KeyValues *);
+
+	inline CDOTA_BaseNPC *GetCaster(){
+		extern void *GetBuffCaster;
+		CDOTA_BaseNPC *result;
+		CDOTA_Buff *self = this;
+		__asm {
+			mov eax, self
+			call GetBuffCaster
+			mov result, eax
+		}
+		return result;
+	}
 
 protected:
+
 	#define CONCAT_3_( a, b ) a##b
 	#define CONCAT_2_( a, b ) CONCAT_3_( a, b )
 	#define CONCAT( a, b ) CONCAT_2_( a, b )
 	#define PADDING_HELPER(len, n) char CONCAT(padding, n)[len];
 	#define PADDING(len) PADDING_HELPER(len, __COUNTER__)
 
-	#define MODIFIER_CALLBACK(name) void (__thiscall *name)(const CModifierParams&)
+	#define MODIFIER_CALLBACK(name) CModifierCallbackResult& (__thiscall *name)(CModifierParams);
 
 	PADDING(176);
 
 	// Add auto attack bonus damage
 	// 176 CDOTA_Modifier_Bloodseeker_Thirst_Speed
-	MODIFIER_CALLBACK(GetModifierPreAttack_BonusDamage);
-	// 180
-	PADDING(4);
-	// 184
-	MODIFIER_CALLBACK(GetModifierBaseAttack_BonusDamage);
-	MODIFIER_CALLBACK(GetModifierProcAttack_BonusDamage_Physical);
-	MODIFIER_CALLBACK(GetModifierProcAttack_BonusDamage_Magical);
-	// 196
-	PADDING(8);
+	MODIFIER_CALLBACK(GetPreAttack_BonusDamage);
+	MODIFIER_CALLBACK(GetPreAttack_BonusDamage_PostCrit);
+	MODIFIER_CALLBACK(GetBaseAttack_BonusDamage);
+	MODIFIER_CALLBACK(GetProcAttack_BonusDamage_Physical);
+	MODIFIER_CALLBACK(GetProcAttack_BonusDamage_Magical);
+	MODIFIER_CALLBACK(GetProcAttack_BonusDamage_Composite);
+	MODIFIER_CALLBACK(GetProcAttack_BonusDamage_Pure);
 	// When you auto attack something, used to do stuff like AntiMage's mana break
 	// Param is target (CDOTA_BaseNPC)
-	// 204 
-	MODIFIER_CALLBACK(GetModifierProcAttack_Feedback);
-	// 208
-	PADDING(4);
-	// 212
-	MODIFIER_CALLBACK(GetModifierInvisibilityLevel);
-	// 216
-	PADDING(4);
-	// 220
-	MODIFIER_CALLBACK(GetModifierMoveSpeedBonus_Constant);
-	MODIFIER_CALLBACK(GetModifierMoveSpeedOverride);
-	MODIFIER_CALLBACK(GetModifierMoveSpeedBonus_Percentage);
-	// 232
-	PADDING(4);
-	// 236
-	MODIFIER_CALLBACK(GetModifierMoveSpeedBonus_Special_Boots);
-	// 240
-	PADDING(8);
-	// Increase the maximum move speed
+	MODIFIER_CALLBACK(GetProcAttack_Feedback);
+	MODIFIER_CALLBACK(GetPostAttack);
+	MODIFIER_CALLBACK(GetInvisibilityLevel);
+	MODIFIER_CALLBACK(GetPersistentInvisibility);
+	MODIFIER_CALLBACK(GetMoveSpeedBonus_Constant);
+	MODIFIER_CALLBACK(GetMoveSpeedOverride);
+	MODIFIER_CALLBACK(GetMoveSpeedBonus_Percentage);
+	MODIFIER_CALLBACK(GetMoveSpeedBonus_PercentageUnique);
+	MODIFIER_CALLBACK(GetMoveSpeedBonus_Special_Boots);
+	MODIFIER_CALLBACK(GetMoveSpeed_Absolute);
+	MODIFIER_CALLBACK(GetMoveSpeed_Limit);
 	// 248 CDOTA_Modifier_Bloodseeker_Thirst_Speed
-	MODIFIER_CALLBACK(GetModifierMoveSpeed_Max);
-	MODIFIER_CALLBACK(GetModifierAttackSpeedBonus_Constant);
-	MODIFIER_CALLBACK(GetModifierAttackSpeedBonus_Constant_PowerTreads);
-	MODIFIER_CALLBACK(GetModifierAttackSpeedBonus_Constant_Secondary);
-	// 260
-	PADDING(8);
-	// 268
-	MODIFIER_CALLBACK(GetModifierDamageOutgoing_Percentage);
-	// 272
-	PADDING(8);
-	// 280
-	MODIFIER_CALLBACK(GetModifierIncomingDamage_Percentage);
-	// 288
-	PADDING(4);
-	// 292
-	MODIFIER_CALLBACK(GetModifierEvasion_Constant);
-	// 296
-	PADDING(8);
-	// 304
-	MODIFIER_CALLBACK(GetModifierMiss_Percentage);
-	MODIFIER_CALLBACK(GetModifierPhysicalArmorBonus);
-	MODIFIER_CALLBACK(GetModifierPhysicalArmorBonusIllusions); // Also affects illusions
-	// 316
-	PADDING(8);
-	// 324
-	MODIFIER_CALLBACK(GetModifierMagicalResistanceBonus);
-	// 328
-	PADDING(4);
-	// 332
-	MODIFIER_CALLBACK(GetModifierMagicalResistanceDecrepifyUnique);
-	// 336
-	PADDING(4);
-	// 340
-	MODIFIER_CALLBACK(GetModifierConstantManaRegen);
-	// 344
-	PADDING(4);
-	// 348
-	MODIFIER_CALLBACK(GetModifierPercentageManaRegen);
-	// 352
-	PADDING(4);
-	// 356
-	MODIFIER_CALLBACK(GetModifierConstantHealthRegen);
-	// 360
-	PADDING(4);
-	// 364
-	MODIFIER_CALLBACK(GetModifierHealthBonus);
-	MODIFIER_CALLBACK(GetModifierManaBonus);
-	// 372
-	PADDING(4);
-	// 376
-	MODIFIER_CALLBACK(GetModifierExtraHealthBonus);
-	MODIFIER_CALLBACK(GetModifierBonusStats_Strength);
-	MODIFIER_CALLBACK(GetModifierBonusStats_Agility);
-	MODIFIER_CALLBACK(GetModifierBonusStats_Intellect);
-	// 392
-	PADDING(4);
-	// 396
-	MODIFIER_CALLBACK(GetModifierAttackRangeBonus);
-	// 400
-	PADDING(12);
-	// 412
-	MODIFIER_CALLBACK(GetModifierPreAttack_CriticalStrike);
-	MODIFIER_CALLBACK(GetModifierPhysical_ConstantBlock); // Shields
-	// 420
-	PADDING(8);
-	// 428
+	MODIFIER_CALLBACK(GetMoveSpeed_Max);
+	MODIFIER_CALLBACK(GetAttackSpeedBonus_Constant);
+	MODIFIER_CALLBACK(GetAttackSpeedBonus_Constant_PowerTreads);
+	MODIFIER_CALLBACK(GetAttackSpeedBonus_Constant_Secondary);
+	MODIFIER_CALLBACK(GetBaseAttackTimeConstant);
+	MODIFIER_CALLBACK(GetDamageOutgoing_Percentage);
+	MODIFIER_CALLBACK(GetDamageOutgoing_Percentage_Illusion);
+	MODIFIER_CALLBACK(GetBaseDamageOutgoing_Percentage);
+	MODIFIER_CALLBACK(GetIncomingDamage_Percentage); // 280
+	MODIFIER_CALLBACK(GetIncomingPhysicalDamage_Percentage); // 288
+	MODIFIER_CALLBACK(GetIncomingSpellDamage_Percentage); // 292
+	MODIFIER_CALLBACK(GetEvasion_Constant); // 296
+	MODIFIER_CALLBACK(GetAvoid_Constant); // 300
+	MODIFIER_CALLBACK(GetAvoidSpell); // 304
+	MODIFIER_CALLBACK(GetMiss_Percentage); // 308
+	MODIFIER_CALLBACK(GetPhysicalArmorBonus); // 312
+	MODIFIER_CALLBACK(GetPhysicalArmorBonusIllusions); // 316 Also affects illusions
+	MODIFIER_CALLBACK(GetPhysicalArmorBonus_Unique); // 320
+	MODIFIER_CALLBACK(GetPhysicalArmorBonus_UniqueActive); // 324
+	MODIFIER_CALLBACK(GetMagicalResistanceBonus); // 328
+	MODIFIER_CALLBACK(GetMagicalResistanceItemUnique); // 332
+	MODIFIER_CALLBACK(GetMagicalResistanceDecrepifyUnique); // 336
+	MODIFIER_CALLBACK(GetBaseManaRegen); // 340
+	MODIFIER_CALLBACK(GetConstantManaRegen); // 344
+	MODIFIER_CALLBACK(GetConstantManaRegenUnique); // 348
+	MODIFIER_CALLBACK(GetPercentageManaRegen); // 352
+	MODIFIER_CALLBACK(GetTotalPercentageManaRegen); // 356
+	MODIFIER_CALLBACK(GetConstantHealthRegen); // 360
+	MODIFIER_CALLBACK(GetPercentageHealthRegen); // 364
+	MODIFIER_CALLBACK(GetHealthBonus); // 368
+	MODIFIER_CALLBACK(GetManaBonus); // 372
+	MODIFIER_CALLBACK(GetExtraHealthBonus); // 376
+	MODIFIER_CALLBACK(GetBonusStats_Strength); // 380
+	MODIFIER_CALLBACK(GetBonusStats_Agility); // 384
+	MODIFIER_CALLBACK(GetBonusStats_Intellect); // 388
+	MODIFIER_CALLBACK(GetAttackRangeBonus);
+	MODIFIER_CALLBACK(GetReincarnation);
+	MODIFIER_CALLBACK(GetRespawnTime);
+	MODIFIER_CALLBACK(GetDeathGoldCost);
+	MODIFIER_CALLBACK(GetPreAttack_CriticalStrike);
+	MODIFIER_CALLBACK(GetPhysical_ConstantBlock); // Shields
+	MODIFIER_CALLBACK(GetTotal_ConstantBlock_UnavoidablePreArmor);
+	MODIFIER_CALLBACK(GetTotal_ConstantBlock);
 	MODIFIER_CALLBACK(GetOverrideAnimation);
 	MODIFIER_CALLBACK(GetOverrideAnimationWeight);
-	// 436
-	PADDING(16);
-	// 452
+	MODIFIER_CALLBACK(GetOverrideAnimationRate);
+	MODIFIER_CALLBACK(GetAbsorbSpell);
+	MODIFIER_CALLBACK(GetDisableAutoAttack);
+	MODIFIER_CALLBACK(GetBonusDayVision);
 	MODIFIER_CALLBACK(GetBonusNightVision);
 	MODIFIER_CALLBACK(GetBonusVisionPercentage);
 	MODIFIER_CALLBACK(GetMinHealth);
 	MODIFIER_CALLBACK(GetAbsoluteNoDamagePhysical);
 	MODIFIER_CALLBACK(GetAbsoluteNoDamageMagical);
-	// 472
-	PADDING(4);
-	// 476
+	MODIFIER_CALLBACK(GetAbsoluteNoDamagePure);
 	MODIFIER_CALLBACK(IsIllusion);
-	MODIFIER_CALLBACK(GetModifierTurnRate_Percentage);
-	MODIFIER_CALLBACK(OnAttackStart);
-	MODIFIER_CALLBACK(OnAttack);
-	MODIFIER_CALLBACK(OnAttackLanded);
-	// 496
-	PADDING(16);
-	// 512
-	MODIFIER_CALLBACK(OnOrder);
-	// 516
-	PADDING(4);
-	// 520
-	MODIFIER_CALLBACK(OnAbilityStart);
-	MODIFIER_CALLBACK(OnAbilityExecuted); // Called when the hero casts any ability
-	MODIFIER_CALLBACK(OnBreakInvisibility);
-	// 528
-	PADDING(16);
-	// 544
-	MODIFIER_CALLBACK(OnTakeDamage);
-	MODIFIER_CALLBACK(OnStateChanged);
-	// 552
-	PADDING(4);
-	// 556
-	MODIFIER_CALLBACK(OnAttacked);
-	MODIFIER_CALLBACK(OnDeath); // There is a param, not sure what it is, could be damage record
-	// 564
-	PADDING(28);
-	// 592
-	MODIFIER_CALLBACK(OnTooltip); // This seems to be the number that floats above an unit
-	MODIFIER_CALLBACK(GetModifierModelChange);
-	MODIFIER_CALLBACK(ModelScale);
-	// 604
-	PADDING(4);
-	// 608
+	MODIFIER_CALLBACK(GetTurnRate_Percentage);
+
+
+	MODIFIER_CALLBACK(Event_OnAttackStart);
+	MODIFIER_CALLBACK(Event_OnAttack);
+	MODIFIER_CALLBACK(Event_OnAttackLanded);
+	MODIFIER_CALLBACK(Event_OnAttackFail);
+	MODIFIER_CALLBACK(Event_OnAttackAllied);
+	MODIFIER_CALLBACK(Event_OnProjectileDodge);
+	MODIFIER_CALLBACK(Event_OnOrder);
+	MODIFIER_CALLBACK(Event_OnUnitMoved);
+	MODIFIER_CALLBACK(Event_OnAbilityStart);
+	MODIFIER_CALLBACK(Event_OnAbilityExecuted); // Called when the hero casts any ability
+	MODIFIER_CALLBACK(Event_OnBreakInvisibility);
+	MODIFIER_CALLBACK(Event_OnAbilityEndChannel);
+	MODIFIER_CALLBACK(Event_OnProcessUpgrade);
+	MODIFIER_CALLBACK(Event_OnRefresh);
+	MODIFIER_CALLBACK(Event_OnTakeDamage);
+	MODIFIER_CALLBACK(Event_OnStateChanged);
+	MODIFIER_CALLBACK(Event_OnOrbEffect);
+	MODIFIER_CALLBACK(Event_OnAttacked);
+	MODIFIER_CALLBACK(Event_OnDeath); // There is a param, not sure what it is, could be damage record
+	MODIFIER_CALLBACK(Event_OnRespawn);
+	MODIFIER_CALLBACK(Event_OnSpentMana);
+	MODIFIER_CALLBACK(Event_OnTeleporting);
+	MODIFIER_CALLBACK(Event_OnTeleported);
+	MODIFIER_CALLBACK(Event_OnHealthGained);
+	MODIFIER_CALLBACK(Event_OnManaGained);
+	MODIFIER_CALLBACK(Event_OnTakeDamage_ReaperScythe);
+
+	MODIFIER_CALLBACK(GetTooltip); // This seems to be the number that floats above an unit
+	MODIFIER_CALLBACK(OnModelChange);
+	MODIFIER_CALLBACK(OnModelScale);
+	MODIFIER_CALLBACK(IsScepter);
 	MODIFIER_CALLBACK(GetActivityModifiers);
 	MODIFIER_CALLBACK(GetActivityTranslationModifiers);
 	MODIFIER_CALLBACK(GetAttackSound); // Param is the victim CDOTA_BaseNPC
-	MODIFIER_CALLBACK(GetModifierProvidesFOWVision);
+	MODIFIER_CALLBACK(GetUnitLifetimeFraction);
+	MODIFIER_CALLBACK(GetProvidesFOWVision);
 
-	// 616 also points to GetUnitLifetimeFraction (wards) ???
+	// 616 also points to  (wards) ???
 
 	PADDING(300);
 #undef MODIFIER_CALLBACK
@@ -303,3 +281,6 @@ protected:
 
 private:
 };
+
+
+#undef redirector

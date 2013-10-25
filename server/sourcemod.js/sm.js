@@ -1,7 +1,7 @@
 (function(){
 	// Remove __require from the global scope
 	var _require = __require;
-	__require = void 0;
+	delete __require;
 	
 	require = function(file){
 		if(require.cache.hasOwnProperty(file)) return require.cache[file];

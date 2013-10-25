@@ -218,7 +218,7 @@ static void *UpgradeAbility;
 static void *ForceKill;
 static void *SetControllableByPlayer;
 static void *SetPurchaser;
-static void *GetBuffCaster;
+void *GetBuffCaster; // Needed for MDotaWrappers
 static void *CreateIllusions;
 static void *GetAbilityCaster;
 static void *GivePlayerGold;
@@ -249,6 +249,7 @@ static CDetour *unitThinkDetour;
 static CDetour *heroSpawnDetour;
 static CDetour *isDeniableDetour;
 static CDetour *pickupItemDetour;
+static CDetour *createModifierDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
@@ -325,6 +326,11 @@ MDota::MDota(){
 
 	pickupItemDetour = DETOUR_CREATE_STATIC(PickupItem, "PickupItem");
 	if(pickupItemDetour) pickupItemDetour->EnableDetour();
+
+	createModifierDetour = DETOUR_CREATE_MEMBER(CreateModifier, "CreateModifier");
+	if(createModifierDetour) createModifierDetour->EnableDetour();
+
+	
 
 	FIND_DOTA_PTR(GameManager);
 	FIND_DOTA_PTR_NEW(GridNav, "\x32\xC0\xE8\x2A\x2A\x2A\x2A\x8B\x97\x2A\x2A\x2A\x2A\xF3\x0F\x7E\x87\x2A\x2A\x2A\x2A\x6A\x01\x83\xEC\x0C\x8B\xC4", -4);
@@ -403,7 +409,7 @@ void MDota::OnWrapperAttached(SMJS_Plugin *plugin, v8::Persistent<v8::Value> wra
 	auto obj = wrapper->ToObject();
 }
 
-KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> options, const char *setName){
+KeyValues *KeyValuesFromJsObject(v8::Handle<v8::Object> &options, const char *setName){
 
 	KeyValues *kv = new KeyValues(setName);
 
@@ -1095,9 +1101,6 @@ FUNCTION_M(MDota::addNewModifier)
 
 	CBaseEntity *casterEnt = NULL;
 
-
-// use variable "caster"
-
 	if(target == NULL || ability == NULL) THROW("Entity cannot be null");
 
 	CBaseEntity *targetEnt;
@@ -1121,7 +1124,6 @@ FUNCTION_M(MDota::addNewModifier)
 
 	KeyValues *kv = KeyValuesFromJsObject(options, *setName);
 
-	if(kv == NULL) THROW("options object misconfigured");
 
 	char *modifier = *modifierName;
 
@@ -1138,6 +1140,8 @@ FUNCTION_M(MDota::addNewModifier)
 		call AddNewModifier
 		mov  buff, eax
 	}
+
+	kv->deleteThis();
 
 	RETURN_UNDEF;
 END

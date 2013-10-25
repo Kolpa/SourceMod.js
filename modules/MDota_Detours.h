@@ -210,7 +210,6 @@ DETOUR_DECL_STATIC2_STDCALL(ClientPickHero, void, CBaseEntity*, client, CCommand
 	
 	block = false;
 	newHero = CallClientPickHero(client, cmd, &block);
-	printf("%s", newHero);
 	if(!block){
 		if(newHero == NULL){
 			DETOUR_STATIC_CALL(ClientPickHero)(client, cmd);
@@ -459,4 +458,29 @@ DETOUR_DECL_MEMBER1(HeroSpawn, void, int, something){
 			func->Call(pl->GetContext()->Global(), 1, args);
 		}
 	}
+}
+
+class TestModifier : public CDOTA_Buff {
+	void DeclareFunctions(){
+		printf("Declaring functions, yay\n");
+		SourceHook::MemFuncInfo info;
+		SourceHook::GetFuncInfo<TestModifier, TestModifier, CModifierCallbackResult&, CModifierParams>(this, &TestModifier::BonusDamage, info);
+		*(void**)&GetBaseAttack_BonusDamage = (*(void***)this)[info.vtblindex];
+	}
+
+	//void DoCreate(KeyValues *){};
+
+	virtual CModifierCallbackResult& BonusDamage(CModifierParams params){
+		params.result.Set(500.0f);
+		return params.result;
+	}
+};
+
+DETOUR_DECL_MEMBER1(CreateModifier, CDOTA_Buff*, const char *, name){
+	printf("Create modifier %s\n", name);
+	if(strcmp(name, "m28_test_modifier") == 0){
+		return new TestModifier();
+	}
+
+	return DETOUR_MEMBER_CALL(CreateModifier)(name);
 }
