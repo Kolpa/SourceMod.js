@@ -153,7 +153,7 @@ public:
 		Context::Scope context_scope(plugin->GetContext()); \
 		auto func = obj->Get(v8::String::NewSymbol(#name)); \
 		if(!func.IsEmpty() && func->IsFunction()){ \
-			auto res = v8::Handle<v8::Function>::Cast(func)->Call(ent, 0, NULL); \
+			auto res = v8::Handle<v8::Function>::Cast(func)->Call(obj, 0, NULL); \
 			if(!res.IsEmpty()) { \
 				if(res->IsNumber()){ \
 					params.result.Set((float) res->NumberValue()); \
