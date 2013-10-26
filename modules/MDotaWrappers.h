@@ -290,8 +290,6 @@ protected:
 	MODIFIER_CALLBACK(GetUnitLifetimeFraction);
 	MODIFIER_CALLBACK(GetProvidesFOWVision);
 
-	// 616 also points to  (wards) ???
-
 	PADDING(300);
 #undef MODIFIER_CALLBACK
 #undef PADDING
