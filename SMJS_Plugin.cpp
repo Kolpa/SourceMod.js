@@ -161,10 +161,12 @@ bool SMJS_Plugin::RunString(const char* name, const char *source, bool asGlobal,
 	TryCatch try_catch;
 	v8::ScriptOrigin origin(String::New(name), v8::Integer::New(0), v8::Integer::New(0));
 	Handle<Script> script;
+	char *buffer = (char*) alloca(strlen(source) + 200);
 	if(asGlobal){
-		script = Script::Compile(v8::String::New(source), &origin, NULL, v8::String::New(dir.c_str()));
+		strcpy(buffer, "(function(){");
+		strcat(buffer, source);
+		strcat(buffer, "})();");
 	}else{
-		char *buffer = new char[strlen(source) + 200];
 		strcpy(buffer,
 		"(function(){\
 			var exports = {};\
@@ -177,11 +179,8 @@ bool SMJS_Plugin::RunString(const char* name, const char *source, bool asGlobal,
 			"})(exports);\
 			return exports;\
 		})();");
-
-		script = Script::Compile(v8::String::New(buffer), &origin, NULL, v8::String::New(dir.c_str()));
-		delete buffer;
 	}
-
+	script = Script::Compile(v8::String::New(buffer), &origin, NULL, v8::String::New(dir.c_str()));
 
 	if(script.IsEmpty()) {
 		// Print errors that happened during compilation.
