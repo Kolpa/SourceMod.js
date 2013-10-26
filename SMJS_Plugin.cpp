@@ -167,18 +167,11 @@ bool SMJS_Plugin::RunString(const char* name, const char *source, bool asGlobal,
 		strcat(buffer, source);
 		strcat(buffer, "})();");
 	}else{
-		strcpy(buffer,
-		"(function(){\
-			var exports = {};\
-			(function(exports){\
-		");
+		strcpy(buffer, "(function(exports){");
 
 		strcat(buffer, source);
 
-		strcat(buffer,
-			"})(exports);\
-			return exports;\
-		})();");
+		strcat(buffer, "});");
 	}
 	script = Script::Compile(v8::String::New(buffer), &origin, NULL, v8::String::New(dir.c_str()));
 

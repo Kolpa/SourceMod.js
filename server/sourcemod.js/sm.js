@@ -5,7 +5,10 @@
 	
 	require = function(file){
 		if(require.cache.hasOwnProperty(file)) return require.cache[file];
-		return require.cache[file] = _require(file);
+		var exports = {};
+		require.cache[file] = exports;
+		(_require(file))(exports);
+		return exports;
 	}
 	
 	require.cache = {};
