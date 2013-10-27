@@ -20,7 +20,7 @@ public:
 	bool IsPurgable(){ return false; }
 	bool ShouldSendToClients(){ return false; }
 	bool ShouldSendToTeam(){ return false; }
-
+	bool RemoveOnDeath() { return false; }
 #define USE_CALLBACK2(callbackName, function) { \
 		auto func = obj->Get(v8::String::NewSymbol(#function)); \
 		if(!func.IsEmpty() && func->IsFunction()){ \
