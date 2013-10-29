@@ -31,7 +31,6 @@ struct AvoidLocation {
 
 
 struct CModifierCallbackResult {
-	// I know, this is stupid, blame volvo and tell them to learn how to use unions
 	CModifierCallbackResult(bool value) { type = 1; fValue = (float) value; szValue = NULL; }
 	CModifierCallbackResult(int value) { type = 1; fValue = (float) value; szValue = NULL; }
 	CModifierCallbackResult(float value) { type = 1; fValue = value; szValue = NULL; }
@@ -42,6 +41,27 @@ private:
 	int type;
 	float fValue;
 	const char *szValue;
+
+	/*
+		I know, this is stupid, blame volvo and tell them to learn how to use unions
+
+		It should have been:
+		struct {
+			int type;
+			union {
+				int asInt;
+				bool asBool;
+				float asFloat;
+				const char *asString;
+				...
+			};
+		}
+
+		But nooooo. They had to FUCKING CAST A BOOLEAN TO A FLOAT SO THEY COULD STORE IT
+		Who was the dumbfuck that wrote that?
+
+		/rant
+	*/
 };
 
 struct CModifierParams {
@@ -179,21 +199,19 @@ protected:
 	#define MODIFIER_CALLBACK(name) CModifierCallbackResult (*name)(const CModifierParams &);
 
 	// Use this macro to use a callback
-	
 	#define USE_CALLBACK(cls, callbackName, function) { \
-		SourceHook::MemFuncInfo info; \
-		SourceHook::GetFuncInfo<cls, cls, CModifierCallbackResult, const CModifierParams&>(this, &cls::function, info); \
-		*(void**)&callbackName = (*(void***)this)[info.vtblindex]; \
+		union { \
+			CModifierCallbackResult (cls::* func)(const CModifierParams &);\
+			struct { \
+				void *ptr1; \
+				void *ptr2; \
+			} st;\
+		} info; \
+		static_assert(sizeof(info) == 8, "wtf volvo"); \
+		info.st.ptr1 = NULL; \
+		info.func = &cls::function; \
+		*(void**)&callbackName = info.st.ptr1; \
 	}
-	
-	/*
-	#define USE_CALLBACK(cls, callbackName, function) { \
-		callbackName = [](CModifierParams params) -> CModifierCallbackResult& { \
-			cls *self; \
-			__asm { mov self, ecx }; \
-			return self->function(params); \
-		}; \
-	}*/
 
 	PADDING(176);
 

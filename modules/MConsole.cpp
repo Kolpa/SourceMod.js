@@ -298,6 +298,7 @@ FUNCTION_M(MConsole::findConVar)
 		if(strcmp(*cvarName, "sv_password") == 0) RETURN_NULL;
 		if(strcmp(*cvarName, "rcon_password") == 0) RETURN_NULL;
 		if(strcmp(*cvarName, "sv_cheats") == 0) RETURN_NULL;
+		if(strcmp(*cvarName, "host_timescale") == 0) RETURN_NULL;
 	}
 
 	ConVar *cv = icvar->FindVar(*cvarName);

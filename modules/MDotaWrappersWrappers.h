@@ -148,7 +148,7 @@ public:
 	}
 
 #define DEF_CALLBACK(name) \
-	virtual CModifierCallbackResult name(const CModifierParams &params){ \
+	CModifierCallbackResult name(const CModifierParams &params){ \
 		if(obj.IsEmpty()) return CModifierCallbackResult(0.0f);  \
 		HandleScope handle_scope(plugin->GetIsolate()); \
 		Context::Scope context_scope(plugin->GetContext()); \
