@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "MDotaWrappers.h"
 #include "SMJS_SimpleWrapped.h"
+#include "MEntities.h"
 
 
 class DMasterBuff : public CDOTA_Buff {
@@ -147,9 +148,8 @@ public:
 	}
 
 #define DEF_CALLBACK(name) \
-	virtual CModifierCallbackResult& name(CModifierParams params){ \
-		if(obj.IsEmpty()) return params.result;  \
-		params.result.Set(0.0f); \
+	virtual CModifierCallbackResult name(const CModifierParams &params){ \
+		if(obj.IsEmpty()) return CModifierCallbackResult(0.0f);  \
 		HandleScope handle_scope(plugin->GetIsolate()); \
 		Context::Scope context_scope(plugin->GetContext()); \
 		auto func = obj->Get(v8::String::NewSymbol(#name)); \
@@ -157,17 +157,18 @@ public:
 			auto res = v8::Handle<v8::Function>::Cast(func)->Call(obj, 0, NULL); \
 			if(!res.IsEmpty()) { \
 				if(res->IsNumber()){ \
-					params.result.Set((float) res->NumberValue()); \
+					return CModifierCallbackResult((float) res->NumberValue()); \
 				} else if(res->IsString()){ \
 					v8::String::Utf8Value str(res); \
-					params.result.Set(*str); \
+					return CModifierCallbackResult(*str); \
 				} else if(res->IsBoolean()) { \
-					params.result.Set(res->BooleanValue()); \
+					return CModifierCallbackResult(res->BooleanValue()); \
 				} \
 			} \
 		} \
-		return params.result; \
+		return CModifierCallbackResult(0.0); \
 	}
+
 
 	DEF_CALLBACK(getPreAttackBonusDamage);
 	DEF_CALLBACK(getPreAttackBonusDamagePostCrit);

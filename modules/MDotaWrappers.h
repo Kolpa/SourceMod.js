@@ -3,6 +3,7 @@
 #include "mathlib\vector.h"
 #include "sourcehook.h"
 #include "sh_memfuncinfo.h"
+#include "MEntities.h"
 
 #define CALL_REAL_CONSTRUCTOR(ctor) { \
 		void *self = this; \
@@ -20,6 +21,7 @@ class CDOTA_BaseNPC;
 class CDOTAModifierBuffTableEntry;
 class CDOTA_AttackRecord;
 class CDOTA_Bot;
+class CDOTA_Orb;
 
 struct AvoidLocation {
 	int dunno;
@@ -30,10 +32,11 @@ struct AvoidLocation {
 
 struct CModifierCallbackResult {
 	// I know, this is stupid, blame volvo and tell them to learn how to use unions
-	void Set(bool value) { type = 1; fValue = (float) value; szValue = NULL; }
-	void Set(int value) { type = 1; fValue = (float) value; szValue = NULL; }
-	void Set(float value) { type = 1; fValue = value; szValue = NULL; }
-	void Set(const char *value) { type = 2; fValue = 0.0f; szValue = value; }
+	CModifierCallbackResult(bool value) { type = 1; fValue = (float) value; szValue = NULL; }
+	CModifierCallbackResult(int value) { type = 1; fValue = (float) value; szValue = NULL; }
+	CModifierCallbackResult(float value) { type = 1; fValue = value; szValue = NULL; }
+	CModifierCallbackResult(double value) { type = 1; fValue = value; szValue = NULL; }
+	CModifierCallbackResult(const char *value) { type = 2; fValue = 0.0f; szValue = value; }
 
 private:
 	int type;
@@ -42,8 +45,31 @@ private:
 };
 
 struct CModifierParams {
-	CModifierCallbackResult &result;
-	void *param;
+#ifdef WIN32
+private:
+	uint8 padding;
+public:
+#endif
+	// Offsets in the mac bin, in windows there's an extra 4 byte offset
+
+	char padding0[60];
+
+	CDOTA_Orb *m_Orb; // 60
+	char padding1[48];
+	CBaseHandle m_Victim; // 112
+};
+
+struct CTakeDamageInfo {
+	char padding0[8];
+	float unknown8; // 8
+	char padding1[8];
+	float unknown20; // 20
+	char padding2[8];
+	float unknown32; // 32
+	CBaseHandle m_Ability; // 36
+	CBaseHandle m_Killer; // 40
+	char padding3[20];
+	int flags; // 64
 };
 
 // Just a base class that will redirect any non-complex virtual to the real vtable
@@ -150,13 +176,13 @@ protected:
 	#define PADDING_HELPER(len, n) char CONCAT(padding, n)[len];
 	#define PADDING(len) PADDING_HELPER(len, __COUNTER__)
 
-	#define MODIFIER_CALLBACK(name) CModifierCallbackResult& (*name)(CModifierParams);
+	#define MODIFIER_CALLBACK(name) CModifierCallbackResult (*name)(const CModifierParams &);
 
 	// Use this macro to use a callback
 	
 	#define USE_CALLBACK(cls, callbackName, function) { \
 		SourceHook::MemFuncInfo info; \
-		SourceHook::GetFuncInfo<cls, cls, CModifierCallbackResult&, CModifierParams>(this, &cls::function, info); \
+		SourceHook::GetFuncInfo<cls, cls, CModifierCallbackResult, const CModifierParams&>(this, &cls::function, info); \
 		*(void**)&callbackName = (*(void***)this)[info.vtblindex]; \
 	}
 	
