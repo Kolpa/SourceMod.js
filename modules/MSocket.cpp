@@ -95,7 +95,7 @@ END
 FUNCTION_M(JSSocket::writeString)
 	GET_INTERNAL(JSSocket*, self);
 	ARG_COUNT(1);
-	PSTR(str);
+	PUTF8(str);
 	
 	RETURN_SCOPED(v8::Int32::New(self->socket.Send((uint8*) *str, str.length())));
 END

@@ -116,7 +116,9 @@ FUNCTION_M(MPlugin::setMasterPlugin)
 END
 
 FUNCTION_M(MPlugin::getCallerIdentifier)
-	auto plugin = (SMJS_Plugin*) v8::Handle<External>::Cast(v8::Context::GetEntered()->GetEmbedderData(1))->Value();
+	auto ctx = v8::Context::GetEntered();
+	if(ctx.IsEmpty()) RETURN_STRING(GetPluginRunning()->GetDir());
+	auto plugin = (SMJS_Plugin*) v8::Handle<External>::Cast(ctx->GetEmbedderData(1))->Value();
 	RETURN_STRING(plugin->GetDir());
 END
 	
