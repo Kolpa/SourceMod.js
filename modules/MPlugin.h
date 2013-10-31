@@ -33,6 +33,7 @@ public:
 	FUNCTION_DECL(get);
 	FUNCTION_DECL(getApiVersion);
 	FUNCTION_DECL(setMasterPlugin);
+	FUNCTION_DECL(getCallerIdentifier);
 
 	WRAPPED_CLS(MPlugin, SMJS_Module) {
 		temp->SetClassName(v8::String::NewSymbol("PluginModule"));
@@ -44,5 +45,6 @@ public:
 		WRAPPED_FUNC(get);
 		WRAPPED_FUNC(getApiVersion);
 		WRAPPED_FUNC(setMasterPlugin);
+		WRAPPED_FUNC(getCallerIdentifier);
 	}
 };

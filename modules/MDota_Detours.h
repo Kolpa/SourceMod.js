@@ -113,7 +113,6 @@ void CallGetAbilityValueHook(CBaseEntity *ability, AbilityData *data){
 DETOUR_DECL_STATIC1_STDCALL_NAKED(GetAbilityValue, uint8_t *, char*, a2){
 	void *ability;
 	AbilityData *data;
-	int abilityLevel;
 
 	__asm {
 		push	ebp
@@ -132,8 +131,6 @@ DETOUR_DECL_STATIC1_STDCALL_NAKED(GetAbilityValue, uint8_t *, char*, a2){
 	__asm pushfd
 
 	if(ability == NULL || data == NULL || strlen(a2) == 0) goto FEND;
-	
-	abilityLevel = *(int*)((intptr_t)ability + 984) - 1;
 	
 	CallGetAbilityValueHook((CBaseEntity*) ability, data);
 	
@@ -538,14 +535,14 @@ class TestModifier : public CDOTA_Buff {
 
 	//void DoCreate(KeyValues *){};
 
-	virtual CModifierCallbackResult& BonusDamage(CModifierParams params){
+	CModifierCallbackResult& BonusDamage(CModifierParams params){
 		params.result.Set(500.0f);
 		return params.result;
 	}
 };*/
 
 extern const char *nextMasterModifierID;
-	extern DMasterBuff *nextMasterModifier;
+extern DMasterBuff *nextMasterModifier;
 
 DETOUR_DECL_MEMBER1(CreateModifier, CDOTA_Buff*, const char *, name){
 
