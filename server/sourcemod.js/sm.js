@@ -18,7 +18,7 @@
 		var t = 2 * Math.PI * Math.random();
 		var u = Math.random() + Math.random();
 		var r = u > 1 ? 2 - u : u;
-		return {x: center.x + r * Math.cos(t), y: center.y + r * Math.sin(t), z: center.z}; // z provided for convenience
+		return {x: center.x + radius * r * Math.cos(t), y: center.y + radius * r * Math.sin(t), z: center.z}; // z provided for convenience
 	}
 	
 	Array.prototype.remove = function(e){
