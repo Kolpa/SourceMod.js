@@ -1,0 +1,26 @@
+{
+	"Introduction": "The dota module can be accessed using the \"dota\" global variable.",
+	
+	"Methods": {
+		"addNewModifier": {
+			"Signature": "dota.addNewModifier(target:Entity, ability:Entity, modifierName:String, setName:String, options:Object, caster:Entity):Void",
+			"Description": "Adds a modifier - a buff or debuff - to `target`. The spell controlling the function of the modifier is specified with ability. Any keyvalues the modifier accepts are contained in `options`. Caster is the unit that applied the modifier.",
+			"Example": "var sheep = dota.createAbility(hero, \"item_sheepstick\");\ndota.addNewModifier(hero, sheep, \"modifier_sheepstick_debuff\", \"item_sheepstick\", {\"duration\":10,\"sheep_movement_speed\":400}, hero);"
+		},
+		
+		"remove": {
+			"Signature": "dota.remove(ent:Entity):Void",
+			"Description": "Removes the given entity"
+		},
+		
+		"removeAll": {
+			"Signature": "dota.removeAll(clsname:String):Void",
+			"Description": "Removes all entities matching the given classname. Supports * at the end of the string, e.g. dota.removeAll(\"npc_dota_tower*\") removes all towers."
+		},
+		
+		"removeModifier": {
+			"Signature": "dota.removeModifier(unit:Entity, modifier:String):Void",
+			"Description": "Removes `modifier` from `unit`."
+		}
+	}
+}
