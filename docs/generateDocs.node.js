@@ -47,5 +47,31 @@ function generateWikiDocs(filename, obj){
 		}
 	}
 	
+	if(obj["Constants"]){
+		str += "## Constants\n\n";
+		
+		var constantsList = [];
+		
+		for(var cteName in obj["Constants"]){
+			if(!obj["Constants"].hasOwnProperty(cteName)) continue;
+			constantsList.push(cteName);
+		}
+		
+		constantsList.sort();
+		
+		for (var i = 0; i < constantsList.length; i++) {
+			var cteName = constantsList[i];
+			var ctes = obj["Constants"][cteName];
+			
+			str += "### " + cteName + "\n";
+			for (var j = 0; j < ctes.length; j++) {
+				var cte = ctes[j];
+				str += "    " + cte + "\n";
+			}
+			
+			str += "\n\n";
+		}
+	}
+	
 	fs.writeFileSync("out/" + filename + ".md", str, {"encoding": "utf8"})
 }

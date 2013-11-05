@@ -3,24 +3,442 @@
 	
 	"Methods": {
 		"addNewModifier": {
-			"Signature": "dota.addNewModifier(target:Entity, ability:Entity, modifierName:String, setName:String, options:Object, caster:Entity):Void",
+			"Signature":   "dota.addNewModifier(target:Entity, ability:Entity, modifierName:String, setName:String, options:Object, caster:Entity):Void",
 			"Description": "Adds a modifier - a buff or debuff - to `target`. The spell controlling the function of the modifier is specified with ability. Any keyvalues the modifier accepts are contained in `options`. Caster is the unit that applied the modifier.",
 			"Example": "var sheep = dota.createAbility(hero, \"item_sheepstick\");\ndota.addNewModifier(hero, sheep, \"modifier_sheepstick_debuff\", \"item_sheepstick\", {\"duration\":10,\"sheep_movement_speed\":400}, hero);"
 		},
 		
+		"attachMasterModifier": {
+			"Signature":   "dota.attachMasterModifier(target:Entity, obj:Object):Void",
+			"Description": "Please check the [[Dota Master Modifier]] page for info."
+		},
+		
+		"applyDamage": {
+			"Signature":   "dota.applyDamage(attacker:Entity, attacked:Entity, ability:Entity, damage:Number, damageType:Int):Void",
+			"Description": "Applies `damage` with the flags `damageType` to `attacked` attributed to `attacker`. `ability` is provided for logging purposes."
+		},
+		
+		"autoRemoveUnit": {
+			"Signature":   "dota.autoRemoveUnit(ent:Entity):Void",
+			"Description": "Marks the unit so it'll call `dota.remove` on itself as soon as it dies (hp <= 0). Always use this if you're not deleting the unit manually yourself."
+		},
+		
+		"changeToRandomHero": {
+			"Signature":   "dota.changeToRandomHero(client:Client):Void",
+			"Description": "Changes the client's hero to a random hero"
+		},
+		
+		"clearMap": {
+			"Signature":   "dota.clearMap():Void",
+			"Description": "Clears the map of all buildings. You shouldn't use this function in your plugin. Instead, remove buildings types individually in your OnMapStart."
+		},
+		
+		"createCustomUnit": {
+			"Signature":   "dota.createCustomUnit(baseUnit:String, team:Int, keyvalues:Object):Entity",
+			"Description": "Creates and spawns an unit with the given base unit, and overriding the its keyvalues with the keyvalues provided by the third argument."
+		},
+		
+		"createParticleEffect": {
+			"Signature":   "dota.createParticleEffect(unit:Entity, systemName:String, attach:Int):Int",
+			"Description": "Creates a particle system. The return value is used to identify it in subsequent calls. Must be followed up with one or more calls to additional particle functions.",
+			"Example": "var index = dota.createParticleEffect(hero, \"kunkka_torrent_splash\", 1);"
+		},
+		
+		"createItemDrop": {
+			"Signature":   "dota.createItemDrop(owner:Entity, itemName:String, position:Vector):Entity",
+			"Description": "Creates an item drop at certain location. For now, the owner cannot be null."
+		},
+		
+		"createUnit": {
+			"Signature":   "dota.createUnit(unit:String, team:Int):Entity",
+			"Description": "Creates and spawns an unit."
+		},
+		
+		"destroyParticle": {
+			"Signature":   "dota.destroyParticle(client:Client, index:Int, destroyImmediately:Bool):Void",
+			"Description": "Remove a particle effect's visuals. Set `destroyImmediately` to false to trigger the particle system's natural fade-out routines, or set it to true to cause it to abruptly disappear."
+		},
+		
+		"destroyTreesAroundPoint": {
+			"Signature":   "dota.destroyTreesAroundPoint(position:Vector, radius:Number, unknown:Boolean):Void",
+			"Description": "Destroys all trees around a point. We don't know what the last argument does, just use false. If it's true, it seems to skip some additional check that's done to filter which trees to destroy."
+		},
+		
+		"endCooldown": {
+			"Signature":   "dota.endCooldown(ability:Entity):Void",
+			"Description": "Ends the cooldown of the provided ability."
+		},
+		
+		"executeOrders": {
+			"Signature":   "dota.executeOrders(playerId:Int, type:Int, units:Array, target:Entity, ability:Entity, queue:Bool, loc:Vector):Void",
+			"Description": "`ExecuteOrders` is capable of stipulating most in-game actions. However, the action must be within the permissions of `playerId`. See the Order Types constants for the types of orders available."
+		},
+		
+		"findClientByPlayerID": {
+			"Signature":   "dota.findClientByPlayerID(id:Int):Client",
+			"Description": "Loops through the clients and find the first one that has that `m_iPlayerID`. Returns `null` if not found."
+		},
+		
+		"findUnitsInRadius": {
+			"Signature":   "dota.findUnitsInRadius(ent:Entity, team:Int, radius:Number, x:Number, y:Number, targetTeamFlags:Int, targetUnitTypeFlags:Int, targetUnitStateFlags:Int):Array<Entity>",
+			"Description": "Returns an array of entities in the given AoE matching the given flags. See the Target Team constants for `targetTeamFlags`, Target Unit Type Flags constants for `targetUnitTypeFlags` and Target Unit State Flags for `targetUnitStateFlags`."
+		},
+		
+		"getTotalExpRequiredForLevel": {
+			"Signature":   "dota.getTotalExpRequiredForLevel(level:Int):Int",
+			"Description": "Returns the amount of total experienced for a hero to have that level."
+		},
+		
+		"getUnitType": {
+			"Signature":   "dota.getUnitType(unit:Entity):Int",
+			"Description": "Returns the given unit's type flags. See Unit Type Flags for the full list."
+		},
+		
+		"giveExperienceToHero": {
+			"Signature":   "dota.giveExperienceToHero(hero:Entity, amount:Number):Void",
+			"Description": "Gives the provided amount of experience to the provided hero."
+		},
+		
+		"givePlayerGold": {
+			"Signature":   "dota.givePlayerGold(playerId:Int, amount:Int, reliable:Boolean):Void",
+			"Description": "Self-explanatory."
+		},
+		
+		"hasModifier": {
+			"Signature":   "dota.hasModifier(unit:Entity, modifier:String):Boolean",
+			"Description": "Returns if the unit is under effects of the given modifier."
+		},
+		
+		"heal": {
+			"Signature":   "dota.heal(unit:Entity, ability:Entity, amount:Int):Void",
+			"Description": "Heals `unit` for `amount`. `ability` is used only for logging - it can point to any ability entity."
+		},
+		
+		"heroIdToClassname": {
+			"Signature":   "dota.heroIdToClassname(id:Int):String",
+			"Description": "Converts a hero integer id to its entity classname.",
+			"Example":     "dota.heroIdToClassname(82); // \"npc_dota_hero_meepo\""
+		},
+		
+		"levelUpHero": {
+			"Signature":   "dota.levelUpHero(hero:Entity, playEffects:Boolean):Void",
+			"Description": "Levels up the provided hero once."
+		},
+		
+		"loadParticleFile": {
+			"Signature":   "dota.loadParticleFile(file:String):Void",
+			"Description": "Loads a particle file for the clients. The file path is relative to the \"dota\" directory.",
+			"Example":     "dota.loadParticleFile(\"particles/units/heroes/hero_meepo.pcf\");"
+		},
+		
+		"releaseParticle": {
+			"Signature":   "dota.releaseParticle(client:Client, index:int):Void",
+			"Description": "Release a particle effect"
+		},
+		
 		"remove": {
-			"Signature": "dota.remove(ent:Entity):Void",
+			"Signature":   "dota.remove(ent:Entity):Void",
 			"Description": "Removes the given entity"
 		},
 		
 		"removeAll": {
-			"Signature": "dota.removeAll(clsname:String):Void",
+			"Signature":   "dota.removeAll(clsname:String):Void",
 			"Description": "Removes all entities matching the given classname. Supports * at the end of the string, e.g. dota.removeAll(\"npc_dota_tower*\") removes all towers."
 		},
 		
 		"removeModifier": {
-			"Signature": "dota.removeModifier(unit:Entity, modifier:String):Void",
+			"Signature":   "dota.removeModifier(unit:Entity, modifier:String):Void",
 			"Description": "Removes `modifier` from `unit`."
+		},
+		
+		"sendAudio": {
+			"Signature":   "dota.sendAudio(client:Client, stop:Boolean, name:String):Void",
+			"Description": "Plays sounds to individual clients. Use stop to order the sound in question to be cut off. Check out `pak01_dir\\scripts` for sound names.",
+			"Example":     "dota.sendAudio(client, false, \"Tower.Fire.Attack\");"
+		},
+		
+		"setAbilityByIndex": {
+			"Signature":   "dota.setAbilityByIndex(unit:Entity, ability:Entity, index:Int):Void",
+			"Description": "Set the given slot (`index`) on this unit to the provided ability. Most useful with `dota.createAbility`"
+		},
+		
+		"removeAbilityFromIndex": {
+			"Signature":   "dota.removeAbilityFromIndex(unit:Entity, index:Int):Void",
+			"Description": "Removes the ability on the given slot."
+		},
+		
+		"setGamePaused": {
+			"Signature":   "dota.setGamePaused(paused:Boolean):Void",
+			"Description": "Self-explanatory"
+		},
+		
+		"setHeroAvailable": {
+			"Signature":   "dota.setHeroAvailable(heroId:Int, available:Bool):Void",
+			"Description": "Sets if a hero is able to be picked/randomed by all players."
+		},
+		
+		"setParticleControl": {
+			"Signature":   "dota.setParticleControl(client:Client, index:Int, controlPoint:Int, loc:Vector):Void",
+			"Description": "Updates the location of the given control point on the particle system associated with the given index. This is selectively networked: if you want to display it to all clients, you will need to call it for each of them.",
+			"Example":     "var index = dota.createParticleEffect(hero, \"kunkka_torrent_splash\", 1);\ndota.setParticleControl(client, index, 0, hero.netprops.m_vecOrigin);"
+		},
+		
+		"setParticleControlEnt": {
+			"Signature":   "dota.setParticleControlEnt(unit:Entity, controlPoint:Int, unknown:Int, attachPoint:String, attachType:Int, index:Int)",
+			"Description": "Binds the selected control point of this particle system to the given attach point on the given entity. Many attach points are unique to certain heroes, but there are several generic options:\n\n    attach_attack4\n    attach_attack4\n    attach_hitloc\n    attach_attack2\n    attach_attack1\n    attach_weapon_chain_rt\n    attach_attach_1\n    attach_ability1\n    attach_head\n    attach_mouth\n    attach_tail\n    attach_sword\n    attach_left_eye\n    attach__right_eye\n    attach_spear_end\n    attach_static\n    attach_eye_r\n    attach_eye_l\n    attach_mane1\n    attach_mane2\n    attach_mane3\n    attach_mane4\n    attach_mane5\n    attach_mane6\n    attach_mane7\n    attach_mane8\n    attach_maneR\n    attach_maneL\n    attach_hand_r\n    attach_hand_l\n    attach_mouthFire\n    attach_cast4_primal_roar\n    attach_neck\n    attach_wing_barb_1\n    attach_wing_barb_2\n    attach_wing_barb_3\n    attach_wing_barb_4\n    attach_orb3\n    attach_orb2\n    attach_orb1\n    attach_rocket\n    attach_staff_base\n    attach_thorax\n    attach_weapon1\n    attach_weapon2\n    attach_fuse\n    attach_rocket1\n    attach_rocket2\n    attach_ogerhead\n    attach_key\n    attach_toss\n    attach_staffend\n    attach_wingtipR\n    attach_wingtipL\n    attach_tail_tip\n    attach_wing_L0\n    attach_wing_R0\n    attach_wing_L1\n    attach_wing_R1\n    attach_chain_rt\n    attach_chain_lf\n    attach_chain_rt0\n    attach_chain_lf0\n    attach_hoof_R\n    attach_hoof_L\n    attach_horn\n    attach_chimmney\n    attach_to_hands\n    attach_to_hands_vm_only\n    attach_to_rootbone\n    attach_type\n    attach_entity",
+			"Example":     "dota.setParticleControlEnt(hero, 0, 1, \"attach_static\", 1, index);"
+		},
+		
+		"setParticleOrient": {
+			"Signature":   "dota.setParticleOrient(client:Client, index:Int, controlPoint:Int, fwd:Vector, right:Vector, up:Vector):Void",
+			"Description": "Selectively networked. Mutates the given control point based on the given vectors."
+		},
+		
+		"setRuneType": {
+			"Signature":   "dota.setRuneType(rune:Entity, runeType:Int):Void",
+			"Description": "Set the given rune to the given rune type. See Rune Types for the available types."
+		},
+		
+		"setTotalExpRequiredForLevel": {
+			"Signature":   "dota.setTotalExpRequiredForLevel(level:Int, amount:Int):Void",
+			"Description": "Sets the amount of total experienced for a hero to have that level."
+		},
+		
+		"setUnitState": {
+			"Signature":   "dota.setUnitState(unit:Entity, state:Int, value:Boolean):Void",
+			"Description":  "Cannot be used outside of a `Dota_OnUnitThink` hook. You can find applicable unit states in the Unit States constant list."
+		},
+		
+		"spawnRune": {
+			"Signature":   "dota.spawnRune():Void",
+			"Description": "Spawns a random rune at a random rune spawner."
+		},
+		
+		"getCursorTarget": {
+			"Signature":   "dota.getCursorTarget(ability:Entity):Entity",
+			"Description": "Returns the entity targeted by the ability's owner, if one exists. Used inside of an `OnSpellStart` ability hook."
+		},
+		
+		"getCursorLocation": {
+			"Signature":   "dota.getCursorLocation(ability:Entity):Vector",
+			"Description": "Returns the vector targeted by the ability's owner, if one exists. Used inside of an `OnSpellStart` Ability hook."
+		},
+		
+		"upgradeAbility": {
+			"Signature":   "dota.upgradeAbility(ability:Entity):Void",
+			"Description": "Levels up the given ability."
+		},
+		
+		"canEntityBeSeenByTeam": {
+			"Signature":   "dota.canEntityBeSeenByTeam(ent:Entity, team:Int):Boolean",
+			"Description": "Returns true if the given team can see the given entity."
+		},
+		
+		"forceKill": {
+			"Signature":   "dota.forceKill(ent:Entity, unknown:Boolean):Void",
+			"Description": "Kills an unit. The boolean value seems to decide if some items like rapier will be dropped."
+		},
+		
+		"getModifierCaster": {
+			"Signature":   "dota.getModifierCaster(unit:Entity, modifier:String):Entity",
+			"Description": "Returns the unit that gave the given unit that modifier."
+		},
+		
+		"unitHasState": {
+			"Signature":   "dota.unitHasState(unit:Entity, state:Int):Boolean",
+			"Description": "Returns if the given unit has the given state"
+		},
+		
+		"setHealth": {
+			"Signature":   "dota.setHealth(unit:Entity, amount:Int):Void",
+			"Description": "Sets an unit's health."
+		},
+		
+		"giveItemToHero": {
+			"Signature":   "dota.giveItemToHero(itemClsname:String, hero:Entity):Entity",
+			"Description": "Creates and gives an item to a hero and returns that item entity"
+		},
+		
+		"findClearSpaceForUnit": {
+			"Signature":   "dota.findClearSpaceForUnit(unit:Entity, location:Vector):Void",
+			"Description": "Teleports an unit to a location, making sure it won't get stuck."
+		},
+		
+		"forceWin": {
+			"Signature":   "dota.forceWin(team:Int):Void",
+			"Description": "Forces a team to win the game"
+		},
+		
+		"worldLine": {
+			"Signature":   "dota.worldLine(target:Client, playerId:Int, end:Boolean, initial:Boolean, location:Vector):Void",
+			"Description": "Draws a line in the map."
+		},
+		
+		"pingLocation": {
+			"Signature":   "dota.pingLocation(target:Client, playerId:Int, pingTarget:Int, directPing:Boolean, type:Int, location:Vector):Void",
+			"Description": "Pings the map"
+		},
+		
+		"mapLine": {
+			"Signature":   "dota.mapLine(target:Client, playerId:Int, initial:Boolean, location:Vector):Void",
+			"Description": "Draws a line in the minimap"
+		},
+		
+		"createIllusions": {
+			"Signature":   "dota.createIllusions(unit:Entity, count:Int, xOffset:Int, unknown:Boolean, options:Object, setName:String, owner:Entity):Array<Entity>",
+			"Description": "Creates illusions"
+		},
+		
+		"getAbilityCaster": {
+			"Signature":   "dota.getAbilityCaster(ability:Entity):Entity",
+			"Description": "Gets the caster of an ability"
+		},
+		
+		"createAbility": {
+			"Signature":   "dota.createAbility(owner:Entity, clsname:String):Entity",
+			"Description": "Creates an ability"
+		},
+		
+		"setPurchaser": {
+			"Signature":   "dota.setPurchaser(item:Entity, purchaser:Entity):Void",
+			"Description": "Sets the entity that purchased that item"
 		}
+	},
+	
+	"Constants": {
+		"Teams": [
+			"TEAM_NONE",
+			"TEAM_SPEC",
+			"TEAM_RADIANT",
+			"TEAM_DIRE",
+			"TEAM_NEUTRAL"
+		],
+		
+		"Order Types": [
+			"dota.ORDER_TYPE_MOVE_TO_LOCATION",
+			"dota.ORDER_TYPE_MOVE_TO_UNIT",
+			"dota.ORDER_TYPE_ATTACK_MOVE",
+			"dota.ORDER_TYPE_ATTACK",
+			"dota.ORDER_TYPE_CAST_ABILITY_ON_LOCATION",
+			"dota.ORDER_TYPE_CAST_ABILITY_ON_UNIT",
+			"dota.ORDER_TYPE_CAST_ABILITY_ON_TREE",
+			"dota.ORDER_TYPE_CAST_ABILITY_NO_TARGET",
+			"dota.ORDER_TYPE_AUTO_CAST_ABILITY",
+			"dota.ORDER_TYPE_HOLD",
+			"dota.ORDER_TYPE_DROP_ITEM",
+			"dota.ORDER_TYPE_GIVE_ITEM",
+			"dota.ORDER_TYPE_PICK_UP_ITEM",
+			"dota.ORDER_TYPE_PICK_UP_RUNE",
+			"dota.ORDER_TYPE_BUY_ITEM",
+			"dota.ORDER_TYPE_AUTO_CAST_TOGGLE",
+			"dota.ORDER_TYPE_STOP"
+		],
+		
+		"Target Team": [
+			"dota.UNIT_TARGET_TEAM_FRIENDLY",
+			"dota.UNIT_TARGET_TEAM_ENEMY",
+			"dota.UNIT_TARGET_TEAM_BOTH",
+			"dota.UNIT_TARGET_TEAM_CUSTOM"
+		],
+		
+		"Unit Type Flags": [
+			"dota.UNIT_TYPE_FLAG_HERO",
+			"dota.UNIT_TYPE_FLAG_MECHANICAL",
+			"dota.UNIT_TYPE_FLAG_TOWER",
+			"dota.UNIT_TYPE_FLAG_SIEGE",
+			"dota.UNIT_TYPE_FLAG_BUILDING",
+			"dota.UNIT_TYPE_FLAG_ANCIENT",
+			"dota.UNIT_TYPE_FLAG_BARRACKS",
+			"dota.UNIT_TYPE_FLAG_CREEP",
+			"dota.UNIT_TYPE_FLAG_COURIER",
+			"dota.UNIT_TYPE_FLAG_WARD",
+			"dota.UNIT_TYPE_FLAG_LANE_CREEP",
+			"dota.UNIT_TYPE_FLAG_ROSHAN"
+		],
+		
+		"Target Unit Type Flags": [
+			"dota.UNIT_TARGET_TYPE_HERO",
+			"dota.UNIT_TARGET_TYPE_CREEP",
+			"dota.UNIT_TARGET_TYPE_BUILDING",
+			"dota.UNIT_TARGET_TYPE_MECHANICAL",
+			"dota.UNIT_TARGET_TYPE_COURIER",
+			"dota.UNIT_TARGET_TYPE_OTHER",
+			"dota.UNIT_TARGET_TYPE_TREE",
+			"dota.UNIT_TARGET_TYPE_CUSTOM",
+			"dota.UNIT_TARGET_TYPE_BASIC"
+		],
+		
+		"Target Unit State Flags": [
+			"dota.UNIT_TARGET_STATE_FLAG_RANGED_ONLY",
+			"dota.UNIT_TARGET_STATE_FLAG_MELEE_ONLY",
+			"dota.UNIT_TARGET_STATE_FLAG_DEAD",
+			"dota.UNIT_TARGET_STATE_FLAG_MAGIC_IMMUNE_ENEMIES",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_MAGIC_IMMUNE_ALLIES",
+			"dota.UNIT_TARGET_STATE_FLAG_INVULNERABLE",
+			"dota.UNIT_TARGET_STATE_FLAG_FOW_VISIBLE",
+			"dota.UNIT_TARGET_STATE_NO_INVIS",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_ANCIENTS",
+			"dota.UNIT_TARGET_STATE_FLAG_PLAYER_CONTROLLED",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_DOMINATED",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_SUMMONED",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_ILLUSION",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_ATTACK_IMMUNE",
+			"dota.UNIT_TARGET_STATE_FLAG_MANA_ONLY",
+			"dota.UNIT_TARGET_STATE_FLAG_CHECK_DISABLE_HELP",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_CREEP_HERO",
+			"dota.UNIT_TARGET_STATE_FLAG_OUT_OF_WORLD",
+			"dota.UNIT_TARGET_STATE_FLAG_NOT_NIGHTMARED"
+		],
+		
+		"Unit States": [
+			"dota.UNIT_STATE_ROOTED",
+			"dota.UNIT_STATE_SOFT_DISARMED",
+			"dota.UNIT_STATE_DISARMED",
+			"dota.UNIT_STATE_ATTACK_IMMUNE",
+			"dota.UNIT_STATE_SILENCED",
+			"dota.UNIT_STATE_MUTED",
+			"dota.UNIT_STATE_STUNNED",
+			"dota.UNIT_STATE_HEXED",
+			"dota.UNIT_STATE_INVISIBLE",
+			"dota.UNIT_STATE_INVULNERABLE",
+			"dota.UNIT_STATE_MAGIC_IMMUNE",
+			"dota.UNIT_STATE_PROVIDES_VISION",
+			"dota.UNIT_STATE_NIGHTMARED",
+			"dota.UNIT_STATE_BLOCK_DISABLED",
+			"dota.UNIT_STATE_EVADE_DISABLED",
+			"dota.UNIT_STATE_UNSELECTABLE",
+			"dota.UNIT_STATE_CANNOT_MISS",
+			"dota.UNIT_STATE_SPECIALLY_DENIABLE",
+			"dota.UNIT_STATE_FROZEN",
+			"dota.UNIT_STATE_COMMAND_RESTRICTED",
+			"dota.UNIT_STATE_NOT_ON_MINIMAP_FOR_ENEMIES",
+			"dota.UNIT_STATE_NOT_ON_MINIMAP",
+			"dota.UNIT_STATE_LOW_ATTACK_PRIORITY",
+			"dota.UNIT_STATE_NO_HEALTHBAR",
+			"dota.UNIT_STATE_FLYING",
+			"dota.UNIT_STATE_NO_UNIT_COLLISION",
+			"dota.UNIT_STATE_NO_TEAM_MOVE_TO",
+			"dota.UNIT_STATE_NO_TEAM_SELECT",
+			"dota.UNIT_STATE_PASSIVES_DISABLED",
+			"dota.UNIT_STATE_DOMINATED",
+			"dota.UNIT_STATE_BLIND",
+			"dota.UNIT_STATE_OUT_OF_GAME"
+		],
+		
+		"Damage Type": [
+			"dota.DAMAGE_TYPE_PHYSICAL",
+			"dota.DAMAGE_TYPE_MAGICAL",
+			"dota.DAMAGE_TYPE_COMPOSITE",
+			"dota.DAMAGE_TYPE_PURE",
+			"dota.DAMAGE_TYPE_HP_REMOVAL"
+		],
+		
+		"Rune Types": [
+			"dota.RUNE_TYPE_DOUBLE_DAMAGE",
+			"dota.RUNE_TYPE_HASTE",
+			"dota.RUNE_TYPE_ILLUSION",
+			"dota.RUNE_TYPE_INVIS",
+			"dota.RUNE_TYPE_REGENERATION"
+		]
 	}
 }
