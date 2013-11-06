@@ -2,6 +2,11 @@
 
 node generateDocs.node.js
 
-echo Done
+IF ERRORLEVEL 1 GOTO onError
 
+goto onSuccess
+
+:onError
 pause
+
+:onSuccess
