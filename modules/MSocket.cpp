@@ -204,7 +204,7 @@ void MSocket::Process(){
 
 				auto callback = jssocket->GetWrapper()->ToObject()->Get(v8::String::New("onClose"));
 
-				if(callback->IsFunction()){
+				if(!callback.IsEmpty() && callback->IsFunction()){
 					auto func = v8::Handle<v8::Function>::Cast(callback);
 					func->Call(obj, 0, NULL);
 				}

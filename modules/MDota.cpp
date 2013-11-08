@@ -222,12 +222,12 @@ static void *SetPurchaser;
 void *GetBuffCaster; // Needed for MDotaWrappers
 static void *CreateIllusions;
 static void *GetAbilityCaster;
-static void *GivePlayerGold;
 static void *SetGamePaused;
 static void *CanBeSeenByTeam;
 static void (*ChangeToRandomHero)(void *player);
 static void *DestroyTreesAroundPoint;
 static void *FindOrCreatePlayerID;
+static void *ModifyGold;
 
 static uint8_t GetParticleManager[4];
 
@@ -335,7 +335,6 @@ MDota::MDota(){
 
 	createModifierDetour = DETOUR_CREATE_MEMBER(CreateModifier, "CreateModifier");
 	if(createModifierDetour) createModifierDetour->EnableDetour();
-
 	
 
 	FIND_DOTA_PTR(GameManager);
@@ -381,12 +380,12 @@ MDota::MDota(){
 	FIND_DOTA_FUNC_NEW(GetBuffCaster, "\x8B\x50\x3C\x83\xFA\xFF\x74\x2A\x8B\xC2\x25\xFF\xFF\x00\x00\x8B\xC8\xC1\xE1\x04\x81\x2A\x2A\x2A\x2A\x2A\xC1\xEA\x10\x39\x51\x04\x75\x2A\x8B\x09\x85\xC9\x75");
 	FIND_DOTA_FUNC_NEW(GetAbilityCaster, "\x8B\x88\xC4\x01\x00\x00\x83\xF9\xFF\x74\x2A\x8B\xC1\x25\xFF\xFF\x00\x00\xC1\xE0\x04\x05\x2A\x2A\x2A\x2A\xC1\xE9\x10\x39\x48\x04\x75\x2A\x8B\x00\xC3\x33\xC0\xC3");
 	FIND_DOTA_FUNC_NEW(CreateIllusions, "\x55\x8B\xEC\x83\xE4\xF8\xA1\x2A\x2A\x2A\x2A\x8B\x2A\x2A\x2A\x2A\x2A\x8B\x11\x83\xEC\x74\x53\x56\x8B");
-	FIND_DOTA_FUNC_NEW(GivePlayerGold, "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x53\x8B\x5D\x08\x56\x8B\x35\x2A\x2A\x2A\x2A\x57\x83\xFB\x09\x76\x2A\x33\xC0\x5F\x5E\x5B\x8B\xE5\x5D\xC2\x10\x00");
 	FIND_DOTA_FUNC_NEW(SetGamePaused, "\x55\x8B\xEC\x83\xE4\xF8\x81\xEC\x34\x01\x00\x00\x53\x56\x57\x8B\xF9\x33\xD2\x33\xC9\x83\xCB\xFF\xF6\x05\x2A\x2A\x2A\x2A\x01\x8B\xF0\x8B\xC3\x66\x89\x4C\x24\x22");
 	FIND_DOTA_FUNC_NEW(CanBeSeenByTeam, "\x55\x8B\xEC\x8B\x06\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCE\xFF\xD2\x84\xC0\x75\x06\xB0\x01\x5D\xC2\x04\x00\x80\xBE\x2A\x2A\x2A\x2A\x00\x74\x0C\x8B\x06\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCE\xFF\xD2\x8B\x4D\x08\xB8\x01\x00\x00\x00\xD3\xE0\x8B\x8E\x2A\x2A\x2A\x2A\x33\xD2\x23\xC8\x3B\xC8\x0F\x94\xC0\x5D\xC2\x04\x00");
 	FIND_DOTA_FUNC_NEW(ChangeToRandomHero, "\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x54\x53\x56\x8B\x75\x08\x8B\x06\x8B\x90\x2A\x2A\x2A\x2A\x57\x8B\xCE\xFF\xD2\xE8\x2A\x2A\x2A\x2A\x89\x44\x24\x1C\x8B\x86\x2A\x2A\x2A\x2A\x33\xF6\x83\xF8\xFF\x74\x28\x8B\xC8");
 	FIND_DOTA_FUNC_NEW(DestroyTreesAroundPoint, "\x55\x8B\xEC\x83\xEC\x14\x8B\x4D\x14\x53\x56\x57\x50\x83\xEC\x10\xF3\x0F\x11\x44\x24\x0C\xF3\x0F\x7E\x45\x0C");
 	FIND_DOTA_FUNC_NEW(FindOrCreatePlayerID, "\x55\x8B\xEC\x83\xEC\x08\x53\x83\xC9\xFF\x80\x7D\x14\x00\x56\x8B\x75\x08\x57\x89\x4D\xF8\x89\x4D\xFC");
+	FIND_DOTA_FUNC_NEW(ModifyGold, "\x55\x8B\xEC\x81\xEC\x2A\x2A\x00\x00\x53\x8B\x5D\x08\x56\x8B\x35\x2A\x2A\x2A\x2A\x57\x83\xFB\x09\x76\x2A\x33\xC0\x5F\x5E\x5B\x8B\xE5\x5D\xC2\x10\x00\xA1")
 
 	upgradeAbilityDetour = DETOUR_CREATE_STATIC(UpgradeAbilityDetour, "UpgradeAbility");
     if(upgradeAbilityDetour) upgradeAbilityDetour->EnableDetour();
@@ -1110,13 +1109,13 @@ FUNCTION_M(MDota::addNewModifier)
 
 	CBaseEntity *casterEnt = NULL;
 
-	if(target == NULL || ability == NULL) THROW("Entity cannot be null");
+	if(target == NULL) THROW("Entity cannot be null");
 
 	CBaseEntity *targetEnt;
 	targetEnt = target->ent;
 
-	CBaseEntity *abilityEnt;
-	abilityEnt = ability->ent;
+	CBaseEntity *abilityEnt = NULL;
+	if(ability != NULL) abilityEnt = ability->ent;
 
 	if(GetPluginRunning()->GetApiVersion() < 6){
 		casterEnt = targetEnt;
@@ -1752,9 +1751,8 @@ FUNCTION_M(MDota::getModifierCaster)
 	PSTR(modifier);
 
 	CBaseEntity *unitEnt;
-	unitEnt = unit->ent;
-
 	if(unit == NULL) THROW("Invalid entity");
+	unitEnt = unit->ent;
 
 	void *modifierManager = (void*)((uintptr_t)unitEnt + offset);
 	char *modifierStr = *modifier;
@@ -1830,15 +1828,17 @@ FUNCTION_M(MDota::givePlayerGold)
 	PINT(amount);
 	PBOL(reliable);
 
+	int result;
 	__asm {
-		push 0 // a4, unknown
+		push 6
 		push dword ptr reliable
 		push amount
 		push playerId
-		call GivePlayerGold
+		call ModifyGold
+		mov result, eax
 	}
 
-	RETURN_UNDEF;
+	RETURN_INT(result);
 END
 
 FUNCTION_M(MDota::setGamePaused)

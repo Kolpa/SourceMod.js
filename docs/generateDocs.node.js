@@ -16,6 +16,8 @@ function generateWikiDocs(filename, obj){
 	var str = "";
 	
 	str += "## Introduction\n";
+	str += "{#pre-intro}\n\n";
+	
 	str += obj["Introduction"] + "\n\n";
 	
 	var methodList = [];
@@ -109,19 +111,21 @@ function generateHTMLPage(filename, obj){
 	content = wikifyLinks(content);
 	
 	content = content.replace(/<h3>([^\{]+)\s*\{#([a-z0-9_-]+)\}\s*<\/h3>/ig, function(all, title, link){
-		return '<h3 id="' + link + '">' + title.trim() + '</h3>';
+		return '<hr /><h3 id="' + link + '">' + title.trim() + '</h3>';
 	});
 	
+	content = content.replace("<p>{#post-intro}</p>", '<br clear="both" />')
+	
 	content = content.replace(/\{#([a-z0-9_-]+)\}/ig, function(all, link){
-		if(link == "post-intro"){
-			var nav = '<div class="well"><ul class="nav nav-list">';
+		if(link == "pre-intro"){
+			var nav = '<div class="well pull-right"><ul class="nav nav-list">';
 			nav += '<li class="nav-header">Table of contents</li>';
 			
 			
 			if(obj.methodList.length > 0){
 				nav += '<li class="nav-header">Methods</li>';
 				for (var i = 0; i < obj.methodList.length; i++) {
-					nav += '<li><a href="#func-' + wikifyLink2(obj.methodList[i]) + '">' + obj.methodList[i] + '</a></li>';
+					nav += '<li><a onclick="window.location.hash=\'func-' + wikifyLink2(obj.methodList[i]) + '\'" href="#">' + obj.methodList[i] + '</a></li>';
 					
 				}
 			}
@@ -129,7 +133,7 @@ function generateHTMLPage(filename, obj){
 			if(obj.constantsList.length > 0){
 				nav += '<li class="nav-header">Constants</li>';
 				for (var i = 0; i < obj.constantsList.length; i++) {
-					nav += '<li><a href="#ctes-' + wikifyLink2(obj.constantsList[i]) + '">' + obj.constantsList[i] + '</a></li>';
+					nav += '<li><a onclick="window.location.hash=\'ctes-' + wikifyLink2(obj.constantsList[i]) + '\'" href="#">' + obj.constantsList[i] + '</a></li>';
 					
 				}
 			}
@@ -144,10 +148,9 @@ function generateHTMLPage(filename, obj){
 			return nav;
 		}
 		
-		return '<a id="' + link + '"></a>'
+		return '<a id="' + link + '"></a>';
 	});
 	content = content.replace(/<h2>/gi, "<hr /><h2>");
-	content = content.replace(/<h3>/gi, "<hr /><h3>");
 	content = content.replace(/<\/h2>\s*<hr \/>/gi, "</h2>");
 	
 	var html = '<div class="d2w-container">\n<div id="content">\n' + content + '\n<br clear="both"/>\n</div>\n</div>';

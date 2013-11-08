@@ -100,7 +100,7 @@ FUNCTION_M(SMJS_Entity::input)
 			THROW("\"AcceptEntityInput\" not supported by this mod");
 		}
 	
-		offset = 43; // Temporary workaround
+		offset = 44; // Temporary workaround
 
 		PassInfo pass[6];
 		pass[0].type = PassType_Basic;
@@ -333,7 +333,7 @@ FUNCTION_M(SMJS_Entity::teleport)
 		}
 
 		// Temporary fix until the sourcemod offset is updated
-		offset = 116;
+		offset = 117;
 	
 		PassInfo pass[3];
 		pass[0].type = PassType_Basic;
@@ -390,7 +390,7 @@ FUNCTION_M(SMJS_Entity::setRotation)
 		}
 
 		// Temporary fix until the sourcemod offset is updated
-		offset = 116;
+		offset = 117;
 	
 		PassInfo pass[3];
 		pass[0].type = PassType_Basic;
@@ -447,7 +447,7 @@ FUNCTION_M(SMJS_Entity::setVelocity)
 		}
 
 		// Temporary fix until the sourcemod offset is updated
-		offset = 116;
+		offset = 117;
 	
 		PassInfo pass[3];
 		pass[0].type = PassType_Basic;
@@ -504,7 +504,7 @@ FUNCTION_M(SMJS_Entity::changeTeam)
 			THROW("\"ChangeTeam\" not supported by this mod");
 		}*/
 
-		offset = 99;
+		offset = 100;
 	
 		PassInfo pass[1];
 		pass[0].type = PassType_Basic;
