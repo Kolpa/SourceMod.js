@@ -252,6 +252,7 @@ static CDetour *isDeniableDetour;
 static CDetour *upgradeAbilityDetour;
 static CDetour *pickupItemDetour;
 static CDetour *createModifierDetour;
+static CDetour *executeOrdersDetour;
 
 static void (*UTIL_Remove)(IServerNetworkable *oldObj);
 static void **FindUnitsInRadius;
@@ -390,6 +391,8 @@ MDota::MDota(){
 	upgradeAbilityDetour = DETOUR_CREATE_STATIC(UpgradeAbilityDetour, "UpgradeAbility");
     if(upgradeAbilityDetour) upgradeAbilityDetour->EnableDetour();
 
+	executeOrdersDetour = DETOUR_CREATE_STATIC(ExecuteOrdersDetour, "ExecuteOrders");
+	if(executeOrdersDetour) executeOrdersDetour->EnableDetour();
 
 	expRequiredForLevel = (int*) memutils->FindPattern(g_SMAPI->GetServerFactory(false), "\x00\x00\x00\x00\xC8\x00\x00\x00\xF4\x01\x00\x00\x84\x03\x00\x00\x78\x05\x00\x00", 20);
 	if(expRequiredForLevel == NULL){

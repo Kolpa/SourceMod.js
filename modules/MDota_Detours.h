@@ -1,5 +1,79 @@
 // Keep this file separated from MDota.cpp because it's really ugly
 
+bool CallExecuteOrdersHook(CUnitOrders& orders){            
+        int len = GetNumPlugins();
+        for(int i = 0; i < len; ++i){
+                SMJS_Plugin *pl = GetPlugin(i);
+                if(pl == NULL) continue;
+                       
+                HandleScope handle_scope(pl->GetIsolate());
+                Context::Scope context_scope(pl->GetContext());
+ 
+                auto *hooks = pl->GetHooks("Dota_OnExecuteOrders");
+ 
+                if(hooks->size() == 0) continue;
+ 
+				auto arr = v8::Array::New();
+
+				for(int i = 0; i < orders.m_SelectedUnitEntIndexes.Count(); i++){
+					int index = orders.m_SelectedUnitEntIndexes[i];
+					CBaseEntity *ent = gamehelpers->ReferenceToEntity(gamehelpers->IndexToReference(index));
+					SMJS_Entity *entWrapper = GetEntityWrapper(ent);
+					arr->Set(i, entWrapper->GetWrapper(pl));
+				}
+
+                v8::Handle<v8::Value> args[6];
+
+				args[0] = v8::Int32::New(orders.m_iPlayerID);
+				args[1] = v8::Int32::New(orders.m_iOrderType);
+				args[2] = arr;
+
+				if(orders.m_iTargetEntIndex > 0){
+					SMJS_Entity *targetWrapper = GetEntityWrapper(gamehelpers->ReferenceToEntity(gamehelpers->IndexToReference(orders.m_iAbilityEntIndex)));
+					args[3] = targetWrapper->GetWrapper(pl);
+				}else{
+					args[3] = v8::Null();
+				}
+
+				if(orders.m_iAbilityEntIndex > 0){
+					SMJS_Entity *abilityWrapper = GetEntityWrapper(gamehelpers->ReferenceToEntity(gamehelpers->IndexToReference(orders.m_iTargetEntIndex)));
+					args[4] = abilityWrapper->GetWrapper(pl);
+				}else{
+					args[4] = v8::Null();
+				}
+
+				auto jsvec = v8::Object::New();
+				jsvec->Set(v8::String::New("x"), v8::Number::New(orders.m_TargetPos.x));
+				jsvec->Set(v8::String::New("y"), v8::Number::New(orders.m_TargetPos.y));
+				jsvec->Set(v8::String::New("z"), v8::Number::New(orders.m_TargetPos.z));
+				args[5] = jsvec;
+
+                for(auto it = hooks->begin(); it != hooks->end(); ++it){
+                        auto func = *it;
+                        auto res = func->Call(pl->GetContext()->Global(), 6, args);
+                        if(!res.IsEmpty() && !res->IsUndefined()){
+							if(res->IsTrue()){
+								return false;
+							}
+							if(res->IsFalse()){
+								return true;
+							}
+                        }
+                }
+        }
+	return false;
+}
+
+
+DETOUR_DECL_STATIC1(ExecuteOrdersDetour, void, CUnitOrders&, orders){
+
+	bool blocking = CallExecuteOrdersHook(orders);
+
+	if(!blocking){
+		DETOUR_STATIC_CALL(ExecuteOrdersDetour)(orders);
+	}
+}
+
 DETOUR_DECL_MEMBER3(ParseUnit, void*, void*, a2, KeyValues*, keyvalues, void*, a4){
 	SMJS_Entity *entWrapper = GetEntityWrapper((CBaseEntity*) this);
 	
