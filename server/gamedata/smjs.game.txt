@@ -4,83 +4,91 @@
 	{
 		"Offsets"
 		{
-			"UpgradeAbility"
-			{
-				"windows"	"429"
-			}
-			"IsStealable"
-			{
-				"windows"	"264"
-			}
+			
+			
 			"GetAbilityType"
 			{
-				"windows"	"209"
+				"windows"	"210"
 			}
+			
 			"GetChannelTime"
 			{
-				"windows"	"212"
+				"windows"	"214"
 			}
+			
 			"GetCastRange"
-			{
-				"windows"	"213"
-			}
-			"GetCastPoint"
 			{
 				"windows"	"215"
 			}
+			
+			"GetCastPoint"
+			{
+				"windows"	"217"
+			}
+			
 			"GetCooldown"
 			{
-				"windows"	"223"
+				"windows"	"225"
 			}
+			
+			"GetAbilityDamage"
+			{
+				"windows"	"229"
+			}
+			
 			"OnAbilityPhaseStart"
-			{
-				"windows"	"237"
-			}
-			"OnAbilityPhaseInterrupted"
-			{
-				"windows"	"238"
-			}
-			"OnChannelFinish"
 			{
 				"windows"	"240"
 			}
-			"OnToggle"
+			
+			"OnAbilityPhaseInterrupted"
+			{
+				"windows"	"241"
+			}
+			
+			"OnSpellStart"
+			{
+				"windows"	"242"
+			}
+			
+			"OnChannelFinish"
 			{
 				"windows"	"243"
 			}
-			"OnProjectileHit"
-			{
-				"windows"	"251"
-			}
-			"OnProjectileThinkWithVector"
-			{
-				"windows"	"254"
-			}
-			"OnProjectileThinkWithInt"
-			{
-				"windows"	"253"
-			}
-			"OnStolen"
-			{
-				"windows"	"266"
-			}
-			"OnSpellStart"
-			{
-				"windows"	"239"
-				"linux"		"240"
-				"mac"		"240"
-			}
-			"GetManaCost"
+			
+			"OnToggle"
 			{
 				"windows"	"246"
-				"linux"		"247"
-				"mac"		"247"
 			}
-			"GetAbilityDamage"
+			
+			"GetManaCost"
 			{
-				"windows"	"226"
-				"linux"		"227"
-				"mac"		"227"
+				"windows"	"249"
+			}
+			
+			"OnProjectileHit"
+			{
+				"windows"	"257"
+			}
+			
+			"OnProjectileThinkWithVector"
+			{
+				"windows"	"260"
+			}
+			
+			"OnProjectileThinkWithInt"
+			{
+				"windows"	"259"
+			}
+			
+			"IsStealable"
+			{
+				"windows"	"270"
+			}
+			
+			"OnStolen"
+			{
+				"windows"	"272"
 			}
 		}
 	}

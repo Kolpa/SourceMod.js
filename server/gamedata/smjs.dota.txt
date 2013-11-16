@@ -407,12 +407,12 @@
 		"Offsets"
 		{
 			/*
-				void CDOTA_BaseNPC_Hero::LevelUp(bool playEffects);
+				void CDOTA_BaseNPC_Hero::HeroLevelUp(bool playEffects);
 				Found close to the string dota_hero_level in the main dispatch function for client commands
 			*/
 			"HeroLevelUp"
 			{
-				"windows"	"429"
+				"windows"	"443"
 			}
 
 			/*
@@ -444,7 +444,7 @@
 			*/
 			"HeroGiveExperience"
 			{
-				"windows"	"430"
+				"windows"	"444"
 			}
 			
 			"GetRefEHandle"
