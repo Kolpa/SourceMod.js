@@ -1508,48 +1508,6 @@ void MGame::Hook_OnStolen(){
 	RETURN_META(MRES_IGNORED);
 }
 
-/*int MGame::Hook_UpgradeAbility(CBaseEntity *pAbility){
-	CBaseEntity *pEntity = META_IFACEPTR(CBaseEntity);
-	int entity = gamehelpers->EntityToBCompatRef(pEntity);
-
-	bool handled = false;
-	int returnValue = 0;
-
-	for (auto iter = m_EntHooks[EntHookType_UpgradeAbility].begin(); iter != m_EntHooks[EntHookType_UpgradeAbility].end(); ++iter){
-		EntHookInfo *pHook = *iter;
-		if (pHook->entity != entity)
-			continue;
-		SMJS_Plugin *pPlugin = pHook->plugin;
-
-		HandleScope handle_scope(pPlugin->GetIsolate());
-		Context::Scope context_scope(pPlugin->GetContext());
-
-		SMJS_Entity *entityWrapper = GetEntityWrapper(pEntity);
-		SMJS_Entity *abilityWrapper = GetEntityWrapper(pAbility);
-		v8::Handle<v8::Value> args[2];
-		args[0] = entityWrapper->GetWrapper(pPlugin);
-		args[1] = abilityWrapper->GetWrapper(pPlugin);
-
-		auto res = pHook->callback->Call(pPlugin->GetContext()->Global(), 2, args);
-		if (res.IsEmpty() || res->IsUndefined())
-			continue;
-
-		if (res->IsBoolean() && !handled){
-			if(res->IsFalse()){
-				RETURN_META_VALUE(MRES_SUPERCEDE, 0);
-			}
-		}
-	}
-
-	if(handled){
-		RETURN_META_VALUE(MRES_SUPERCEDE, returnValue);
-	}
-
-	RETURN_META_VALUE(MRES_IGNORED, 0);
-}
-*/
-
-
 
 
 
