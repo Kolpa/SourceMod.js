@@ -110,7 +110,11 @@ enum Dota_Hero {
 	Hero_Abaddon = 102,
 	Hero_ElderTitan = 103,
 	Hero_LegionCommander = 104,
-	
+	Hero_Techies = 105,
+	Hero_EmberSpirit = 106,
+	Hero_EarthSpirit = 107,
+	Hero_PitLord = 108,
+
 	Hero_Count
 };
 

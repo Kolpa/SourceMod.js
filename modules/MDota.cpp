@@ -1831,12 +1831,16 @@ FUNCTION_M(MDota::givePlayerGold)
 	PINT(amount);
 	PBOL(reliable);
 
+	if(playerId < 0 || playerId > 9) THROW("Invalid PlayerId");
+
 	int result;
+
 	__asm {
 		push 6
 		push dword ptr reliable
 		push amount
 		push playerId
+		mov ecx, PlayerResource
 		call ModifyGold
 		mov result, eax
 	}
@@ -2079,6 +2083,10 @@ END
 		case Hero_Abaddon: return "npc_dota_hero_abaddon";
 		case Hero_ElderTitan: return "npc_dota_hero_elder_titan";
 		case Hero_LegionCommander: return "npc_dota_hero_legion_commander";
+		case Hero_Techies: return "npc_dota_hero_techies";
+		case Hero_EmberSpirit: return "npc_dota_hero_ember_spirit";
+		case Hero_EarthSpirit: return "npc_dota_hero_earth_spirit";
+		case Hero_PitLord: return "npc_dota_hero_abyssal_underlord";
 	}
 
 	return NULL;
